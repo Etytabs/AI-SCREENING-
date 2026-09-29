@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GrantProposal",
+  "type": "object",
+  "required": ["proposal_id", "title", "abstract"],
+  "properties": {
+    "proposal_id": {"type": "string"},
+    "title": {"type": "string"},
+    "abstract": {"type": "string"},
+    "full_text": {"type": "string"},
+    "source_id": {"type": "string"}
+  }
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
@@ -117,7 +117,6 @@ function DocumentPane({live}:any) {
 }
 
 function Intelligence({result,openComparison,setDecisionOpen}:any) {
-  const checks = result?.eligibility_checks || [];
   return <section className="intelligence">
     <div className="intel-title"><div><div className="eyebrow">AI SCREENING ANALYSIS</div><h2>Findings & evidence</h2><p>{result ? "Live screening result · human review required" : "Demo evidence · human review required"}</p></div><div className="state-count"><b>4</b><span>passed</span><b>2</b><span>review</span></div></div>
     <div className="readout"><b>READOUT</b><p>Core sections are present. Similarity and unresolved eligibility signals require comparison or reviewer confirmation.</p></div>

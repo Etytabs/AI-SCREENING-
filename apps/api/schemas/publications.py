@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 
+
 class PublicationRecord(BaseModel):
     record_id: str
     title: str = Field(min_length=1)
@@ -7,6 +8,7 @@ class PublicationRecord(BaseModel):
     doi: str | None = None
     year: int | None = None
     source: str
+
 
 class ReconciliationResult(BaseModel):
     left_record_id: str

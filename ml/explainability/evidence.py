@@ -7,6 +7,8 @@ class Evidence:
     field: str
     value: str
     rationale: str
+    page_number: int | None = None
+    chunk_id: str | None = None
 
 
 @dataclass(frozen=True)

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PublicationRecord",
+  "type": "object",
+  "required": ["record_id", "title", "authors", "source"],
+  "properties": {
+    "record_id": {"type": "string"},
+    "title": {"type": "string"},
+    "authors": {"type": "array", "items": {"type": "string"}},
+    "doi": {"type": ["string", "null"]},
+    "year": {"type": ["integer", "null"]},
+    "source": {"type": "string"}
+  }
+}

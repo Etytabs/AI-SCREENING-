@@ -1,6 +1,7 @@
 from ml.entity_resolution.service import match_authors
 from ml.semantic_matching.service import compare_texts
 
+
 def reconcile_text(left_id: str, left: str, right_id: str, right: str) -> dict:
     match = compare_texts(left, right)
     return {
@@ -10,6 +11,7 @@ def reconcile_text(left_id: str, left: str, right_id: str, right: str) -> dict:
         "method": match.method,
         "explanation": match.explanation,
     }
+
 
 def reconcile_publication(
     left_id: str,

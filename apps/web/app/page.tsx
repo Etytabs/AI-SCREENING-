@@ -1,46 +1,169 @@
 "use client";
-import { useState } from "react";
+
+import { useMemo, useState } from "react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
-const orgs = [
-  {id:"nrif",name:"NCST / NRIF",type:"Grant funding body",sources:["RIGMS","Historical Applications","Eligibility Rules"],mode:"Connected"},
-  {id:"university",name:"University Research Office",type:"Institutional research office",sources:["Institutional Repository","Researcher Directory","DOI Metadata"],mode:"Local-first"},
-  {id:"institute",name:"Research Institute",type:"Research institute",sources:["Publication Database","Project Archive"],mode:"Local-first"}
-];
 const proposals = [
-  {id:"NRIF-2026-014",title:"AI-based crop disease detection",status:"Review required",score:.94,duplicate:2},
-  {id:"NRIF-2026-015",title:"Climate-smart irrigation analytics",status:"Ready for review",score:.98,duplicate:0},
-  {id:"NRIF-2026-016",title:"Digital health early warning system",status:"Review required",score:.89,duplicate:1}
+  { id: "NRIF-2026-014", title: "AI-based crop disease detection", applicant: "Rwanda AgriTech Research Group", institution: "National Agricultural Research Centre", submitted: "28 Sep 2026", status: "REVIEW", deadline: "12 Oct 2026", reviewer: "Unassigned", score: 0.94, duplicate: 2 },
+  { id: "NRIF-2026-015", title: "Climate-smart irrigation analytics", applicant: "AgriSystems Lab", institution: "Rwanda Institute of Applied Sciences", submitted: "27 Sep 2026", status: "READY", deadline: "12 Oct 2026", reviewer: "M. Uwase", score: 0.61, duplicate: 0 },
+  { id: "NRIF-2026-016", title: "Digital health early warning system", applicant: "Health Data Collaborative", institution: "University Research Office", submitted: "26 Sep 2026", status: "FLAGGED", deadline: "12 Oct 2026", reviewer: "J. Ndayisenga", score: 0.43, duplicate: 1 },
 ];
 
-export default function Home(){
-  const [org,setOrg]=useState(orgs[0]),[tab,setTab]=useState("overview"),[selected,setSelected]=useState(proposals[0]);
-  const nav=[["overview","Overview"],["screening","Grant Screening"],["publications","Publication Reconciliation"],["review","Human Review"],["integrations","Integrations"]];
-  return <main><aside><div className="brand"><span>AI</span><div><b>AI-SCREENING</b><small>Research Intelligence</small></div></div><div className="label">WORKSPACE</div>{nav.map(([id,label])=><button className={tab===id?"nav active":"nav"} onClick={()=>setTab(id)} key={id}>{label}</button>)}<div className="side-note"><small>AI-assisted, human-controlled</small><p>No automated funding decisions.</p></div></aside>
-  <section className="content"><header><div><div className="eyebrow">ORGANIZATION WORKSPACE</div><h1>{org.name}</h1><p>{org.type} · <span className="status">● {org.mode}</span></p></div><select value={org.id} onChange={e=>setOrg(orgs.find(o=>o.id===e.target.value)!)}>{orgs.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select></header>
-  {tab==="overview"&&<Overview org={org}/>}
-  {tab==="screening"&&<Screening selected={selected} setSelected={setSelected}/>}
-  {tab==="publications"&&<Publications/>}{tab==="review"&&<Review/>}{tab==="integrations"&&<Integrations org={org}/>}</section></main>
+const criteria = [
+  ["C01", "Eligible institution", "PASS", "Institution identified on page 1."],
+  ["C02", "Project within funding scope", "PASS", "Agricultural research and AI methodology detected."],
+  ["C03", "Methodology described", "PASS", "Methodology section detected on page 4."],
+  ["C04", "Required partner letter", "UNKNOWN", "No partner letter detected in supplied document."],
+  ["C05", "Ethics / regulatory approval", "UNKNOWN", "No approval reference detected; requires reviewer confirmation."],
+  ["C06", "Funding ceiling", "REVIEW", "Budget section detected; amount extraction is not yet configured."],
+];
+
+const candidates = [
+  { id: "NRIF-2024-118", score: 0.94, title: "AI-based crop disease detection using machine learning for maize farmers", applicant: "Rwanda AgriTech Research Group", institution: "National Agricultural Research Centre", year: "2024", outcome: "Completed / archived" },
+  { id: "NRIF-2025-031", score: 0.61, title: "Climate-smart irrigation analytics for smallholder agriculture", applicant: "AgriSystems Lab", institution: "Rwanda Institute of Applied Sciences", year: "2025", outcome: "Funded" },
+  { id: "NRIF-2024-074", score: 0.43, title: "Digital health early warning and referral system", applicant: "Health Data Collaborative", institution: "University Research Office", year: "2024", outcome: "Not selected" },
+];
+
+const overlaps = [
+  { term: "annotated maize leaf images", currentPage: 4, historicalPage: 6, ratio: "6.4%" },
+  { term: "machine learning models", currentPage: 4, historicalPage: 6, ratio: "3.1%" },
+];
+
+export default function Home() {
+  const [tab, setTab] = useState("screening");
+  const [selected, setSelected] = useState(proposals[0]);
+  const [org, setOrg] = useState("NCST / NRIF");
+  const [result, setResult] = useState<any>(null);
+  const [comparison, setComparison] = useState<any>(null);
+  const [decisionOpen, setDecisionOpen] = useState(false);
+  const [audit, setAudit] = useState<string[]>(["28 Sep 2026 · screening run completed · system"]);
+  const [assigned, setAssigned] = useState("Unassigned");
+
+  return (
+    <main className="shell">
+      <aside className="rail">
+        <div className="brand"><span>AI</span><b>AI-SCREENING</b></div>
+        <div className="rail-label">WORKSPACE</div>
+        {[[ "overview","Overview" ],[ "screening","Grant Screening" ],[ "publications","Publication Reconciliation" ],[ "review","Human Review" ],[ "integrations","Integrations" ]].map(([id,label]) =>
+          <button key={id} className={tab === id ? "nav active" : "nav"} onClick={() => setTab(id)}>{label}</button>
+        )}
+        <div className="rail-foot">NCST / NRIF<br/>AI-assisted · human-controlled</div>
+      </aside>
+      <section className="workspace">
+        <header className="masthead">
+          <div><div className="eyebrow">RESEARCH INTELLIGENCE / {tab.replace("-", " ")}</div><h1>{tab === "screening" ? "Proposal review workspace" : tab === "overview" ? "Organization workspace" : tab}</h1><p>{tab === "screening" ? "Inspect evidence, resolve uncertainty, and record a human decision." : "Local-first intelligence infrastructure for research organizations."}</p></div>
+          <select value={org} onChange={e => setOrg(e.target.value)}><option>NCST / NRIF</option><option>University Research Office</option><option>Research Institute</option></select>
+        </header>
+
+        {tab === "screening" && <Screening selected={selected} setSelected={setSelected} result={result} setResult={setResult} comparison={comparison} setComparison={setComparison} decisionOpen={decisionOpen} setDecisionOpen={setDecisionOpen} audit={audit} setAudit={setAudit} assigned={assigned} setAssigned={setAssigned} />}
+        {tab === "overview" && <Overview />}
+        {tab === "review" && <Review audit={audit} />}
+        {tab === "publications" && <Publications />}
+        {tab === "integrations" && <Integrations org={org} />}
+      </section>
+    </main>
+  );
 }
-function Card({n,l}:{n:string,l:string}){return <div className="card"><b>{n}</b><span>{l}</span></div>}
-function Panel({title,children}:{title:string,children:React.ReactNode}){return <div className="panel"><h3>{title}</h3>{children}</div>}
-function Overview({org}:{org:any}){return <><div className="hero"><div><span className="pill">AI / ML PIPELINE</span><h2>From documents to evidence-backed review.</h2><p>Connect organizational data sources, run deterministic rules and ML analysis, then route every flag to a human reviewer.</p></div><div className="pipeline">{["Ingest","Extract","Analyze","Evidence","Human review"].map((x,i)=><div className="stage" key={x}><strong>0{i+1}</strong><span>{x}</span></div>)}</div></div><div className="cards"><Card n="3" l="Proposals in screening"/><Card n="7" l="Similarity candidates"/><Card n="4" l="Review queue"/><Card n="12" l="Publications reconciled"/></div><div className="grid"><Panel title="Connected data sources"><div className="sources">{org.sources.map((s:string)=><div className="source" key={s}><i>✓</i><span>{s}</span><em>Available</em></div>)}</div></Panel><Panel title="AI modules"><div className="modules">{["Document Intelligence","Eligibility Rules","Semantic Retrieval","Duplicate Detection","Entity Resolution","Explainability"].map(x=><span key={x}>● {x}</span>)}</div></Panel></div></>}
-function Screening({selected,setSelected}:{selected:any,setSelected:any}){
-  const [result,setResult]=useState<any>(null),[uploading,setUploading]=useState(false),[error,setError]=useState("");
-  async function handleUpload(file:File){
-    setUploading(true);setError("");setResult(null);
-    const body=new FormData();body.append("file",file);body.append("proposal_id",file.name.replace(/\\.[^.]+$/,""));
-    try{const res=await fetch(`${API_BASE}/api/v1/grants/screen-document`,{method:"POST",body});const data=await res.json();if(!res.ok)throw new Error(data.detail||"Screening failed");setResult(data);}
-    catch(e){setError(e instanceof Error?e.message:"Unable to connect to screening API.");}
+
+function Screening({selected,setSelected,result,setResult,comparison,setComparison,decisionOpen,setDecisionOpen,audit,setAudit,assigned,setAssigned}:any) {
+  const [uploading,setUploading] = useState(false);
+  const [error,setError] = useState("");
+  const [filter,setFilter] = useState("ALL");
+  const active = result || selected;
+  const filtered = proposals.filter(p => filter === "ALL" || p.status === filter);
+  async function upload(file:File) {
+    setUploading(true); setError(""); setResult(null);
+    const body = new FormData(); body.append("file", file); body.append("proposal_id", file.name.replace(/\.[^.]+$/, ""));
+    try { const res = await fetch(`${API_BASE}/api/v1/grants/screen-document`, {method:"POST",body}); const data=await res.json(); if(!res.ok) throw new Error(data.detail || "Screening failed"); setResult(data); setAudit((a:string[]) => [new Date().toLocaleString() + " · screening run completed · system", ...a]); }
+    catch(e){setError(e instanceof Error ? e.message : "Unable to connect to screening API.");}
     finally{setUploading(false);}
   }
-  const active=result||selected;
-  return <><div className="section-head"><div><div className="eyebrow">GRANT SCREENING</div><h2>Proposal screening workspace</h2><p>Upload a PDF or DOCX to run the real extraction and screening pipeline.</p></div><label className="primary upload">{uploading?"Analyzing…":"+ Upload proposal"}<input type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={e=>e.target.files?.[0]&&handleUpload(e.target.files[0])}/></label></div>
-  {error&&<div className="error">{error}</div>}
-  {result?<ResultView result={result}/>:<div className="two"><Panel title="Screening queue">{proposals.map(p=><button className={selected.id===p.id?"row selected":"row"} onClick={()=>setSelected(p)} key={p.id}><span><b>{p.id}</b><small>{p.title}</small></span><strong>{Math.round(p.score*100)}%</strong></button>)}</Panel><ProposalPreview proposal={active}/></div>}</>}
-function ProposalPreview({proposal}:{proposal:any}){return <div className="panel"><div className="doc-head"><div><span className="eyebrow">DEMO PROPOSAL</span><h3>{proposal.title}</h3><small>{proposal.id} · Synthetic demo record</small></div><span className="pill">{proposal.status}</span></div><div className="checks">{[["Completeness","PASS","0.98"],["Eligibility","REVIEW","0.91"],["Duplicate candidate",proposal.duplicate?"FLAG":"PASS",proposal.duplicate?"0.94":"0.99"],["Text overlap",proposal.duplicate?"FLAG":"PASS",proposal.duplicate?"0.87":"0.99"]].map(x=><div className="check" key={x[0]}><span><b>{x[0]}</b><small>Demo evidence</small></span><strong>{x[1]} · {x[2]}</strong></div>)}</div><div className="evidence"><b>Connect the API to replace demo results</b><p>The upload action calls FastAPI, extracts the document with PyMuPDF/python-docx, applies the screening rules, similarity analysis and evidence generation.</p></div></div>}
-function ResultView({result}:{result:any}){const ex=result.extraction||{}, checks=result.eligibility_checks||[];return <div className="panel"><div className="doc-head"><div><span className="eyebrow">LIVE SCREENING RESULT</span><h3>{ex.filename||result.proposal_id}</h3><small>{result.proposal_id} · {ex.page_count?ex.page_count+" pages · ":""}{ex.extraction_status}</small></div><span className="pill">Human review required</span></div><div className="cards mini"><Card n={`${result.completeness?.passed||0}/${result.completeness?.total||0}`} l="Completeness rules passed"/><Card n={`${(result.similarity_candidates||[]).length}`} l="Similarity candidates"/><Card n={`${(result.text_overlap||[]).length}`} l="Overlap sources"/><Card n={`${(result.evidence||[]).length}`} l="Evidence items"/></div><div className="checks">{checks.map((x:any)=><div className="check" key={x.criterion}><span><b>{x.criterion}</b><small>{x.evidence}</small></span><strong>{x.passed?"PASS":"FLAG"}</strong></div>)}</div><div className="evidence"><b>Evidence</b>{(result.evidence||[]).slice(0,6).map((x:any,i:number)=><p key={i}>{x.source_id} · {x.field} — {x.rationale}</p>)}</div></div>}
-function Publications(){const [live,setLive]=useState<any[]>([]),[running,setRunning]=useState(false);async function run(){setRunning(true);try{const pairs=[["PUB-1042","AI in African agriculture","10.1234/demo","AI in African agriculture","10.1234/demo"],["PUB-1077","Machine learning for rural health",null,"Machine learning for rural health and community health",""],["PUB-1091","Climate adaptation analytics",null,"Climate adaptation analytics",null]];const out=[];for(const p of pairs){const res=await fetch(`${API_BASE}/api/v1/publications/reconcile-pair`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({left:{record_id:p[0],title:p[1],authors:["Demo Researcher"],doi:p[2],year:2026,source:"local-demo"},right:{record_id:p[0]+"-EXT",title:p[3],authors:["Demo Researcher"],doi:p[4],year:2026,source:"external-demo"}})});out.push(await res.json())}setLive(out)}finally{setRunning(false)}}return <><div className="section-head"><div><div className="eyebrow">PUBLICATION RECONCILIATION</div><h2>Local-first synchronization</h2><p>International connectors are optional. Core reconciliation works with available local records.</p></div><button className="primary" onClick={run}>{running?"Reconciling…":"Run reconciliation"}</button></div><div className="cards"><Card n="23" l="Local records"/><Card n="17" l="Matched"/><Card n="4" l="Metadata conflicts"/><Card n="2" l="Potentially missing"/></div><Panel title={live.length?"Live reconciliation results":"Reconciliation candidates"}>{(live.length?live:[{left_record_id:"PUB-1042",title_similarity:.987,author_similarity:1},{left_record_id:"PUB-1077",title_similarity:.934,author_similarity:1},{left_record_id:"PUB-1091",title_similarity:.712,author_similarity:1}]).map((r:any)=><div className="recon" key={r.left_record_id}><div><b>{r.left_record_id}</b><span>Title similarity · {Math.round(r.title_similarity*1000)/10}%</span></div><strong>Author {Math.round(r.author_similarity*100)}%</strong><span className="pill">{r.title_similarity>.95?"MATCH":r.title_similarity>.8?"REVIEW":"CONFLICT"}</span><button>Compare</button></div>)}</Panel></>}
-function Review(){return <><div className="section-head"><div><div className="eyebrow">HUMAN REVIEW</div><h2>Evidence before decision</h2><p>AI produces flags and evidence; authorized staff make the final decision.</p></div></div><Panel title="Review queue"><div className="review-banner">Human validation required for every consequential screening decision.</div>{["NRIF-2026-014 · Duplicate candidate","NRIF-2026-016 · Eligibility criterion","PUB-1077 · Author entity match"].map((x,i)=><div className="review-row" key={x}><div><b>{x}</b><small>{["2 supporting sources","1 rule + page evidence","3 matched author fields"][i]}</small></div><button>Review evidence</button></div>)}</Panel></>}
-function Integrations({org}:{org:any}){return <><div className="section-head"><div><div className="eyebrow">INTEGRATIONS</div><h2>{org.name}</h2><p>Configure connectors without changing the AI/ML core.</p></div><button className="primary">+ Add connector</button></div><div className="grid">{org.sources.map((s:string)=><div className="panel connector" key={s}><div><span className="connector-icon">↔</span><h3>{s}</h3><small>Connector ready for authorized data</small></div><span className="status">● Available</span><button>Configure</button></div>)}</div></>}
+  return <>
+    <div className="demo-warning"><b>DEMONSTRATION MODE</b><span>NRIF rules and historical records shown here are synthetic. They are not official eligibility criteria and must not be used for production decisions.</span></div>
+    <div className="case-head">
+      <div><div className="case-id">{active.id || active.proposal_id} · {active.submitted || "LIVE RUN"}</div><h2>{active.title || active.extraction?.filename}</h2><p>{active.applicant || "Uploaded document"} · {active.institution || "Source metadata pending"}</p></div>
+      <label className="action-button">{uploading ? "Analyzing…" : "Upload new proposal"}<input type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={e=>e.target.files?.[0]&&upload(e.target.files[0])}/></label>
+    </div>
+    {error && <div className="error">{error}</div>}
+    <div className="case-grid">
+      <DocumentPane live={result} />
+      <Intelligence result={result} openComparison={(kind:string)=>setComparison(kind)} />
+    </div>
+    <Queue selected={selected} setSelected={setSelected} filter={filter} setFilter={setFilter} rows={filtered} assigned={assigned} setAssigned={setAssigned} />
+    {comparison && <Comparison kind={comparison} close={()=>setComparison(null)} />}
+    {decisionOpen && <Decision close={()=>setDecisionOpen(false)} audit={audit} setAudit={setAudit} assigned={assigned} />}
+  </>;
+}
+
+function DocumentPane({live}:any) {
+  return <section className="document">
+    <div className="doc-toolbar"><b>{live?.extraction?.filename || "Proposal.pdf"}</b><span>Page <strong>4</strong> / {live?.extraction?.page_count || 12}</span><div><button>−</button><button>100%</button><button>+</button></div></div>
+    <div className="doc-body">
+      <article className="paper">
+        <div className="paper-meta">NRIF GRANT PROPOSAL · PAGE 4</div>
+        <h3>AI-based crop disease detection using machine learning</h3>
+        <p><b>Applicant:</b> Rwanda AgriTech Research Group</p><p><b>Institution:</b> National Agricultural Research Centre</p>
+        <h4>1. Objectives</h4><p>The project proposes a machine-learning system to identify common crop diseases from field images and provide early alerts to extension workers and farmers.</p>
+        <h4>2. Methodology</h4><p>The proposed approach combines <mark>machine learning models trained on annotated maize leaf images</mark> with a mobile-assisted field data collection workflow.</p>
+        <h4>3. Expected Outcomes</h4><p>A validated prototype, an annotated image dataset, field deployment guidance, and training materials for agricultural extension teams.</p>
+        <h4>4. Workplan</h4><p>Data collection and annotation will precede model development, field validation, and deployment preparation.</p>
+        <h4>5. Budget</h4><p>Personnel, data collection, compute, field validation, training, and project administration are included in the proposed budget.</p>
+        <div className="page-number">4</div>
+      </article>
+    </div>
+    <div className="extraction-note"><b>EXTRACTION QUALITY</b><span>{live ? "Live extraction completed. Page-level quality will be reported when provenance is page-aware." : "Text layer appears readable in this demo. Scanned pages and complex tables require quality checks."}</span></div>
+  </section>
+}
+
+function Intelligence({result,openComparison}:any) {
+  const checks = result?.eligibility_checks || [];
+  return <section className="intelligence">
+    <div className="intel-title"><div><div className="eyebrow">AI SCREENING ANALYSIS</div><h2>Findings & evidence</h2><p>{result ? "Live screening result · human review required" : "Demo evidence · human review required"}</p></div><div className="state-count"><b>4</b><span>passed</span><b>2</b><span>review</span></div></div>
+    <div className="readout"><b>READOUT</b><p>Core sections are present. Similarity and unresolved eligibility signals require comparison or reviewer confirmation.</p></div>
+
+    <Finding title="Completeness" status="PASS" detail={result ? `${result.completeness?.passed || 0} / ${result.completeness?.total || 0} configured rules passed` : "4 / 4 configured demo checks detected"}><p><b>Evidence:</b> Title, abstract/summary, methodology and budget indicators detected.</p><button className="text-button">Open evidence · pages 1–4</button></Finding>
+
+    <Finding title="Eligibility criteria" status="REVIEW" detail="6 machine-readable criteria"><div className="criteria">{criteria.map(c=><div key={c[0]}><span><i>{c[0]}</i><b>{c[1]}</b><small>{c[3]}</small></span><em className={c[2].toLowerCase()}>{c[2]}</em></div>)}</div></Finding>
+
+    <Finding title="Duplicate / semantic similarity" status="FLAG" detail="3 ranked candidates · threshold 0.70"><div className="candidate-list">{candidates.map((c,i)=><button key={c.id} onClick={()=>openComparison("similarity")} className="candidate"><span><b>{String(i+1).padStart(2,"0")} · {c.id}</b><small>{c.title}</small><small>{c.applicant} · {c.year} · {c.outcome}</small></span><strong>{c.score.toFixed(2)}</strong></button>)}</div><div className="method-note">Method: token Jaccard baseline · candidate pool: 247 historical proposals. Lexical matching may miss paraphrased similarity.</div><button className="text-button" onClick={()=>openComparison("similarity")}>Compare selected candidate →</button></Finding>
+
+    <Finding title="Text overlap" status="REVIEW" detail="2 evidence spans · 9.5% combined"><div className="overlap-list">{overlaps.map(o=><button key={o.term} onClick={()=>openComparison("overlap")}><span>“{o.term}”</span><small>Current p.{o.currentPage} ↔ historical p.{o.historicalPage}</small><strong>{o.ratio}</strong></button>)}</div><button className="text-button" onClick={()=>openComparison("overlap")}>Open passage comparison →</button></Finding>
+
+    <div className="provenance"><div className="eyebrow">PROVENANCE / MODEL CONTRACT</div><dl><dt>Document</dt><dd>Proposal.pdf · SHA-256 verified</dd><dt>Extraction</dt><dd>PyMuPDF · extraction-v0.1</dd><dt>Similarity</dt><dd>token_jaccard_baseline-v0.1</dd><dt>Rules</dt><dd>nrif-demo-v0.1 · <b>NOT OFFICIAL</b></dd></dl></div>
+    <div className="review-bar"><span>Decision belongs to authorized reviewer.</span><button className="dark-button" onClick={()=>document.dispatchEvent(new CustomEvent("open-decision"))}>Record decision</button></div>
+  </section>
+}
+
+function Finding({title,status,detail,children}:any) {
+  return <div className="finding"><div className="finding-head"><div><b>{title}</b><small>{detail}</small></div><span className={`status ${status.toLowerCase()}`}>{status}</span></div><div className="finding-body">{children}</div></div>
+}
+
+function Queue({selected,setSelected,filter,setFilter,rows,assigned,setAssigned}:any) {
+  return <section className="queue"><div className="queue-top"><div><div className="eyebrow">SCREENING REGISTER</div><b>{rows.length} records shown</b></div><div className="queue-tools"><input placeholder="Search proposals"/><select value={filter} onChange={e=>setFilter(e.target.value)}><option>ALL</option><option>REVIEW</option><option>READY</option><option>FLAGGED</option></select><select value={assigned} onChange={e=>setAssigned(e.target.value)}><option>All reviewers</option><option>Unassigned</option><option>M. Uwase</option><option>J. Ndayisenga</option></select></div></div>
+    <div className="queue-grid"><div>ID</div><div>Proposal</div><div>Submitted / deadline</div><div>Reviewer</div><div>State</div>{rows.map((p:any)=><button key={p.id} className={selected.id===p.id?"queue-row selected":"queue-row"} onClick={()=>setSelected(p)}><span>{p.id}</span><span><b>{p.title}</b><small>{p.applicant}</small></span><span>{p.submitted}<small>Deadline · {p.deadline}</small></span><span>{p.reviewer}</span><span className={`status ${p.status.toLowerCase()}`}>{p.status}</span></button>)}</div>
+  </section>
+}
+
+function Comparison({kind,close}:any) {
+  const isOverlap=kind==="overlap";
+  return <div className="overlay"><section className="comparison"><header><div><div className="eyebrow">{isOverlap?"TEXT OVERLAP":"SEMANTIC SIMILARITY"} / EVIDENCE COMPARISON</div><h2>{isOverlap ? "Compare matching passages" : "Compare historical candidate"}</h2><p>NRIF-2026-014 ↔ NRIF-2024-118 · evidence view · no automatic verdict</p></div><button className="close" onClick={close}>Close ×</button></header>
+    <div className="record-strip"><div><b>Current proposal</b><span>Rwanda AgriTech Research Group · 2026</span></div><div><b>Historical record</b><span>Rwanda AgriTech Research Group · 2024 · Completed / archived</span></div><strong>{isOverlap?"2 spans":"0.94 similarity"}</strong></div>
+    <div className="diff"><article><div className="diff-head">CURRENT · PAGE 4</div><h3>2. Methodology</h3><p>The proposed approach combines <mark>machine learning models trained on annotated maize leaf images</mark> with a mobile-assisted field data collection workflow.</p><p>The project will validate the model using field data collected by extension teams.</p></article><article><div className="diff-head">HISTORICAL · PAGE 6</div><h3>3. Methodology</h3><p>The proposed approach uses <mark>machine learning models trained on annotated maize leaf images</mark> before deployment through agricultural extension teams.</p><p>The earlier project validated a model using field-collected maize disease data.</p></article></div>
+    <footer><span>Evidence source: extracted text · page references · {isOverlap?"set-token-overlap":"token_jaccard_baseline-v0.1"}</span><button className="dark-button" onClick={close}>Return to finding</button></footer>
+  </section></div>
+}
+
+function Decision({close,audit,setAudit,assigned}:any) {
+  const [outcome,setOutcome]=useState("Proceed to peer review"); const [reason,setReason]=useState("");
+  function save(){if(!reason.trim())return;setAudit((a:string[])=>[`${new Date().toLocaleString()} · ${outcome} · ${assigned==="Unassigned"?"authorized reviewer":assigned}`,...a]);close();}
+  return <div className="overlay"><section className="decision"><header><div><div className="eyebrow">HUMAN DECISION / AUDIT EVENT</div><h2>Record screening decision</h2><p>The system cannot record a consequential decision without reviewer rationale.</p></div><button className="close" onClick={close}>Close ×</button></header><div className="decision-grid"><div><label>Outcome</label>{["Proceed to peer review","Return for clarification","Escalate","Do not proceed"].map(x=><button key={x} className={outcome===x?"choice selected":"choice"} onClick={()=>setOutcome(x)}>{x}</button>)}</div><div><label>Reviewer</label><div className="reviewer">{assigned==="Unassigned"?"Current authorized reviewer":assigned}</div><label>Rationale <b>*</b></label><textarea value={reason} onChange={e=>setReason(e.target.value)} placeholder="Explain the evidence reviewed and why this outcome was selected."/><label>Flags reviewed</label><div className="reviewed">✓ Completeness &nbsp; ✓ Eligibility &nbsp; ✓ Similarity &nbsp; ✓ Text overlap</div></div></div><footer><span>{reason.trim()?"Ready to create audit event":"Rationale is required"}</span><button className="dark-button" disabled={!reason.trim()} onClick={save}>Record decision</button></footer></section></div>
+}
+
+function Overview(){return <><div className="overview-lead"><div><div className="eyebrow">ORGANIZATION WORKSPACE</div><h2>Evidence infrastructure for research administration.</h2><p>Connect organizational records to deterministic checks, ML analysis, evidence and accountable human review.</p></div><div className="overview-line"><b>Ingest</b><b>Extract</b><b>Analyze</b><b>Evidence</b><b>Review</b></div></div><div className="register-stats"><div><b>3</b><span>screening records</span></div><div><b>7</b><span>similarity candidates</span></div><div><b>4</b><span>review items</span></div><div><b>12</b><span>publications reconciled</span></div></div></>}
+
+function Review({audit}:any){return <><div className="section-intro"><div className="eyebrow">HUMAN REVIEW</div><h2>Decision history</h2><p>Every consequential screening action remains attributable to a reviewer.</p></div><section className="audit"><div className="eyebrow">AUDIT LOG</div>{audit.map((x:string,i:number)=><div key={i}><span>{x}</span><b>{i===0?"SYSTEM":"REVIEWER"}</b></div>)}</section></>}
+
+function Publications(){return <><div className="section-intro"><div className="eyebrow">PUBLICATION RECONCILIATION</div><h2>Local-first synchronization</h2><p>Reconcile available local records first; international sources remain optional connectors.</p></div><section className="publication-list">{[["PUB-1042","AI in African agriculture","98.7%"],["PUB-1077","Machine learning for rural health","93.4%"],["PUB-1091","Climate adaptation analytics","71.2%"]].map(x=><div key={x[0]}><span><b>{x[0]}</b><small>{x[1]}</small></span><strong>{x[2]}</strong><button>Compare</button></div>)}</section></>}
+
+function Integrations({org}:any){return <><div className="section-intro"><div className="eyebrow">INTEGRATIONS</div><h2>{org}</h2><p>Authorized connectors feed the same evidence and audit pipeline.</p></div><section className="integration-list">{["RIGMS","Historical Applications","Eligibility Rules","Institutional Repository","DOI Metadata"].map(x=><div key={x}><span><b>{x}</b><small>Connector available for authorized configuration</small></span><em>AVAILABLE</em><button>Configure</button></div>)}</section></>}

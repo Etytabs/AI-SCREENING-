@@ -8,13 +8,15 @@ from services.screening.pipeline import screen_document
 
 router = APIRouter(prefix="/api/v1/grants", tags=["grants"])
 
+
 @router.post("/screen")
 def screen_proposal(proposal: GrantProposal) -> dict:
     return {"proposal_id": proposal.proposal_id, "status": "queued", "message": "Proposal accepted for AI-assisted screening."}
 
+
 @router.post("/screen-document")
 async def screen_document_upload(
-    file: UploadFile = File(...),
+    file: UploadFile,
     proposal_id: str = Form("demo-proposal"),
 ) -> dict:
     suffix = Path(file.filename or "").suffix.lower()

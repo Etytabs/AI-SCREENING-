@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ScreeningResult",
+  "type": "object",
+  "required": ["proposal_id", "decision_stage", "flags", "evidence"],
+  "properties": {
+    "proposal_id": {"type": "string"},
+    "decision_stage": {"enum": ["screening_assistance", "human_review"]},
+    "flags": {"type": "array", "items": {"$ref": "#/$defs/flag"}},
+    "evidence": {"type": "array", "items": {"$ref": "#/$defs/evidence"}},
+    "model_versions": {"type": "object", "additionalProperties": {"type": "string"}}
+  },
+  "$defs": {
+    "flag": {
+      "type": "object",
+      "required": ["type", "status", "confidence"],
+      "properties": {
+        "type": {"enum": ["completeness", "eligibility", "duplicate_candidate", "text_overlap"]},
+        "status": {"enum": ["pass", "flag", "unknown"]},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "required": ["source_id", "field", "value"],
+      "properties": {
+        "source_id": {"type": "string"},
+        "field": {"type": "string"},
+        "value": {"type": "string"},
+        "page": {"type": ["integer", "null"], "minimum": 1},
+        "chunk_id": {"type": ["string", "null"]},
+        "rationale": {"type": "string"}
+      }
+    }
+  }
+}

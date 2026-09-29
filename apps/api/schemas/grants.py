@@ -1,10 +1,12 @@
 from pydantic import BaseModel, Field
 
+
 class GrantProposal(BaseModel):
     proposal_id: str
     title: str = Field(min_length=1)
     abstract: str = ""
     full_text: str = ""
+
 
 class EligibilityResult(BaseModel):
     criterion: str

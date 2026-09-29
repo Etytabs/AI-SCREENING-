@@ -2,11 +2,13 @@ from dataclasses import dataclass
 
 from ml.text_normalization.service import normalize_text
 
+
 @dataclass(frozen=True)
 class IngestionRecord:
     source_id: str
     content_type: str
     payload: dict
+
 
 def ingest(source_id: str, content_type: str, payload: dict) -> IngestionRecord:
     normalized = {

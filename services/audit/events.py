@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
+
 @dataclass(frozen=True)
 class AuditEvent:
     event_type: str

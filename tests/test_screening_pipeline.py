@@ -1,7 +1,7 @@
-from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 from services.screening.pipeline import screen_document
+
 
 def test_screening_rejects_unsupported_documents():
     with NamedTemporaryFile(suffix=".txt") as tmp:

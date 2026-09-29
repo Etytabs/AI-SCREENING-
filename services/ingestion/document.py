@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
+import zipfile
+
 from ml.text_normalization.service import normalize_text
 
 @dataclass(frozen=True)
@@ -27,5 +29,5 @@ def extract_document(path: str, source_id: str) -> ExtractedDocument:
             text = normalize_text("\n".join(p.text for p in doc.paragraphs if p.text.strip()))
             return ExtractedDocument(source_id, file.name, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", text, None, "success")
         return ExtractedDocument(source_id, file.name, "application/octet-stream", "", None, "unsupported_type", f"Unsupported file type: {suffix or 'none'}")
-    except Exception as exc:
+    except (OSError, RuntimeError, ValueError, zipfile.BadZipFile) as exc:
         return ExtractedDocument(source_id, file.name, "application/octet-stream", "", None, "extraction_failed", str(exc))

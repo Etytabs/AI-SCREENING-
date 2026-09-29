@@ -88,7 +88,7 @@ function Screening({selected,setSelected,result,setResult,comparison,setComparis
     {error && <div className="error">{error}</div>}
     <div className="case-grid">
       <DocumentPane live={result} />
-      <Intelligence result={result} openComparison={(kind:string)=>setComparison(kind)} />
+      <Intelligence result={result} openComparison={(kind:string)=>setComparison(kind)} setDecisionOpen={setDecisionOpen} />
     </div>
     <Queue selected={selected} setSelected={setSelected} filter={filter} setFilter={setFilter} rows={filtered} assigned={assigned} setAssigned={setAssigned} />
     {comparison && <Comparison kind={comparison} close={()=>setComparison(null)} />}
@@ -116,7 +116,7 @@ function DocumentPane({live}:any) {
   </section>
 }
 
-function Intelligence({result,openComparison}:any) {
+function Intelligence({result,openComparison,setDecisionOpen}:any) {
   const checks = result?.eligibility_checks || [];
   return <section className="intelligence">
     <div className="intel-title"><div><div className="eyebrow">AI SCREENING ANALYSIS</div><h2>Findings & evidence</h2><p>{result ? "Live screening result · human review required" : "Demo evidence · human review required"}</p></div><div className="state-count"><b>4</b><span>passed</span><b>2</b><span>review</span></div></div>
@@ -131,7 +131,7 @@ function Intelligence({result,openComparison}:any) {
     <Finding title="Text overlap" status="REVIEW" detail="2 evidence spans · 9.5% combined"><div className="overlap-list">{overlaps.map(o=><button key={o.term} onClick={()=>openComparison("overlap")}><span>“{o.term}”</span><small>Current p.{o.currentPage} ↔ historical p.{o.historicalPage}</small><strong>{o.ratio}</strong></button>)}</div><button className="text-button" onClick={()=>openComparison("overlap")}>Open passage comparison →</button></Finding>
 
     <div className="provenance"><div className="eyebrow">PROVENANCE / MODEL CONTRACT</div><dl><dt>Document</dt><dd>Proposal.pdf · SHA-256 verified</dd><dt>Extraction</dt><dd>PyMuPDF · extraction-v0.1</dd><dt>Similarity</dt><dd>token_jaccard_baseline-v0.1</dd><dt>Rules</dt><dd>nrif-demo-v0.1 · <b>NOT OFFICIAL</b></dd></dl></div>
-    <div className="review-bar"><span>Decision belongs to authorized reviewer.</span><button className="dark-button" onClick={()=>document.dispatchEvent(new CustomEvent("open-decision"))}>Record decision</button></div>
+    <div className="review-bar"><span>Decision belongs to authorized reviewer.</span><button className="dark-button" onClick={()=>setDecisionOpen(true)}>Record decision</button></div>
   </section>
 }
 

@@ -1,11 +1,13 @@
 from dataclasses import dataclass
 
+
 @dataclass(frozen=True)
 class EntityMatch:
     left_id: str
     right_id: str
     score: float
     matched_fields: tuple[str, ...]
+
 
 def match_authors(
     left_id: str,

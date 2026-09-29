@@ -1,10 +1,12 @@
 from dataclasses import dataclass
 
+
 @dataclass(frozen=True)
 class MatchResult:
     score: float
     method: str
     explanation: str
+
 
 def compare_texts(left: str, right: str) -> MatchResult:
     a, b = set(left.lower().split()), set(right.lower().split())

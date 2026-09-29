@@ -1,0 +1,56 @@
+{
+  "schema_version": "0.1",
+  "ruleset_id": "nrif-demo-v0.2",
+  "status": "DEMO_ONLY",
+  "description": "Synthetic eligibility rules for prototype testing. Not official NRIF criteria.",
+  "rules": [
+    {
+      "criterion_id": "C01",
+      "label": "Eligible institution",
+      "field": "eligible_institution",
+      "expected": true,
+      "evidence_required": true,
+      "missing_status": "UNKNOWN"
+    },
+    {
+      "criterion_id": "C02",
+      "label": "Project within funding scope",
+      "field": "within_funding_scope",
+      "expected": true,
+      "evidence_required": true,
+      "missing_status": "REVIEW"
+    },
+    {
+      "criterion_id": "C03",
+      "label": "Methodology described",
+      "field": "has_methodology",
+      "expected": true,
+      "evidence_required": true,
+      "missing_status": "REVIEW"
+    },
+    {
+      "criterion_id": "C04",
+      "label": "Required partner letter",
+      "field": "partner_letter_present",
+      "expected": true,
+      "evidence_required": true,
+      "missing_status": "UNKNOWN"
+    },
+    {
+      "criterion_id": "C05",
+      "label": "Ethics / regulatory approval",
+      "field": "ethics_approval_present",
+      "expected": true,
+      "evidence_required": true,
+      "missing_status": "REVIEW"
+    },
+    {
+      "criterion_id": "C06",
+      "label": "Funding ceiling",
+      "field": "within_funding_ceiling",
+      "expected": true,
+      "evidence_required": true,
+      "missing_status": "REVIEW"
+    }
+  ]
+}

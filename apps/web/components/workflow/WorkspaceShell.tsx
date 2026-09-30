@@ -9,27 +9,27 @@ import { useWorkspace, WorkspaceProvider } from "./WorkspaceContext";
 
 export const NAV_ITEMS = {
   NCST_GRANT_PERSONNEL: [
-    { href: "/dashboard", label: "Overview" },
-    { href: "/dashboard/calls", label: "Grant Calls" },
-    { href: "/dashboard/applications", label: "Applications" },
-    { href: "/dashboard/screening", label: "AI Screening" },
-    { href: "/dashboard/review", label: "Human Review" },
-    { href: "/dashboard/publications", label: "Publications" },
-    { href: "/dashboard/sources", label: "Evidence Sources" },
+    { href: "/dashboard", label: "Overview", icon: "⌂" },
+    { href: "/dashboard/calls", label: "Grant Calls", icon: "□" },
+    { href: "/dashboard/applications", label: "Applications", icon: "▤" },
+    { href: "/dashboard/screening", label: "AI Screening", icon: "◈" },
+    { href: "/dashboard/review", label: "Human Review", icon: "✓" },
+    { href: "/dashboard/publications", label: "Publications", icon: "◫" },
+    { href: "/dashboard/sources", label: "Evidence Sources", icon: "◎" },
   ],
   GRANT_INSTITUTION: [
-    { href: "/dashboard", label: "My Workspace" },
-    { href: "/dashboard/calls", label: "Funding Calls" },
-    { href: "/dashboard/applications", label: "My Submissions" },
-    { href: "/dashboard/check", label: "Submission Check" },
-    { href: "/dashboard/publications", label: "Research Outputs" },
+    { href: "/dashboard", label: "My Workspace", icon: "⌂" },
+    { href: "/dashboard/calls", label: "Funding Calls", icon: "□" },
+    { href: "/dashboard/applications", label: "My Submissions", icon: "▤" },
+    { href: "/dashboard/check", label: "Submission Check", icon: "✓" },
+    { href: "/dashboard/publications", label: "Research Outputs", icon: "◫" },
   ],
   RESEARCHER_APPLICANT: [
     { href: "/dashboard", label: "My Workspace" },
-    { href: "/dashboard/calls", label: "Find Funding" },
-    { href: "/dashboard/applications", label: "My Applications" },
-    { href: "/dashboard/check", label: "Research Check" },
-    { href: "/dashboard/publications", label: "My Publications" },
+    { href: "/dashboard/calls", label: "Find Funding", icon: "□" },
+    { href: "/dashboard/applications", label: "My Applications", icon: "▤" },
+    { href: "/dashboard/check", label: "Research Check", icon: "✓" },
+    { href: "/dashboard/publications", label: "My Publications", icon: "◫" },
   ],
   GRANT_ADMINISTRATOR: [
     { href: "/dashboard", label: "Overview" },
@@ -39,13 +39,13 @@ export const NAV_ITEMS = {
     { href: "/dashboard/review", label: "Human Review" },
   ],
   REVIEWER: [
-    { href: "/dashboard", label: "Review Overview" },
+    { href: "/dashboard", label: "Review Overview", icon: "⌂" },
     { href: "/dashboard/applications", label: "Applications" },
     { href: "/dashboard/review", label: "Human Review" },
   ],
   SYSTEM_ADMINISTRATOR: [
     { href: "/dashboard", label: "Overview" },
-    { href: "/dashboard/sources", label: "Evidence Sources" },
+    { href: "/dashboard/sources", label: "Evidence Sources", icon: "◎" },
   ],
 } as const;
 
@@ -74,7 +74,7 @@ function Sidebar() {
       <nav>
         {NAV_ITEMS[role].map((item) => (
           <Link key={item.href} href={item.href} className={isActive(pathname, item.href) ? "side-link active" : "side-link"} aria-current={isActive(pathname, item.href) ? "page" : undefined}>
-            <span>{item.label}</span>
+            <span className="side-link-icon" aria-hidden="true">{item.icon}</span><span className="side-link-label">{item.label}</span>
           </Link>
         ))}
       </nav>

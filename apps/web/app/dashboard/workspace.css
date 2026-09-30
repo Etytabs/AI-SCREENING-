@@ -326,3 +326,22 @@ dl.summary-table dt { color: var(--muted); }
 
 
 .source-comparison{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}.source-comparison>div{min-width:0}.source-comparison b{font-size:10px}.source-comparison blockquote{margin:5px 0;padding:8px 10px;background:#f5f5f2;border-left:2px solid #9b681b;font-size:10px;line-height:1.5}.evidence-drawer .match-list li small{display:block;margin-top:4px}.evidence-drawer a.text-button{display:inline-block;text-decoration:none}@media(max-width:700px){.source-comparison{grid-template-columns:1fr}}
+
+/* primary user / evidence context */
+.stakeholder-overview { margin: 24px 0; border-top: 1px solid var(--ink); padding-top: 18px; }
+.stakeholder-overview-head { display: flex; justify-content: space-between; gap: 24px; align-items: end; margin: 8px 0 14px; }
+.stakeholder-overview-head h2 { font: 400 25px Georgia, serif; margin: 0 0 5px; }
+.stakeholder-overview-head p { margin: 0; color: var(--muted); max-width: 760px; font-size: 14px; line-height: 1.5; }
+.human-review-note { border: 1px solid var(--ws-review); color: var(--ws-review); background: #f8f2e4; padding: 7px 10px; font-size: 12px; font-weight: 800; white-space: nowrap; }
+.stakeholder-overview-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--line); }
+.stakeholder-overview-card { position: relative; padding: 16px; border-left: 1px solid var(--line); }
+.stakeholder-overview-card:first-child { border-left: 0; }
+.stakeholder-index { font-size: 11px; letter-spacing: .12em; color: var(--muted); font-weight: 800; }
+.stakeholder-overview-card h3 { font: 400 20px Georgia, serif; margin: 7px 0 2px; }
+.stakeholder-role { font-size: 12px; font-weight: 800; color: var(--ws-accent); margin: 0 0 10px; }
+.stakeholder-overview-card > p:not(.stakeholder-role) { font-size: 13px; line-height: 1.5; margin: 0 0 12px; }
+.stakeholder-overview-card dl { display: grid; grid-template-columns: 54px 1fr; gap: 5px 10px; margin: 0; font-size: 12px; }
+.stakeholder-overview-card dt { color: var(--muted); }
+.stakeholder-overview-card dd { margin: 0; }
+@media (max-width: 900px) { .stakeholder-overview-grid { grid-template-columns: 1fr; } .stakeholder-overview-card { border-left: 0; border-top: 1px solid var(--line); } .stakeholder-overview-card:first-child { border-top: 0; } }
+@media (max-width: 650px) { .stakeholder-overview-head { display: block; } .human-review-note { display: inline-block; margin-top: 10px; white-space: normal; } }

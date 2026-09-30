@@ -19,7 +19,7 @@ def test_retrieval_metrics_for_known_ranking():
     assert recall_at_k(ranked, relevant, 3) == 0.5
     assert precision_at_k(ranked, relevant, 3) == pytest.approx(1 / 3)
     assert mean_reciprocal_rank(ranked, relevant) == pytest.approx(1 / 3)
-    assert ndcg_at_k(ranked, relevant, 3) == pytest.approx(0.6131471927654584)
+    assert ndcg_at_k(ranked, relevant, 3) == pytest.approx(0.3065735963827292)
 
 
 def test_evaluate_retrieval_returns_all_metrics():

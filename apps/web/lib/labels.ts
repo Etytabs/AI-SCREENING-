@@ -4,6 +4,9 @@ export const ROLE_LABELS: Record<Role, string> = {
   NCST_GRANT_PERSONNEL: "NCST Grant Personnel",
   GRANT_INSTITUTION: "Grant Institution",
   RESEARCHER_APPLICANT: "Researcher / Applicant",
+  GRANT_ADMINISTRATOR: "Grant Administrator (legacy)",
+  REVIEWER: "Reviewer (legacy)",
+  SYSTEM_ADMINISTRATOR: "System Administrator (legacy)",
 };
 
 export const CALL_STATUS_LABELS: Record<GrantCallStatus, string> = {

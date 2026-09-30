@@ -530,26 +530,31 @@ class GrantWorkflowService:
                     by_reference[reference] = application
                 elif added:
                     result.applications_updated.append(application.id)
-            hashes = {p.file_hash: f"unassigned/{p.filename}" for p in self.repo.list(PendingUpload, grant_call_id=call_id) if p.file_hash}
+            # An unlabelled upload is still a valid research submission. If the
+            # administrator uploads a loose file, create one application for that file
+            # and give it a generated reference. Folder/prefix grouping above remains
+            # available when several files belong to the same submission.
+            #
+            # This avoids making file naming conventions a prerequisite for screening.
+            # Exact duplicate files are intentionally retained as separate applications:
+            # the screening duplication stage must be able to flag the second submission
+            # against the first one in the same grant call.
             for upload in unassigned:
-                digest = _sha256(upload.data) if upload.data else None
-                if digest and digest in hashes:
-                    result.duplicates.append(f"{upload.path} duplicates {hashes[digest]}")
-                    continue
-                pending_id = new_id("upload")
-                try:
-                    extracted = extract_bytes(upload.filename, upload.data, pending_id)
-                except UploadError as exc:
-                    result.errors.append(str(exc))
-                    continue
-                pending = PendingUpload(
-                    id=pending_id, grant_call_id=call_id, filename=upload.filename, file_hash=digest,
-                    extraction_status=extracted.extraction_status, uploaded_by=actor.user_id,
-                    reason="File name does not identify an application (use REF/file or REF__file)",
+                reference = self._next_reference(call_id)
+                application = Application(
+                    grant_call_id=call_id,
+                    application_reference=reference,
+                    data_origin=data_origin,
                 )
-                self.repo.save(pending)
-                self.repo.save_content(pending_id, extracted)
-                result.requires_manual_association.append(pending)
+                self.repo.save(application)
+                before = result.documents_associated
+                application = self._add_files(actor, application, [upload], result)
+                added = result.documents_associated > before
+                if added:
+                    result.applications_created.append(application.id)
+                else:
+                    self.repo.delete(Application, application.id)
+                    result.errors.append(f"{upload.path}: no document could be associated")
         self.audit.record(
             "applications.batch_uploaded", actor.user_id, call_id, call_id,
             files_received=result.files_received, created=len(result.applications_created),

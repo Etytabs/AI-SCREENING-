@@ -61,7 +61,10 @@ def evaluate_dataset(
         if method in {"embedding", "hybrid", "hybrid_reranked"} and embedder is None:
             results["strategies"][method] = {
                 "status": "not_run",
-                "reason": "Embedding runtime is disabled. Set AI_SCREENING_EMBEDDINGS_ENABLED=true.",
+                "reason": (
+                    "Embedding runtime is disabled. "
+                    "Set AI_SCREENING_EMBEDDINGS_ENABLED=true."
+                ),
             }
             continue
         if method == "hybrid_reranked" and reranker is None:
@@ -96,7 +99,7 @@ def evaluate_dataset(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Evaluate AI-SCREENING retrieval strategies.")
-    parser.add_argument(" --dataset", dest="dataset", default="data/evaluation/retrieval_benchmark.json")
+    parser.add_argument("--dataset", default="data/evaluation/retrieval_benchmark.json")
     parser.add_argument("--k", type=int, default=5)
     parser.add_argument("--rerank-k", type=int, default=5)
     parser.add_argument(

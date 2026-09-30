@@ -16,11 +16,7 @@ def _get(url: str, headers: dict[str, str] | None = None) -> bytes:
 def search_crossref(query: str, rows: int = 10) -> list[ResearchRecord]:
     params = urllib.parse.urlencode({"query.bibliographic": query, "rows": min(rows, 50)})
     payload = json.loads(_get("https://api.crossref.org/works?" + params))
-    records = []
-    for item in payload.get("message", {}).get("items", []):
-        authors = tuple(" ".join(filter(None, (a.get("given"), a.get("family")))) for a in item.get("author", []))
-        records.append(ResearchRecord(record_id=item.get("DOI") or item.get("URL", ""), title=(item.get("title") or [""])[0], authors=authors, doi=item.get("DOI"), source_id="crossref", source_url=item.get("URL"), provenance={"retrieval_method": "crossref_rest"}))
-    return records
+    return [ResearchRecord(record_id=i.get("DOI") or i.get("URL", ""), title=(i.get("title") or [""])[0], authors=tuple(" ".join(filter(None, (a.get("given"), a.get("family")))) for a in i.get("author", [])), doi=i.get("DOI"), source_id="crossref", source_url=i.get("URL"), provenance={"retrieval_method": "crossref_rest"}) for i in payload.get("message", {}).get("items", [])]
 
 
 def search_arxiv(query: str, rows: int = 10) -> list[ResearchRecord]:
@@ -46,17 +42,37 @@ def search_pmc(query: str, rows: int = 10) -> list[ResearchRecord]:
     return [ResearchRecord(record_id=pmcid, title=payload.get("result", {}).get(pmcid, {}).get("title", ""), pmid=payload.get("result", {}).get(pmcid, {}).get("pmid"), source_id="pmc", source_url="https://pmc.ncbi.nlm.nih.gov/articles/" + pmcid + "/", full_text_url="https://pmc.ncbi.nlm.nih.gov/articles/" + pmcid + "/", provenance={"retrieval_method": "ncbi_eutils"}) for pmcid in ids]
 
 
+def search_doaj(query: str, rows: int = 10) -> list[ResearchRecord]:
+    params = urllib.parse.urlencode({"verb": "ListRecords", "metadataPrefix": "oai_doaj", "from": "2020-01-01"})
+    root = ET.fromstring(_get("https://doaj.org/oai.article?" + params))
+    ns = {"oai": "http://www.openarchives.org/OAI/2.0/", "d": "http://doaj.org/features/oai_doaj/"}
+    needle = query.lower()
+    records = []
+    for record in root.findall(".//oai:record", ns):
+        title = record.findtext(".//d:title", "", ns)
+        abstract = record.findtext(".//d:abstract", "", ns)
+        if needle not in (title + " " + abstract).lower():
+            continue
+        doi = record.findtext(".//d:doi", None, ns)
+        url = record.findtext(".//d:fullTextUrl", None, ns)
+        identifier = doi or record.findtext(".//oai:identifier", "", ns)
+        records.append(ResearchRecord(record_id=identifier, title=title, abstract=abstract, doi=doi, source_id="doaj", source_url=url, full_text_url=url, provenance={"retrieval_method": "doaj_oai_pmh"}))
+        if len(records) >= min(rows, 20):
+            break
+    return records
+
+
 def search_core(query: str, rows: int = 10) -> list[ResearchRecord]:
     api_key = os.getenv("AI_SCREENING_CORE_API_KEY")
     if not api_key:
         raise RuntimeError("AI_SCREENING_CORE_API_KEY is required for CORE search.")
     params = urllib.parse.urlencode({"q": query, "limit": min(rows, 100)})
     payload = json.loads(_get("https://api.core.ac.uk/v3/search/works?" + params, {"Authorization": "Bearer " + api_key, "User-Agent": "AI-SCREENING/0.1"}))
-    return [ResearchRecord(record_id=str(item.get("id", "")), title=item.get("title", ""), abstract=item.get("abstract", "") or "", doi=item.get("doi"), source_id="core", source_url=item.get("downloadUrl"), full_text_url=item.get("downloadUrl"), provenance={"retrieval_method": "core_api"}) for item in payload.get("results", [])]
+    return [ResearchRecord(record_id=str(i.get("id", "")), title=i.get("title", ""), abstract=i.get("abstract", "") or "", doi=i.get("doi"), source_id="core", source_url=i.get("downloadUrl"), full_text_url=i.get("downloadUrl"), provenance={"retrieval_method": "core_api"}) for i in payload.get("results", [])]
 
 
 def search_source(source_id: str, query: str, rows: int = 10) -> list[ResearchRecord]:
-    connector = {"crossref": search_crossref, "arxiv": search_arxiv, "pmc": search_pmc, "core": search_core}.get(source_id)
+    connector = {"crossref": search_crossref, "arxiv": search_arxiv, "pmc": search_pmc, "doaj": search_doaj, "core": search_core}.get(source_id)
     if connector is None:
         raise ValueError(f"Source {source_id!r} is discovery-only or has no connector configured.")
     return connector(query, rows)

@@ -247,12 +247,29 @@ def test_batch_zip_groups_applications_and_detects_duplicates():
     assert again.applications_created == [] and again.documents_associated == 0
     assert len(again.duplicates) == len(DEMO_APPLICATION_FILES)
 
-    loose = service.upload_applications(ADMIN, call.id, files(orphan__txt=PROPOSAL))
-    assert len(loose.requires_manual_association) == 1
-    target = service.repo.list(Application, grant_call_id=call.id)[0]
-    updated = service.associate_upload(ADMIN, loose.requires_manual_association[0].id, application_id=target.id)
-    assert "orphan.txt" in {d.filename for d in service.application_documents(updated.id)}
+    loose = service.upload_applications(ADMIN, call.id, [UploadedFile("orphan.txt", PROPOSAL.encode())])
+    assert len(loose.applications_created) == 1
+    assert loose.requires_manual_association == []
+    created = service.get_application(loose.applications_created[0])
+    assert created.application_reference.startswith("APP-")
+    assert "orphan.txt" in {d.filename for d in service.application_documents(created.id)}
     assert service.list_pending_uploads(call.id) == []
+
+def test_loose_duplicate_submission_is_screenable_and_comparable():
+    service = make_service()
+    call = ready_call(service)
+    first = service.upload_applications(ADMIN, call.id, [UploadedFile("first.txt", PROPOSAL.encode())])
+    second = service.upload_applications(ADMIN, call.id, [UploadedFile("second.txt", PROPOSAL.encode())])
+    assert len(first.applications_created) == 1 and len(second.applications_created) == 1
+    service.start_screening(ADMIN, call.id, second.applications_created)
+    duplication = next(
+        f for f in service.list_findings(second.applications_created[0])
+        if f.type == FindingType.DUPLICATION
+    )
+    assert duplication.signal == "POSSIBLE_DUPLICATION"
+    assert duplication.matches
+    assert duplication.matches[0].application_id == first.applications_created[0]
+
 
 
 def test_bad_zip_is_reported():

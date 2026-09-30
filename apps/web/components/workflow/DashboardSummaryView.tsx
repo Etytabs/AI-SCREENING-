@@ -4,6 +4,7 @@ import Link from "next/link";
 import { formatAmount, SIGNAL_LABELS } from "../../lib/labels";
 import type { DashboardSummary } from "../../lib/types";
 import { CallStatusBadge, Notice, StatusBadge } from "./ui";
+import { StakeholderOverview } from "./StakeholderOverview";
 
 function CountRow({ label, counts, order }: { label: string; counts: Record<string, number>; order: string[] }) {
   return (
@@ -108,6 +109,8 @@ export function DashboardSummaryView({ summary }: { summary: DashboardSummary })
           </table>
         )}
       </section>
+
+      <StakeholderOverview />
 
       <section className="coverage" aria-label="Source coverage">
         <div className="eyebrow">SOURCE COVERAGE</div>

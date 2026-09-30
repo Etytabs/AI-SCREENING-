@@ -112,7 +112,7 @@ export default function ResearchCheckPage() {
             Funding call: <b>{call.name}</b>
           </p>
           <FileDrop
-            accept=".pdf,.docx,.txt,.zip"
+            accept=".pdf,.docx,.txt,.md,.markdown,.zip"
             multiple
             disabled={busy}
             inputLabel="Submitted research"

@@ -3,7 +3,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from apps.api.routes import grants, health, publications
+from apps.api.routes import grants, health, ncst, publications
 
 app = FastAPI(title="AI-SCREENING Research Intelligence API", version="0.1.0")
 
@@ -19,7 +19,7 @@ cors_origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
-    allow_origin_regex=r"https://[a-z0-9-]+\.ai-screening\.pages\.dev",
+    allow_origin_regex=r"https://[a-z0-9-]+\\.ai-screening\\.pages\\.dev",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -27,6 +27,7 @@ app.add_middleware(
 
 app.include_router(health.router)
 app.include_router(grants.router)
+app.include_router(ncst.router)
 app.include_router(publications.router)
 
 

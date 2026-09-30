@@ -1,0 +1,56 @@
+{
+  "schema_version": "0.1",
+  "dataset_id": "synthetic-grant-retrieval-v0.1",
+  "status": "SYNTHETIC_DEMO_ONLY",
+  "description": "Synthetic labelled retrieval cases for comparing retrieval strategies. These labels are not official NRIF decisions.",
+  "cases": [
+    {
+      "query_id": "Q001",
+      "query": "machine learning crop disease detection using annotated maize leaf images",
+      "relevant_candidate_ids": ["NRIF-2024-118"],
+      "candidates": [
+        {"candidate_id": "NRIF-2024-118", "text": "machine learning models for crop disease detection using annotated maize leaf images and field validation"},
+        {"candidate_id": "NRIF-2025-031", "text": "remote sensing and climate analytics for drought monitoring and irrigation planning"},
+        {"candidate_id": "NRIF-2024-074", "text": "digital health prediction models for early warning and community health services"},
+        {"candidate_id": "NRIF-2025-067", "text": "maize production training and extension services without machine learning"},
+        {"candidate_id": "NRIF-2024-091", "text": "computer vision for livestock disease monitoring using field images"}
+      ]
+    },
+    {
+      "query_id": "Q002",
+      "query": "mobile assisted maternal health risk screening and referral",
+      "relevant_candidate_ids": ["NRIF-2025-042"],
+      "candidates": [
+        {"candidate_id": "NRIF-2024-031", "text": "agricultural extension services using mobile data collection"},
+        {"candidate_id": "NRIF-2025-042", "text": "mobile-assisted maternal health risk screening, referral and community follow-up"},
+        {"candidate_id": "NRIF-2024-074", "text": "digital health prediction models for early warning and community health services"},
+        {"candidate_id": "NRIF-2025-019", "text": "maternal nutrition education and clinic outreach programmes"},
+        {"candidate_id": "NRIF-2025-031", "text": "remote sensing and climate analytics for drought monitoring"}
+      ]
+    },
+    {
+      "query_id": "Q003",
+      "query": "water quality sensor network and machine learning anomaly detection",
+      "relevant_candidate_ids": ["NRIF-2025-055"],
+      "candidates": [
+        {"candidate_id": "NRIF-2025-055", "text": "sensor network for water quality monitoring with machine learning anomaly detection"},
+        {"candidate_id": "NRIF-2024-118", "text": "machine learning crop disease detection using annotated maize leaf images"},
+        {"candidate_id": "NRIF-2025-031", "text": "remote sensing and climate analytics for drought monitoring"},
+        {"candidate_id": "NRIF-2024-062", "text": "water access infrastructure and rural water supply planning"},
+        {"candidate_id": "NRIF-2024-091", "text": "computer vision for livestock disease monitoring using field images"}
+      ]
+    },
+    {
+      "query_id": "Q004",
+      "query": "solar energy forecasting using weather data and machine learning",
+      "relevant_candidate_ids": ["NRIF-2025-073"],
+      "candidates": [
+        {"candidate_id": "NRIF-2025-031", "text": "remote sensing and climate analytics for drought monitoring"},
+        {"candidate_id": "NRIF-2025-073", "text": "solar energy forecasting using weather data, time series and machine learning"},
+        {"candidate_id": "NRIF-2024-052", "text": "rural electrification planning and solar mini-grid deployment"},
+        {"candidate_id": "NRIF-2025-055", "text": "sensor network for water quality monitoring with machine learning anomaly detection"},
+        {"candidate_id": "NRIF-2024-091", "text": "computer vision for livestock disease monitoring using field images"}
+      ]
+    }
+  ]
+}

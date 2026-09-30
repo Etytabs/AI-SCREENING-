@@ -5,6 +5,7 @@ import { ApiError, createClient, type ApiClient } from "../../lib/api";
 import type { GrantCall, Role } from "../../lib/types";
 
 const ROLE_KEY = "ai-screening.role";
+const VALID_ROLES: Role[] = ["NCST_GRANT_PERSONNEL", "GRANT_INSTITUTION", "RESEARCHER_APPLICANT"];
 const CALL_KEY = "ai-screening.call";
 
 export type LoadState = "loading" | "ready" | "error";
@@ -41,7 +42,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const storedRole = window.localStorage.getItem(ROLE_KEY) as Role | null;
-    if (storedRole) setRoleState(storedRole);
+    if (storedRole && VALID_ROLES.includes(storedRole)) setRoleState(storedRole);
+    else if (storedRole) window.localStorage.setItem(ROLE_KEY, "NCST_GRANT_PERSONNEL");
     setCallIdState(window.localStorage.getItem(CALL_KEY));
   }, []);
 

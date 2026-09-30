@@ -36,25 +36,33 @@ export default function ResearchCheckPage() {
       // Research Check is an intake point for the NCST team: several submitted
       // proposals can arrive together and must remain separate applications.
       const upload = await client.batchUpload(call.id, files);
+
+      // Backward compatibility with an API deployment that still parks loose
+      // files as PendingUpload records. A filename must never be a prerequisite
+      // for screening, so immediately create an application reference for each
+      // pending submission and attach the stored document to it.
+      const recoveredApplicationIds: string[] = [];
+      for (let index = 0; index < upload.requires_manual_association.length; index += 1) {
+        const pending = upload.requires_manual_association[index];
+        const reference = `APP-AUTO-${Date.now()}-${index + 1}`;
+        const application = await client.associateUpload(pending.id, { new_reference: reference });
+        recoveredApplicationIds.push(application.id);
+      }
+
       setUploadErrors([
         ...upload.errors,
         ...upload.duplicates.map((d) => `${d}: duplicate file skipped`),
-        ...upload.requires_manual_association.map(
-          (p) => `${p.filename}: needs an application reference before screening`,
-        ),
       ]);
 
       const applicationIds = [...new Set([
         ...upload.applications_created,
         ...upload.applications_updated,
+        ...recoveredApplicationIds,
       ])];
 
       if (!applicationIds.length) {
-        throw new Error(
-          "No research submission could be associated with an application. Use a ZIP with one folder per submission, or prefix files with the application reference (REF__proposal.pdf).",
-        );
+        throw new Error("No research submission was created from the uploaded document.");
       }
-
       setPhase("screening");
       const screening = await client.screenCall(call.id, applicationIds);
 

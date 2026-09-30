@@ -1,0 +1,25 @@
+{
+  "schema_version": "0.1",
+  "dataset_id": "synthetic-grant-retrieval-v0.1",
+  "status": "SYNTHETIC_REFERENCE_ONLY",
+  "k": 5,
+  "query_count": 4,
+  "strategies": {
+    "lexical": {
+      "recall_at_k": 1.0,
+      "precision_at_k": 0.2,
+      "mrr": 1.0,
+      "ndcg_at_k": 1.0,
+      "model": "token_jaccard_baseline-v0.1"
+    },
+    "embedding": {
+      "status": "not_run",
+      "reason": "The production sentence-transformer runtime remains disabled in CI."
+    },
+    "hybrid": {
+      "status": "not_run",
+      "reason": "The production sentence-transformer runtime remains disabled in CI."
+    }
+  },
+  "interpretation": "The lexical result is a synthetic reference baseline only. It does not establish production retrieval performance and must not be used as a model-selection decision."
+}

@@ -284,6 +284,60 @@ function Overview({result}:{result:ScreeningResult|null}) {
 
 function Review({audit}:any){return <><div className="section-intro"><div className="eyebrow">HUMAN REVIEW</div><h2>Decision history</h2><p>Every consequential screening action remains attributable to a reviewer.</p></div><section className="audit"><div className="eyebrow">AUDIT LOG</div>{audit.map((x:string,i:number)=><div key={i}><span>{x}</span><b>{i===0?"SYSTEM":"REVIEWER"}</b></div>)}</section></>}
 
-function Publications(){return <><div className="section-intro"><div className="eyebrow">PUBLICATION RECONCILIATION</div><h2>Local-first synchronization</h2><p>Reconcile available local records first; international sources remain optional connectors.</p></div><section className="publication-list">{[["PUB-1042","AI in African agriculture","98.7%"],["PUB-1077","Machine learning for rural health","93.4%"],["PUB-1091","Climate adaptation analytics","71.2%"]].map(x=><div key={x[0]}><span><b>{x[0]}</b><small>{x[1]}</small></span><strong>{x[2]}</strong><button>Compare</button></div>)}</section></>}
+function Publications(){
+  const [query,setQuery]=useState("machine learning agriculture");
+  const [source,setSource]=useState("crossref");
+  const [sources,setSources]=useState<any[]>([]);
+  const [records,setRecords]=useState<any[]>([]);
+  const [loading,setLoading]=useState(false);
+  const [error,setError]=useState("");
 
-function Integrations({org}:{org:string}){return <><div className="section-intro"><div className="eyebrow">INTEGRATIONS</div><h2>{org}</h2><p>Authorized connectors feed the same evidence and audit pipeline.</p></div><section className="integration-list">{["RIGMS","Historical Applications","Eligibility Rules","Institutional Repository","DOI Metadata"].map(x=><div key={x}><span><b>{x}</b><small>Connector available for authorized configuration</small></span><em>AVAILABLE</em><button>Configure</button></div>)}</section></>}
+  async function loadSources(){
+    try {
+      const res=await fetch(`${API_BASE}/api/v1/publications/sources`);
+      if(!res.ok) throw new Error("Unable to load source registry.");
+      setSources(await res.json());
+    } catch(e) { setError(e instanceof Error ? e.message : "Unable to load sources."); }
+  }
+
+  async function search(){
+    setLoading(true); setError("");
+    try {
+      const res=await fetch(`${API_BASE}/api/v1/publications/search?q=${encodeURIComponent(query)}&source=${encodeURIComponent(source)}&limit=10`);
+      const data=await res.json();
+      if(!res.ok) throw new Error(data.detail || "Research search failed.");
+      setRecords(data.records || []);
+    } catch(e) { setError(e instanceof Error ? e.message : "Research search failed."); }
+    finally { setLoading(false); }
+  }
+
+  return <div>
+    <div className="section-intro"><div className="eyebrow">PUBLICATION RECONCILIATION / LIVE</div><h2>Research evidence workspace</h2><p>Search authorized scholarly sources, normalize records, and inspect similarity evidence before reconciliation.</p></div>
+    <section className="publication-list">
+      <div style={{display:"flex",gap:10,flexWrap:"wrap",padding:"14px 0"}}>
+        <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search research..." style={{flex:"1 1 320px",padding:10,border:"1px solid var(--line)",background:"transparent"}}/>
+        <select value={source} onChange={e=>setSource(e.target.value)} onFocus={loadSources} style={{padding:10,border:"1px solid var(--line)",background:"transparent"}}>
+          <option value="crossref">Crossref</option><option value="doaj">DOAJ</option><option value="pmc">PubMed Central</option><option value="arxiv">arXiv</option><option value="core">CORE</option>
+        </select>
+        <button className="dark-button" onClick={search} disabled={loading}>{loading ? "Searching…" : "Search"}</button>
+      </div>
+      {error && <div className="error">{error}</div>}
+      {records.map((r:any)=><div key={r.record_id}><span><b>{r.title || "Untitled record"}</b><small>{r.authors?.slice(0,3).join(", ") || "Author metadata unavailable"} · {r.source_id}</small><small>{r.doi ? `DOI: ${r.doi}` : r.source_url || "Source URL unavailable"}</small></span><button onClick={()=>r.source_url && window.open(r.source_url,"_blank","noopener,noreferrer")}>Open source</button></div>)}
+      {!loading && !records.length && <div style={{padding:"22px 0",color:"var(--muted)"}}>Run a live search to retrieve research records.</div>}
+    </section>
+    <section className="integration-list" style={{marginTop:24}}>
+      <div><span><b>Governed source registry</b><small>{sources.length ? `${sources.length} registered sources` : "Load the source registry when needed"}</small></span><button onClick={loadSources}>Load sources</button></div>
+      {sources.map((s:any)=><div key={s.source_id}><span><b>{s.name}</b><small>{s.scope} · {s.source_type}</small></span><em>{s.source_type === "discovery" ? "DISCOVERY" : "CONNECTED"}</em></div>)}
+    </section>
+  </div>
+}
+
+function Integrations({org}:{org:string}){
+  const [sources,setSources]=useState<any[]>([]);
+  const [error,setError]=useState("");
+  useMemo(()=>{ fetch(`${API_BASE}/api/v1/publications/sources`).then(r=>r.ok?r.json():Promise.reject(new Error("Source registry unavailable."))).then(setSources).catch(e=>setError(e.message)); },[]);
+  return <><div className="section-intro"><div className="eyebrow">INTEGRATIONS / LIVE REGISTRY</div><h2>{org}</h2><p>Authorized institutional records and scholarly connectors feed the same evidence, ML and audit pipeline.</p></div>{error&&<div className="error">{error}</div>}<section className="integration-list">
+    {["RIGMS","Historical Applications","Eligibility Rules","Institutional Repository"].map(x=><div key={x}><span><b>{x}</b><small>Institutional connector boundary · authorized configuration required</small></span><em>INSTITUTIONAL</em></div>)}
+    {sources.map((s:any)=><div key={s.source_id}><span><b>{s.name}</b><small>{s.scope}</small></span><em>{s.source_type==="discovery"?"DISCOVERY":"API / FEED"}</em></div>)}
+  </section></>
+}

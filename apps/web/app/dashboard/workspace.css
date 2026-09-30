@@ -624,3 +624,20 @@ dl.summary-table dt { color: var(--muted); }
 .role-focus-card p { margin: 0; color: var(--muted); line-height: 1.5; max-width: 620px; }
 .role-focus-arrow { position: absolute; top: 18px; right: 18px; font-size: 22px; color: var(--ws-accent); }
 @media (max-width: 760px) { .role-focus-grid { grid-template-columns: 1fr; } }
+
+
+/* Call overview polish */
+.ws-main { overflow-x: hidden; }
+.ws-sidebar .side-link { text-decoration: none; }
+.side-link-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.side-link-icon { width: 22px; flex: 0 0 22px; display: inline-grid; place-items: center; font-weight: 800; color: #71809a; }
+.synthetic-top-banner { display: flex; gap: 10px; align-items: center; margin: -8px 0 18px; padding: 8px 12px; border: 1px solid #ead7ad; border-radius: 8px; background: #fff8e8; color: #5f501f; font-size: 12px; }
+.workflow-steps li.current a { border-color: #b7c3ee; background: #eef1ff; box-shadow: 0 8px 24px rgba(49,70,168,.11); }
+.workflow-steps li.current .step-index { background: var(--ws-accent); color: #fff; }
+.workflow-steps li.current b { color: var(--ws-accent); }
+.step-label-row { display: flex; align-items: center; gap: 7px; min-height: 20px; }
+.step-label-row em { font: 800 9px/1 Inter,system-ui,sans-serif; text-transform: uppercase; color: var(--ws-accent); background: var(--ws-accent-soft); border: 1px solid #cbd4ff; border-radius: 999px; padding: 4px 6px; font-style: normal; }
+.attention-progress { display: block; height: 6px; margin-top: 7px; border-radius: 999px; background: #e4e8ef; overflow: hidden; }
+.attention-progress > span { display: block; height: 100%; border-radius: inherit; background: var(--ws-accent); }
+@media (min-width: 901px) { .ws-sidebar { width: 280px; } }
+@media (max-width: 760px) { .synthetic-top-banner { align-items: flex-start; flex-direction: column; gap: 3px; } }

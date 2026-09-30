@@ -18,6 +18,23 @@ def _fetch_page_text(url: str) -> str:
     return " ".join(text.split())
 
 
+def _best_source_window(applicant: str, source: str) -> tuple[float, str]:
+    applicant_words = applicant.split()
+    source_words = source.split()
+    if not applicant_words or not source_words:
+        return 0.0, ""
+    window = max(40, min(len(applicant_words) * 2, 300))
+    step = max(20, window // 2)
+    best_score = 0.0
+    best_text = ""
+    for start in range(0, max(1, len(source_words) - window + 1), step):
+        chunk = " ".join(source_words[start : start + window])
+        score = compare_texts(applicant, chunk).score
+        if score > best_score:
+            best_score, best_text = score, chunk
+    return best_score, best_text
+
+
 def _match_type(similarity: float, applicant: str, source: str) -> str:
     if similarity >= 0.9:
         return "near-verbatim"
@@ -43,7 +60,7 @@ def check_public_sources(text: str, *, limit: int = 5) -> list[PlagiarismEvidenc
             continue
         if not source_text:
             continue
-        match = compare_texts(normalized, source_text)
+        score, matched_text = _best_source_window(normalized, source_text)
         attribution = resolve_attribution(candidate.url, candidate.title)
         enriched = SourceCandidate(
             source_id=candidate.source_id,
@@ -53,22 +70,22 @@ def check_public_sources(text: str, *, limit: int = 5) -> list[PlagiarismEvidenc
             search_query=candidate.search_query,
             attribution=attribution,
         )
-        if match.score < 0.35:
+        if score < 0.35:
             continue
         findings.append(
             PlagiarismEvidence(
                 finding_id=f"PLG-{uuid4().hex[:10]}",
                 status="REVIEW_REQUIRED",
-                match_type=_match_type(match.score, normalized, source_text),
-                similarity=round(match.score, 4),
+                match_type=_match_type(score, normalized, matched_text),
+                similarity=round(score, 4),
                 applicant_passage=normalized[:2000],
-                source_passage=source_text[:2000],
+                source_passage=matched_text[:2000],
                 source=enriched,
                 explanation=(
                     "Potential text similarity detected against a public source. "
                     "The source URL and attribution metadata are provided for human comparison."
                 ),
-                confidence=round(match.score, 4),
+                confidence=round(score, 4),
             )
         )
     return sorted(findings, key=lambda item: item.similarity, reverse=True)

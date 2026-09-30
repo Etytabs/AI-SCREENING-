@@ -32,7 +32,7 @@ STAKEHOLDERS: tuple[Stakeholder, ...] = (
         "researchers_applicants",
         "Researchers / applicants",
         "Pre-submission research user",
-        "Pre-submission check: assess whether a proposed research topic may overlap with existing or previously submitted research before submission.",
+        "pre-submission check: assess whether a proposed research topic may overlap with existing or previously submitted research before submission.",
         "Authorized research-topic and similarity evidence; no access to confidential applicant records",
         "Pre-submission → application",
     ),

@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+import dataclasses
 
 
 STATUS_PASS = "PASS"
@@ -7,7 +7,7 @@ STATUS_UNKNOWN = "UNKNOWN"
 STATUS_REVIEW = "REVIEW"
 
 
-@dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True)
 class EligibilityRule:
     criterion_id: str
     label: str
@@ -17,7 +17,7 @@ class EligibilityRule:
     missing_status: str = STATUS_UNKNOWN
 
 
-@dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True)
 class EligibilityCheck:
     criterion: str
     label: str

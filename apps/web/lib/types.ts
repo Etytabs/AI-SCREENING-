@@ -1,6 +1,6 @@
 // Mirrors services/grant_workflow/models.py and services/grant_workflow/views.py.
 
-export type Role = "GRANT_ADMINISTRATOR" | "REVIEWER" | "SYSTEM_ADMINISTRATOR";
+export type Role = "NCST_GRANT_PERSONNEL" | "GRANT_INSTITUTION" | "RESEARCHER_APPLICANT";
 export type DataOrigin = "SYNTHETIC" | "UPLOADED" | "PROVIDER";
 export type GrantCallStatus =
   | "DRAFT"

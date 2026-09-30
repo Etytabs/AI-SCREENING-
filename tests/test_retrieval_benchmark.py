@@ -5,6 +5,11 @@ import pytest
 
 from ml.evaluation.benchmark import BenchmarkCase, evaluate_benchmark
 from ml.semantic_matching.hybrid import rank_candidates_semantic
+from ml.semantic_matching.reranker import (
+    DEFAULT_RERANKER_MODEL,
+    RerankerConfig,
+    rerank_candidates,
+)
 from scripts.evaluate_retrieval import evaluate_dataset
 
 
@@ -24,6 +29,17 @@ class BenchmarkEmbedder:
             else:
                 vectors.append([0.0, 0.0, 0.0])
         return vectors
+
+
+class BenchmarkReranker:
+    model_name = "benchmark-cross-encoder-v1"
+
+    def score(self, query: str, candidates: list[tuple[str, str]]) -> list[float]:
+        query_terms = set(query.lower().split())
+        return [
+            float(len(query_terms & set(text.lower().split())))
+            for _, text in candidates
+        ]
 
 
 def load_cases(path: str = "data/evaluation/retrieval_benchmark.json") -> list[BenchmarkCase]:
@@ -69,16 +85,58 @@ def test_semantic_ranker_produces_embedding_method():
     assert ranked[0].method == "embedding:benchmark-embedder-v1"
 
 
-def test_benchmark_runner_reports_disabled_embedding(monkeypatch):
-    monkeypatch.setenv("AI_SCREENING_EMBEDDINGS_ENABLED", "false")
-    result = evaluate_dataset(
-        Path("data/evaluation/retrieval_benchmark.json"),
-        methods=["lexical", "embedding", "hybrid"],
+def test_cross_encoder_reranker_changes_order_using_pair_scores():
+    reranked = rerank_candidates(
+        "crop disease detection",
+        [
+            ("a", "unrelated crop topic", 0.9),
+            ("b", "crop disease detection", 0.4),
+        ],
+        reranker=BenchmarkReranker(),
+        top_k=2,
+    )
+    assert [item.candidate_id for item in reranked] == ["b", "a"]
+    assert reranked[0].method == "cross_encoder:benchmark-cross-encoder-v1"
+    assert reranked[0].first_stage_score == 0.4
+
+
+def test_hybrid_reranked_uses_first_stage_pool():
+    cases = load_cases()
+    result = evaluate_benchmark(
+        cases,
+        method="hybrid_reranked",
+        embedder=BenchmarkEmbedder(),
+        reranker=BenchmarkReranker(),
         k=5,
+        rerank_k=3,
+    )
+    assert result.query_count == 4
+    assert 0.0 <= result.metrics.mrr <= 1.0
+
+
+def test_reranker_config_defaults_to_disabled(monkeypatch):
+    monkeypatch.delenv("AI_SCREENING_RERANKER_ENABLED", raising=False)
+    monkeypatch.delenv("AI_SCREENING_RERANKER_MODEL", raising=False)
+    monkeypatch.delenv("AI_SCREENING_RERANKER_REVISION", raising=False)
+    config = RerankerConfig.from_env()
+    assert config.enabled is False
+    assert config.model_name == DEFAULT_RERANKER_MODEL
+    assert config.revision is None
+
+
+def test_benchmark_runner_reports_disabled_models(monkeypatch):
+    monkeypatch.setenv("AI_SCREENING_EMBEDDINGS_ENABLED", "false")
+    monkeypatch.setenv("AI_SCREENING_RERANKER_ENABLED", "false")
+    result = evaluate_dataset(
+        Path("data/evaluation/retrieval_benchmark_adversarial.json"),
+        methods=["lexical", "embedding", "hybrid", "hybrid_reranked"],
+        k=5,
+        rerank_k=5,
     )
     assert result["strategies"]["lexical"]["status"] == "completed"
     assert result["strategies"]["embedding"]["status"] == "not_run"
     assert result["strategies"]["hybrid"]["status"] == "not_run"
+    assert result["strategies"]["hybrid_reranked"]["status"] == "not_run"
 
 
 def test_adversarial_benchmark_has_harder_cases():

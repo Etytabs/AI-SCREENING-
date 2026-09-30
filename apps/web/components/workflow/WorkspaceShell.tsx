@@ -7,16 +7,31 @@ import type { Role } from "../../lib/types";
 import { SyntheticBadge } from "./ui";
 import { useWorkspace, WorkspaceProvider } from "./WorkspaceContext";
 
-export const NAV_ITEMS = [
-  { href: "/dashboard", label: "Overview" },
-  { href: "/dashboard/check", label: "Research Check" },
-  { href: "/dashboard/calls", label: "Grant Calls" },
-  { href: "/dashboard/applications", label: "Applications" },
-  { href: "/dashboard/screening", label: "Screening" },
-  { href: "/dashboard/review", label: "Review" },
-  { href: "/dashboard/publications", label: "Publications" },
-  { href: "/dashboard/sources", label: "Sources" },
-];
+export const NAV_ITEMS = {
+  NCST_GRANT_PERSONNEL: [
+    { href: "/dashboard", label: "Overview" },
+    { href: "/dashboard/calls", label: "Grant Calls" },
+    { href: "/dashboard/applications", label: "Applications" },
+    { href: "/dashboard/screening", label: "AI Screening" },
+    { href: "/dashboard/review", label: "Human Review" },
+    { href: "/dashboard/publications", label: "Publications" },
+    { href: "/dashboard/sources", label: "Evidence Sources" },
+  ],
+  GRANT_INSTITUTION: [
+    { href: "/dashboard", label: "My Workspace" },
+    { href: "/dashboard/calls", label: "Funding Calls" },
+    { href: "/dashboard/applications", label: "My Submissions" },
+    { href: "/dashboard/check", label: "Submission Check" },
+    { href: "/dashboard/publications", label: "Research Outputs" },
+  ],
+  RESEARCHER_APPLICANT: [
+    { href: "/dashboard", label: "My Workspace" },
+    { href: "/dashboard/calls", label: "Find Funding" },
+    { href: "/dashboard/applications", label: "My Applications" },
+    { href: "/dashboard/check", label: "Research Check" },
+    { href: "/dashboard/publications", label: "My Publications" },
+  ],
+} as const;
 
 function isActive(rawPathname: string, href: string) {
   const pathname = rawPathname.replace(/\/+$/, "") || "/";
@@ -39,18 +54,18 @@ function Sidebar() {
         {call && <SyntheticBadge origin={call.data_origin} />}
       </div>
       <nav>
-        {NAV_ITEMS.map((item) => (
+        {NAV_ITEMS[role].map((item) => (
           <Link key={item.href} href={item.href} className={isActive(pathname, item.href) ? "side-link active" : "side-link"} aria-current={isActive(pathname, item.href) ? "page" : undefined}>
             <span>{item.label}</span>
           </Link>
         ))}
       </nav>
       <div className="sidebar-foot ws-identity">
-        <label htmlFor="role-picker"><b>ACTING AS</b></label>
+        <label htmlFor="role-picker"><b>PRIMARY USER</b></label>
         <select id="role-picker" value={role} onChange={(e) => setRole(e.target.value as Role)}>
           {(Object.keys(ROLE_LABELS) as Role[]).map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
         </select>
-        <small>Demo identity only. The role is sent as a header and is not authenticated.</small>
+        <small>Demo identity only. Selecting a user changes the workspace focus and navigation.</small>
       </div>
     </aside>
   );

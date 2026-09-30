@@ -132,3 +132,38 @@ def rank_candidates(
         RankedCandidate(candidate_id, match.lexical_score, match.semantic_score, match.fused_score, index, match.method)
         for index, (candidate_id, match) in enumerate(ranked[:top_k], start=1)
     ]
+
+
+def rank_candidates_semantic(
+    query: str,
+    candidates: list[tuple[str, str]],
+    *,
+    embedder: TextEmbedder,
+    top_k: int = 10,
+) -> list[RankedCandidate]:
+    if top_k < 1:
+        raise ValueError("top_k must be positive")
+    texts = [query, *(text for _, text in candidates)]
+    vectors = embedder.encode(texts)
+    if len(vectors) != len(texts):
+        raise ValueError("embedder must return one vector per input text")
+    query_vector = vectors[0]
+    ranked = [
+        (
+            candidate_id,
+            max(0.0, min(1.0, cosine_similarity(query_vector, vectors[index]))),
+        )
+        for index, (candidate_id, _) in enumerate(candidates, start=1)
+    ]
+    ranked.sort(key=lambda item: item[1], reverse=True)
+    return [
+        RankedCandidate(
+            candidate_id=candidate_id,
+            lexical_score=0.0,
+            semantic_score=score,
+            fused_score=score,
+            rank=rank,
+            method=f"embedding:{embedder.model_name}",
+        )
+        for rank, (candidate_id, score) in enumerate(ranked[:top_k], start=1)
+    ]

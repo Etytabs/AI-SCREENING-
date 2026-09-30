@@ -6,7 +6,7 @@ from ml.eligibility.rules import EligibilityRule, evaluate_rules
 from ml.evidence.state import AssessmentState, EvidenceRelationship, RunState
 from ml.explainability.evidence import Evidence
 from ml.plagiarism.overlap import token_overlap
-from ml.semantic_matching.service import compare_texts
+from ml.semantic_matching.hybrid import rank_candidates
 from services.evidence.chain import EvidenceChain
 from services.evidence.citations import CitationLocator, validate_citation
 from services.ingestion.document import extract_document
@@ -147,18 +147,21 @@ def screen_document(path: str, proposal_id: str) -> dict:
         else:
             flags[-1]["citation_valid"] = False
 
-    candidates = []
-    for rid, rtext in DEMO_HISTORICAL:
-        match = compare_texts(doc.text, rtext)
-        candidates.append((rid, match.score, match.method))
-    candidates.sort(key=lambda x: x[1], reverse=True)
-    for rid, score, method in candidates[:3]:
-        if score > 0:
+    ranked_candidates = rank_candidates(
+        doc.text,
+        DEMO_HISTORICAL,
+        top_k=len(DEMO_HISTORICAL),
+    )
+    for candidate in ranked_candidates:
+        if candidate.fused_score > 0:
             evidence.append(asdict(Evidence(
-                rid,
+                candidate.candidate_id,
                 "historical_similarity",
-                f"{score:.4f}",
-                f"Compared with historical proposal using {method}.",
+                f"{candidate.fused_score:.4f}",
+                (
+                    f"Compared with historical proposal using {candidate.method}; "
+                    "semantic score is unavailable unless the embedding model is enabled."
+                ),
             )))
 
     overlap = []
@@ -184,8 +187,19 @@ def screen_document(path: str, proposal_id: str) -> dict:
         },
         "eligibility_checks": [asdict(c) for c in checks],
         "similarity_candidates": [
-            {"proposal_id": a, "similarity": round(b, 4), "method": c}
-            for a, b, c in candidates
+            {
+                "proposal_id": candidate.candidate_id,
+                "similarity": round(candidate.fused_score, 4),
+                "lexical_similarity": round(candidate.lexical_score, 4),
+                "semantic_similarity": (
+                    None
+                    if candidate.semantic_score is None
+                    else round(candidate.semantic_score, 4)
+                ),
+                "rank": candidate.rank,
+                "method": candidate.method,
+            }
+            for candidate in ranked_candidates
         ],
         "text_overlap": overlap,
         "flags": flags,
@@ -199,7 +213,8 @@ def screen_document(path: str, proposal_id: str) -> dict:
             "findings": len(flags),
         },
         "model_versions": {
-            "lexical_similarity": "token_jaccard_baseline-v0.1",
+            "retrieval": "hybrid-retrieval-v0.1",
+            "embedding_model": "not_enabled",
             "rules": ruleset_id,
         },
         "human_review_required": True,

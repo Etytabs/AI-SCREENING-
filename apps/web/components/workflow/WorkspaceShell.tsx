@@ -31,7 +31,25 @@ export const NAV_ITEMS = {
     { href: "/dashboard/check", label: "Research Check" },
     { href: "/dashboard/publications", label: "My Publications" },
   ],
+  GRANT_ADMINISTRATOR: [
+    { href: "/dashboard", label: "Overview" },
+    { href: "/dashboard/calls", label: "Grant Calls" },
+    { href: "/dashboard/applications", label: "Applications" },
+    { href: "/dashboard/screening", label: "AI Screening" },
+    { href: "/dashboard/review", label: "Human Review" },
+  ],
+  REVIEWER: [
+    { href: "/dashboard", label: "Review Overview" },
+    { href: "/dashboard/applications", label: "Applications" },
+    { href: "/dashboard/review", label: "Human Review" },
+  ],
+  SYSTEM_ADMINISTRATOR: [
+    { href: "/dashboard", label: "Overview" },
+    { href: "/dashboard/sources", label: "Evidence Sources" },
+  ],
 } as const;
+
+const ROLE_PICKER_OPTIONS: Role[] = ["NCST_GRANT_PERSONNEL", "GRANT_INSTITUTION", "RESEARCHER_APPLICANT"];
 
 function isActive(rawPathname: string, href: string) {
   const pathname = rawPathname.replace(/\/+$/, "") || "/";
@@ -62,8 +80,8 @@ function Sidebar() {
       </nav>
       <div className="sidebar-foot ws-identity">
         <label htmlFor="role-picker"><b>PRIMARY USER</b></label>
-        <select id="role-picker" value={role} onChange={(e) => setRole(e.target.value as Role)}>
-          {(Object.keys(ROLE_LABELS) as Role[]).map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
+        <select id="role-picker" value={ROLE_PICKER_OPTIONS.includes(role) ? role : "NCST_GRANT_PERSONNEL"} onChange={(e) => setRole(e.target.value as Role)}>
+          {ROLE_PICKER_OPTIONS.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
         </select>
         <small>Demo identity only. Selecting a user changes the workspace focus and navigation.</small>
       </div>

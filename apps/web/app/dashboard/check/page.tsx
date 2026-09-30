@@ -80,10 +80,8 @@ export default function ResearchCheckPage() {
     }
   }
 
-  const created = batch?.run_ids.length ?? 0;
-  const finished = batch?.run_ids.length
-    ? batch.runs.filter((run) => ["COMPLETE", "PARTIAL", "BLOCKED", "FAILED"].includes(run.status)).length
-    : 0;
+  const created = batch?.total ?? 0;
+  const finished = batch?.finished ?? 0;
 
   return (
     <>
@@ -159,7 +157,7 @@ export default function ResearchCheckPage() {
 
           <div className="check-section">
             <p>
-              <b>{finished}</b> of <b>{batch.runs.length}</b> screening run{batch.runs.length === 1 ? "" : "s"} finished.
+              <b>{finished}</b> of <b>{batch.total}</b> screening run{batch.total === 1 ? "" : "s"} finished.
             </p>
             {uploadErrors.length > 0 && (
               <p className="muted small">

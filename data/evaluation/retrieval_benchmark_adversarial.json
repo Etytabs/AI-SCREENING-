@@ -1,0 +1,308 @@
+{
+  "schema_version": "0.2",
+  "dataset_id": "synthetic-grant-retrieval-adversarial-v0.1",
+  "status": "SYNTHETIC_ADVERSARIAL_DEMO_ONLY",
+  "description": "Hard synthetic retrieval cases designed to expose lexical failure modes and test semantic retrieval. Labels are benchmark annotations only, not official NRIF decisions.",
+  "design_goals": [
+    "low lexical overlap paraphrases",
+    "lexically tempting but semantically wrong candidates",
+    "near-topic distractors",
+    "terminology variation and abbreviations",
+    "multiple relevant candidates",
+    "generic vocabulary collisions"
+  ],
+  "cases": [
+    {
+      "query_id": "A001",
+      "query": "early detection of crop infections from leaf photographs using artificial intelligence",
+      "relevant_candidate_ids": [
+        "ADV-001-R"
+      ],
+      "candidates": [
+        {
+          "candidate_id": "ADV-001-R",
+          "text": "Computer vision can identify plant pathogens from farmer-captured foliage images before visible damage becomes widespread."
+        },
+        {
+          "candidate_id": "ADV-001-D1",
+          "text": "Machine learning models classify maize leaf disease using annotated images collected from experimental plots."
+        },
+        {
+          "candidate_id": "ADV-001-D2",
+          "text": "Digital photography is used to document crop growth stages and fertilizer response in field trials."
+        },
+        {
+          "candidate_id": "ADV-001-D3",
+          "text": "Artificial intelligence predicts seasonal harvest volumes from historical agricultural production statistics."
+        },
+        {
+          "candidate_id": "ADV-001-D4",
+          "text": "A mobile platform sends agricultural extension messages and collects farmer survey responses."
+        }
+      ]
+    },
+    {
+      "query_id": "A002",
+      "query": "predict maternal complications and route high-risk women to appropriate care",
+      "relevant_candidate_ids": [
+        "ADV-002-R"
+      ],
+      "candidates": [
+        {
+          "candidate_id": "ADV-002-R",
+          "text": "A clinical risk engine identifies women requiring escalation and supports referral from community providers to facilities."
+        },
+        {
+          "candidate_id": "ADV-002-D1",
+          "text": "Maternal health education materials are distributed through community health workers and mobile phones."
+        },
+        {
+          "candidate_id": "ADV-002-D2",
+          "text": "A hospital dashboard tracks antenatal attendance, deliveries and postnatal follow-up."
+        },
+        {
+          "candidate_id": "ADV-002-D3",
+          "text": "Machine learning forecasts outpatient clinic workload from historical appointment records."
+        },
+        {
+          "candidate_id": "ADV-002-D4",
+          "text": "A referral directory lists nearby maternity facilities, ambulance contacts and opening hours."
+        }
+      ]
+    },
+    {
+      "query_id": "A003",
+      "query": "detect unusual contamination patterns in drinking water sensor streams",
+      "relevant_candidate_ids": [
+        "ADV-003-R"
+      ],
+      "candidates": [
+        {
+          "candidate_id": "ADV-003-R",
+          "text": "Streaming measurements from water-quality probes are analysed to flag abnormal chemical and microbial signatures."
+        },
+        {
+          "candidate_id": "ADV-003-D1",
+          "text": "Water monitoring stations report pH, turbidity and temperature at regular intervals."
+        },
+        {
+          "candidate_id": "ADV-003-D2",
+          "text": "Anomaly detection identifies unusual electricity consumption in municipal pumping stations."
+        },
+        {
+          "candidate_id": "ADV-003-D3",
+          "text": "Community teams test drinking-water samples manually using field kits."
+        },
+        {
+          "candidate_id": "ADV-003-D4",
+          "text": "A dashboard visualizes environmental sensor readings and maintenance alerts."
+        }
+      ]
+    },
+    {
+      "query_id": "A004",
+      "query": "estimate photovoltaic generation from meteorological observations",
+      "relevant_candidate_ids": [
+        "ADV-004-R"
+      ],
+      "candidates": [
+        {
+          "candidate_id": "ADV-004-R",
+          "text": "A time-series model forecasts solar farm output using irradiance, cloud cover, temperature and wind measurements."
+        },
+        {
+          "candidate_id": "ADV-004-D1",
+          "text": "Weather observations are used to issue drought advisories for smallholder farmers."
+        },
+        {
+          "candidate_id": "ADV-004-D2",
+          "text": "Solar mini-grid feasibility is assessed using household demand and geographic access data."
+        },
+        {
+          "candidate_id": "ADV-004-D3",
+          "text": "Machine learning estimates electricity demand from historical smart-meter records."
+        },
+        {
+          "candidate_id": "ADV-004-D4",
+          "text": "Photovoltaic panels are monitored for faults and maintenance requirements."
+        }
+      ]
+    },
+    {
+      "query_id": "A005",
+      "query": "match researchers across records despite different spellings and initials",
+      "relevant_candidate_ids": [
+        "ADV-005-R1",
+        "ADV-005-R2"
+      ],
+      "candidates": [
+        {
+          "candidate_id": "ADV-005-R1",
+          "text": "Entity resolution links Dr. A. Mukamana with Alice Mukamana across repository and grant records."
+        },
+        {
+          "candidate_id": "ADV-005-R2",
+          "text": "Author disambiguation connects Jean Claude Niyonzima, J.C. Niyonzima and J. Niyonzima using institutional affiliations."
+        },
+        {
+          "candidate_id": "ADV-005-D1",
+          "text": "Author names are exported exactly as entered by applicants without normalization."
+        },
+        {
+          "candidate_id": "ADV-005-D2",
+          "text": "Researcher profiles contain ORCID identifiers and publication lists."
+        },
+        {
+          "candidate_id": "ADV-005-D3",
+          "text": "Duplicate publications are detected when DOI values are identical."
+        }
+      ]
+    },
+    {
+      "query_id": "A006",
+      "query": "find proposals addressing the same scientific objective even when wording differs",
+      "relevant_candidate_ids": [
+        "ADV-006-R1",
+        "ADV-006-R2"
+      ],
+      "candidates": [
+        {
+          "candidate_id": "ADV-006-R1",
+          "text": "The study develops an automated method for recognizing crop pathogens from images of symptomatic leaves."
+        },
+        {
+          "candidate_id": "ADV-006-R2",
+          "text": "Researchers propose computer-assisted diagnosis of plant disease using photographs captured in farming communities."
+        },
+        {
+          "candidate_id": "ADV-006-D1",
+          "text": "The project trains farmers to recognize common crop diseases by visual inspection."
+        },
+        {
+          "candidate_id": "ADV-006-D2",
+          "text": "The team builds a database of agricultural photographs for extension training."
+        },
+        {
+          "candidate_id": "ADV-006-D3",
+          "text": "The project studies fertilizer application effects on maize yield."
+        }
+      ]
+    },
+    {
+      "query_id": "A007",
+      "query": "identify a publication missing from the national repository",
+      "relevant_candidate_ids": [
+        "ADV-007-R"
+      ],
+      "candidates": [
+        {
+          "candidate_id": "ADV-007-R",
+          "text": "International index record: Niyonzima JC. Community-based maternal referral pathways in rural Rwanda. 2025. DOI 10.1234/example.5678."
+        },
+        {
+          "candidate_id": "ADV-007-D1",
+          "text": "National repository record: Niyonzima J.C. Community health worker training for maternal services. 2025."
+        },
+        {
+          "candidate_id": "ADV-007-D2",
+          "text": "Repository contains a 2024 article by Niyonzima on rural maternal health access."
+        },
+        {
+          "candidate_id": "ADV-007-D3",
+          "text": "DOI registry record for a paper about community referral systems in East Africa, 2023."
+        },
+        {
+          "candidate_id": "ADV-007-D4",
+          "text": "National repository metadata export containing all records deposited during 2025."
+        }
+      ]
+    },
+    {
+      "query_id": "A008",
+      "query": "separate a genuinely duplicate application from another proposal in the same research area",
+      "relevant_candidate_ids": [
+        "ADV-008-R"
+      ],
+      "candidates": [
+        {
+          "candidate_id": "ADV-008-R",
+          "text": "This application repeats the same intervention, population, study design and expected outcomes as the earlier submitted proposal, with only minor wording changes."
+        },
+        {
+          "candidate_id": "ADV-008-D1",
+          "text": "A separate study evaluates a different crop disease intervention in the same agricultural region."
+        },
+        {
+          "candidate_id": "ADV-008-D2",
+          "text": "Another proposal uses the same machine learning technique but studies livestock rather than crops."
+        },
+        {
+          "candidate_id": "ADV-008-D3",
+          "text": "A related project uses agricultural images for farmer training, not disease diagnosis."
+        },
+        {
+          "candidate_id": "ADV-008-D4",
+          "text": "A previous application concerns crop disease surveillance but proposes a different target population and field design."
+        }
+      ]
+    },
+    {
+      "query_id": "A009",
+      "query": "retrieve evidence about whether ethics approval is present",
+      "relevant_candidate_ids": [
+        "ADV-009-R"
+      ],
+      "candidates": [
+        {
+          "candidate_id": "ADV-009-R",
+          "text": "The protocol states that approval was obtained from the institutional research ethics committee before participant recruitment began."
+        },
+        {
+          "candidate_id": "ADV-009-D1",
+          "text": "The proposal describes informed consent procedures and plans to submit the protocol for review."
+        },
+        {
+          "candidate_id": "ADV-009-D2",
+          "text": "The research team lists its institutional affiliations and previous ethics training."
+        },
+        {
+          "candidate_id": "ADV-009-D3",
+          "text": "The project includes a data protection plan for storing participant information."
+        },
+        {
+          "candidate_id": "ADV-009-D4",
+          "text": "The applicant requests budget support for regulatory and compliance activities."
+        }
+      ]
+    },
+    {
+      "query_id": "A010",
+      "query": "locate evidence that the requested budget stays below the funding ceiling",
+      "relevant_candidate_ids": [
+        "ADV-010-R"
+      ],
+      "candidates": [
+        {
+          "candidate_id": "ADV-010-R",
+          "text": "The total amount requested is RWF 48,500,000, which is below the programme maximum of RWF 50,000,000."
+        },
+        {
+          "candidate_id": "ADV-010-D1",
+          "text": "The financial plan allocates funds to personnel, equipment, travel and field activities."
+        },
+        {
+          "candidate_id": "ADV-010-D2",
+          "text": "The proposal requests additional co-financing from an institutional partner."
+        },
+        {
+          "candidate_id": "ADV-010-D3",
+          "text": "The programme guidelines describe eligible expenditure categories and reporting requirements."
+        },
+        {
+          "candidate_id": "ADV-010-D4",
+          "text": "The budget narrative explains the cost of data collection and laboratory analysis."
+        }
+      ]
+    }
+  ]
+}

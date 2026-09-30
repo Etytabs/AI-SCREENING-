@@ -2,6 +2,20 @@
 
 import Link from "next/link";
 import { formatAmount, SIGNAL_LABELS } from "../../lib/labels";
+
+function compactAmount(value: number | null | undefined, currency: string) {
+  if (value == null) return "Not set";
+  if (value >= 1000000) return `${currency} ${(value / 1000000).toLocaleString(undefined, { maximumFractionDigits: 1 })}M`;
+  if (value >= 1000) return `${currency} ${(value / 1000).toLocaleString(undefined, { maximumFractionDigits: 0 })}K`;
+  return `${currency} ${value.toLocaleString()}`;
+}
+
+function dateLabel(value: string | null | undefined) {
+  if (!value) return "—";
+  const date = new Date(`${value}T00:00:00`);
+  return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(date);
+}
+
 import type { DashboardSummary } from "../../lib/types";
 import { CallStatusBadge, Notice, StatusBadge } from "./ui";
 import { StakeholderOverview } from "./StakeholderOverview";
@@ -24,27 +38,29 @@ export function DashboardSummaryView({ summary }: { summary: DashboardSummary })
   const call = summary.grant_call;
   const batch = summary.latest_batch;
   const unavailable = summary.sources.filter((s) => s.access_status !== "AVAILABLE");
+  const reportReady = summary.findings_pending_review === 0 && summary.applications_review_complete === summary.applications_total && summary.applications_total > 0;
+  const currentStep = summary.requirements_confirmed < summary.requirements_total || call.status === "REQUIREMENTS_PENDING" ? 0 : summary.applications_total === 0 ? 1 : !batch || batch.finished < batch.total ? 2 : !reportReady ? 3 : 4;
   const steps = [
     {
       label: "Requirements",
       value: `${summary.requirements_confirmed} of ${summary.requirements_total} confirmed`,
-      done: call.status !== "DRAFT" && call.status !== "REQUIREMENTS_PENDING",
+      done: currentStep > 0,
       href: `/dashboard/calls?id=${call.id}`,
     },
-    { label: "Applications", value: `${summary.applications_total} uploaded`, done: summary.applications_total > 0, href: "/dashboard/applications" },
+    { label: "Applications", value: `${summary.applications_total} uploaded`, done: currentStep > 1, href: "/dashboard/applications" },
     {
       label: "Screening",
       value: batch ? `${batch.finished} of ${batch.total} runs finished` : "Not started",
-      done: !!batch && batch.finished === batch.total,
+      done: currentStep > 2,
       href: "/dashboard/screening",
     },
     {
       label: "Review",
-      value: `${summary.findings_pending_review} findings awaiting a reviewer`,
-      done: summary.findings_total > 0 && summary.findings_pending_review === 0,
+      value: currentStep === 3 ? "Current review stage" : "Human review",
+      done: currentStep > 3,
       href: "/dashboard/review",
     },
-    { label: "Report", value: "Screening report", done: false, href: "/dashboard/report" },
+    { label: "Report", value: reportReady ? "Ready to open" : "Available after review", done: reportReady, href: "/dashboard/report" },
   ];
 
   return (
@@ -57,15 +73,15 @@ export function DashboardSummaryView({ summary }: { summary: DashboardSummary })
         </div>
         <dl>
           <dt>Funding</dt>
-          <dd>{call.funding_max ? `${formatAmount(call.funding_min, call.currency)} – ${formatAmount(call.funding_max, call.currency)}` : "Not set"}</dd>
+          <dd title={call.funding_max ? `${formatAmount(call.funding_min, call.currency)} – ${formatAmount(call.funding_max, call.currency)}` : "Not set"}>{call.funding_max ? `${compactAmount(call.funding_min, call.currency)} – ${compactAmount(call.funding_max, call.currency).replace(`${call.currency} `, "")}` : "Not set"}</dd>
           <dt>Window</dt>
-          <dd>{call.open_date ?? "—"} to {call.close_date ?? "—"}</dd>
+          <dd>{dateLabel(call.open_date)} – {dateLabel(call.close_date)}</dd>
         </dl>
       </section>
 
       <ol className="workflow-steps" aria-label="Workflow progress">
         {steps.map((step, index) => (
-          <li key={step.label} className={step.done ? "done" : ""}>
+          <li key={step.label} className={`${step.done ? "done " : ""}${index === currentStep ? "current" : ""}`}>
             <Link href={step.href}>
               <span className="step-index" aria-hidden="true">{step.done ? "✓" : index + 1}</span>
               <b>{step.label}</b>
@@ -88,7 +104,7 @@ export function DashboardSummaryView({ summary }: { summary: DashboardSummary })
 
       <section className="attention-grid" aria-label="Administrator attention">
         <div className="attention-card attention-review">
-          <span className="attention-icon">!</span>
+          <span className="attention-icon" aria-hidden="true">!</span>
           <div>
             <b>Review queue</b>
             <strong>{summary.findings_pending_review}</strong>
@@ -97,20 +113,20 @@ export function DashboardSummaryView({ summary }: { summary: DashboardSummary })
           <Link href="/dashboard/review">Open review →</Link>
         </div>
         <div className="attention-card attention-screening">
-          <span className="attention-icon">AI</span>
+          <span className="attention-icon" aria-hidden="true">◫</span>
           <div>
             <b>Screening coverage</b>
             <strong>{batch ? `${batch.finished}/${batch.total}` : "—"}</strong>
-            <span>applications with completed runs</span>
+            <span>applications with completed runs</span>\n            {batch && batch.total > 0 && <span className="attention-progress"><span style={{ width: `${Math.min(100, Math.round((batch.finished / batch.total) * 100))}%` }} /></span>}
           </div>
           <Link href="/dashboard/screening">Inspect runs →</Link>
         </div>
         <div className="attention-card attention-evidence">
-          <span className="attention-icon">E</span>
+          <span className="attention-icon" aria-hidden="true">◉</span>
           <div>
             <b>Evidence signals</b>
             <strong>{summary.duplication_flags + summary.text_similarity_flags}</strong>
-            <span>similarity signals surfaced</span>
+            <span>{summary.duplication_flags} possible overlaps · {summary.text_similarity_flags} shared passages</span>
           </div>
           <Link href="/dashboard/review">Inspect evidence →</Link>
         </div>

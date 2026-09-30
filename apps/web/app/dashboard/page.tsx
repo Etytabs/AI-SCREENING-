@@ -8,7 +8,9 @@ import { useWorkspace } from "../../components/workflow/WorkspaceContext";
 import { ApiError } from "../../lib/api";
 import type { DashboardSummary, Role } from "../../lib/types";
 
-const roleContent: Record<Exclude<Role, "NCST_GRANT_PERSONNEL">, { eyebrow: string; title: string; intro: string; actions: { href: string; label: string; description: string }[] }> = {
+type StakeholderRole = "NCST_GRANT_PERSONNEL" | "GRANT_INSTITUTION" | "RESEARCHER_APPLICANT";
+
+const roleContent: Record<Exclude<StakeholderRole, "NCST_GRANT_PERSONNEL">, { eyebrow: string; title: string; intro: string; actions: { href: string; label: string; description: string }[] }> = {
   GRANT_INSTITUTION: {
     eyebrow: "GRANT INSTITUTION / WORKSPACE",
     title: "Submission workspace",
@@ -33,7 +35,7 @@ const roleContent: Record<Exclude<Role, "NCST_GRANT_PERSONNEL">, { eyebrow: stri
   },
 };
 
-function RoleWorkspace({ role }: { role: Exclude<Role, "NCST_GRANT_PERSONNEL"> }) {
+function RoleWorkspace({ role }: { role: Exclude<StakeholderRole, "NCST_GRANT_PERSONNEL"> }) {
   const content = roleContent[role];
   return (
     <>

@@ -45,6 +45,21 @@ export type FindingType = "eligibility" | "completeness" | "duplication" | "plag
 export type FindingStatus = "PASS" | "FAIL" | "REVIEW_REQUIRED";
 export type ReviewState = "PENDING" | "CONFIRMED" | "DISMISSED" | "REVIEW_REQUESTED" | "ESCALATED";
 export type ReviewerAction = "CONFIRM" | "DISMISS" | "REQUEST_REVIEW" | "ESCALATE";
+
+export interface Stakeholder {
+  stakeholder_id: string;
+  name: string;
+  role: string;
+  purpose: string;
+  access_scope: string;
+  lifecycle_stage: string;
+}
+
+export interface StakeholderResponse {
+  stakeholders: Stakeholder[];
+  primary_user_order: string[];
+  human_review_required: boolean;
+}
 export type EvidenceRelationship = "SUPPORTS" | "CONTRADICTS" | "PARTIALLY_SUPPORTS" | "UNCERTAIN";
 
 export interface GrantCall {

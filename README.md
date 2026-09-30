@@ -224,3 +224,18 @@ The GitHub Actions model-backed benchmark workflows are manual so normal CI rema
 ## Prototype disclaimer
 
 This public prototype uses synthetic proposals, historical records and demo eligibility rules. It is **not an official NCST/NRIF screening system** and must not be used for funding, eligibility, plagiarism, or other consequential decisions.
+
+
+## Free MVP publishing
+
+The Next.js presentation frontend is configured for a static export and can be published at no hosting cost using GitHub Pages.
+
+Deployment flow:
+
+`push to main → Next.js static build → GitHub Pages deployment`
+
+To enable it, open **Settings → Pages**, set **Source** to **GitHub Actions**, then push to `main` or manually run **Deploy MVP to GitHub Pages** under Actions.
+
+GitHub Pages hosts the static presentation only. The FastAPI screening endpoint is not hosted by GitHub Pages; live document upload and screening require a separately deployed API. The synthetic presentation remains usable without the API.
+
+The presentation MVP includes the screening workspace, evidence-oriented findings, human-review workflow, screening queue and stakeholder pricing scenario.

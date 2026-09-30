@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-
 from typing import Literal
 
 RequirementStatus = Literal["official_source", "configured", "demo_only", "needs_authorization"]

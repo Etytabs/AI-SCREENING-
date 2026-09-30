@@ -88,7 +88,7 @@ export default function OverviewPage() {
         eyebrow="GRANT SCREENING / OVERVIEW"
         title="Call overview"
         intro="Where the selected call stands: requirements, submissions, screening signals and human review."
-        actions={callId ? <Link className="ghost-button" href="/dashboard/report">Open report</Link> : undefined}
+        actions={callId ? <Link className="dark-button" href="/dashboard/review">Continue review</Link> : undefined}
       />
       {callsState === "loading" && <Notice kind="loading" title="Loading grant calls…" />}
       {callsState === "error" && <Notice kind="error" title="Grant calls unavailable">{callsError}</Notice>}

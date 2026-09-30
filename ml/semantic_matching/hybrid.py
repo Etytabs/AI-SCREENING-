@@ -96,13 +96,52 @@ def rank_candidates(
     *,
     embedder: TextEmbedder | None = None,
     top_k: int = 10,
+    lexical_weight: float = 0.35,
+    semantic_weight: float = 0.65,
 ) -> list[RankedCandidate]:
     if top_k < 1:
         raise ValueError("top_k must be positive")
-    ranked = [
-        (candidate_id, hybrid_compare(query, text, embedder=embedder))
-        for candidate_id, text in candidates
-    ]
+    if not 0.0 <= lexical_weight <= 1.0:
+        raise ValueError("lexical_weight must be between 0 and 1")
+    if not 0.0 <= semantic_weight <= 1.0:
+        raise ValueError("semantic_weight must be between 0 and 1")
+    if abs((lexical_weight + semantic_weight) - 1.0) > 1e-9:
+        raise ValueError("lexical_weight and semantic_weight must sum to 1")
+
+    if embedder is None:
+        ranked = [
+            (candidate_id, hybrid_compare(
+                query,
+                text,
+                embedder=None,
+                lexical_weight=lexical_weight,
+                semantic_weight=semantic_weight,
+            ))
+            for candidate_id, text in candidates
+        ]
+    else:
+        texts = [query, *(text for _, text in candidates)]
+        vectors = embedder.encode(texts)
+        if len(vectors) != len(texts):
+            raise ValueError("embedder must return one vector per input text")
+        query_vector = vectors[0]
+        ranked = []
+        for index, (candidate_id, text) in enumerate(candidates, start=1):
+            lexical = compare_texts(query, text)
+            semantic = cosine_similarity(query_vector, vectors[index])
+            semantic = max(0.0, min(1.0, semantic))
+            fused = (lexical.score * lexical_weight) + (semantic * semantic_weight)
+            ranked.append((
+                candidate_id,
+                HybridMatch(
+                    lexical_score=lexical.score,
+                    semantic_score=semantic,
+                    fused_score=fused,
+                    method=f"hybrid:{embedder.model_name}",
+                    explanation="Fused lexical overlap with sentence-embedding cosine similarity.",
+                ),
+            ))
+
     ranked.sort(key=lambda item: item[1].fused_score, reverse=True)
     return [
         RankedCandidate(

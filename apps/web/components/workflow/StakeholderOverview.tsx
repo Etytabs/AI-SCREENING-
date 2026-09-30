@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import type { Stakeholder } from "../../lib/types";
 import { ApiError } from "../../lib/api";
-import { useWorkspace } from "./WorkspaceContext";
+import { WorkspaceContext } from "./WorkspaceContext";
 
 export function StakeholderOverview() {
-  const { client } = useWorkspace();
+  const workspace = useContext(WorkspaceContext);\n  const client = workspace?.client;
   const [stakeholders, setStakeholders] = useState<Stakeholder[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,7 +20,7 @@ export function StakeholderOverview() {
     return () => { cancelled = true; };
   }, [client]);
 
-  if (error) return <p className="muted">{error}</p>;
+  if (!client) return null;\n  if (error) return <p className="muted">{error}</p>;
   if (!stakeholders.length) return <p className="muted">Loading stakeholder context…</p>;
 
   return (

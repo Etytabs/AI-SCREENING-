@@ -67,7 +67,7 @@ def extract_document(path: str, source_id: str) -> ExtractedDocument:
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 page.text, 1, "success", file_sha256, (page,),
             )
-        if suffix == ".txt":
+        if suffix in {".txt", ".md", ".markdown"}:
             raw = file.read_bytes().decode("utf-8", errors="replace")
             # Form feeds mark page boundaries in plain-text exports.
             pages = tuple(

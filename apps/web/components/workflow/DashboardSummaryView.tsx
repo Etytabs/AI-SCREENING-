@@ -86,6 +86,36 @@ export function DashboardSummaryView({ summary }: { summary: DashboardSummary })
         </Notice>
       )}
 
+      <section className="attention-grid" aria-label="Administrator attention">
+        <div className="attention-card attention-review">
+          <span className="attention-icon">!</span>
+          <div>
+            <b>Review queue</b>
+            <strong>{summary.findings_pending_review}</strong>
+            <span>findings need human review</span>
+          </div>
+          <Link href="/dashboard/review">Open review →</Link>
+        </div>
+        <div className="attention-card attention-screening">
+          <span className="attention-icon">AI</span>
+          <div>
+            <b>Screening coverage</b>
+            <strong>{batch ? `${batch.finished}/${batch.total}` : "—"}</strong>
+            <span>applications with completed runs</span>
+          </div>
+          <Link href="/dashboard/screening">Inspect runs →</Link>
+        </div>
+        <div className="attention-card attention-evidence">
+          <span className="attention-icon">E</span>
+          <div>
+            <b>Evidence signals</b>
+            <strong>{summary.duplication_flags + summary.text_similarity_flags}</strong>
+            <span>similarity signals surfaced</span>
+          </div>
+          <Link href="/dashboard/review">Inspect evidence →</Link>
+        </div>
+      </section>
+
       <section className="summary-table-wrap" aria-label="Screening summary">
         <div className="eyebrow">SCREENING SIGNALS · {summary.applications_total} APPLICATIONS</div>
         {summary.applications_total === 0 ? (

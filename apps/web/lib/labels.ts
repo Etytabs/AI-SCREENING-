@@ -1,9 +1,9 @@
 import type { CriterionCategory, FindingType, GrantCallStatus, ReviewerAction, ReviewState, Role, StageName } from "./types";
 
 export const ROLE_LABELS: Record<Role, string> = {
-  GRANT_ADMINISTRATOR: "Grant Administrator",
-  REVIEWER: "Reviewer",
-  SYSTEM_ADMINISTRATOR: "System Administrator",
+  NCST_GRANT_PERSONNEL: "NCST Grant Personnel",
+  GRANT_INSTITUTION: "Grant Institution",
+  RESEARCHER_APPLICANT: "Researcher / Applicant",
 };
 
 export const CALL_STATUS_LABELS: Record<GrantCallStatus, string> = {

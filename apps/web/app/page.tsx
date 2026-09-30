@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
@@ -335,7 +335,7 @@ function Publications(){
 function Integrations({org}:{org:string}){
   const [sources,setSources]=useState<any[]>([]);
   const [error,setError]=useState("");
-  useMemo(()=>{ fetch(`${API_BASE}/api/v1/publications/sources`).then(r=>r.ok?r.json():Promise.reject(new Error("Source registry unavailable."))).then(setSources).catch(e=>setError(e.message)); },[]);
+  useEffect(()=>{ fetch(`${API_BASE}/api/v1/publications/sources`).then(r=>r.ok?r.json():Promise.reject(new Error("Source registry unavailable."))).then(setSources).catch(e=>setError(e.message)); },[]);
   return <><div className="section-intro"><div className="eyebrow">INTEGRATIONS / LIVE REGISTRY</div><h2>{org}</h2><p>Authorized institutional records and scholarly connectors feed the same evidence, ML and audit pipeline.</p></div>{error&&<div className="error">{error}</div>}<section className="integration-list">
     {["RIGMS","Historical Applications","Eligibility Rules","Institutional Repository"].map(x=><div key={x}><span><b>{x}</b><small>Institutional connector boundary · authorized configuration required</small></span><em>INSTITUTIONAL</em></div>)}
     {sources.map((s:any)=><div key={s.source_id}><span><b>{s.name}</b><small>{s.scope}</small></span><em>{s.source_type==="discovery"?"DISCOVERY":"API / FEED"}</em></div>)}

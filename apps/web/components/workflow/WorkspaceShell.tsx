@@ -62,11 +62,11 @@ function Sidebar() {
   return (
     <aside className="sidebar ws-sidebar" aria-label="Workspace navigation">
       <div className="ws-call-picker">
-        <label htmlFor="call-picker" className="sidebar-label">GRANT CALL</label>
+        <div className="sidebar-product">AI-SCREENING</div><label htmlFor="call-picker" className="sidebar-label">Selected call</label>
         <select id="call-picker" value={callId ?? ""} onChange={(e) => setCallId(e.target.value || null)} disabled={callsState !== "ready" || !calls.length}>
           {!calls.length && <option value="">{callsState === "loading" ? "Loading…" : "No calls yet"}</option>}
           {calls.map((c) => (
-            <option key={c.id} value={c.id}>{c.reference ? `${c.reference} · ` : ""}{c.name}</option>
+            <option key={c.id} value={c.id}>{c.name}{c.reference ? ` · ${c.reference}` : ""}</option>
           ))}
         </select>
         {call && <SyntheticBadge origin={call.data_origin} />}

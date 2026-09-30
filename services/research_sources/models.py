@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
-from typing import Literal
 
+from typing import Literal
 
 SourceType = Literal["api", "oai_pmh", "discovery"]
 

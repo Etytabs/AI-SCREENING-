@@ -294,3 +294,12 @@ GitHub Pages hosts the static presentation only. The FastAPI screening endpoint 
 
 The presentation MVP includes the screening workspace, evidence-oriented findings, human-review workflow, screening queue, NCST/NRIF requirement source map and the grant-call screening workflow.
 Cloudflare Pages deployment verified.
+
+
+## Public-source similarity evidence
+
+AI-SCREENING can search public web sources through Gemini Google Search grounding and attach the discovered source URL to a similarity finding. The comparison service then fetches the public page, computes an explicit similarity signal, and attempts to resolve author, publisher and publication metadata from the page. Results are always marked REVIEW_REQUIRED; the platform does not make an automatic plagiarism verdict.
+
+Configure the backend with GEMINI_API_KEY and optionally AI_SCREENING_GEMINI_MODEL. The key must remain server-side. The endpoint is GET /api/v1/publications/plagiarism?text=...&limit=5.
+
+Google's grounding response provides structured URL citations that can be surfaced in an application. Google documents this as a citation/grounding capability, while pricing and model availability can change; treat the Google provider as replaceable rather than a hard dependency.

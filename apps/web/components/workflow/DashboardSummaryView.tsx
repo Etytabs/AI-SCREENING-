@@ -21,6 +21,20 @@ import type { DashboardSummary } from "../../lib/types";
 import { CallStatusBadge, Notice, StatusBadge } from "./ui";
 import { StakeholderOverview } from "./StakeholderOverview";
 
+function CountRow({ label, counts, order }: { label: string; counts: Record<string, number>; order: string[] }) {
+  return (
+    <tr>
+      <th scope="row">{label}</th>
+      {order.map((status) => (
+        <td key={status}>
+          <b>{counts[status] ?? 0}</b>
+          <span>{status.replace(/_/g, " ").toLowerCase()}</span>
+        </td>
+      ))}
+    </tr>
+  );
+}
+
 export function DashboardSummaryView({ summary }: { summary: DashboardSummary }) {
   const call = summary.grant_call;
   const batch = summary.latest_batch;

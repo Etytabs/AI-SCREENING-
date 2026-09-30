@@ -1,5 +1,5 @@
 import { LegacyPublications } from "../../../components/legacy/LegacyWorkspace";
-import { PageHeader, SyntheticBadge } from "../../../components/workflow/ui";
+import { PageHeader } from "../../../components/workflow/ui";
 
 export default function PublicationsPage() {
   return (
@@ -7,9 +7,8 @@ export default function PublicationsPage() {
       <PageHeader
         eyebrow="GRANT SCREENING / PUBLICATIONS"
         title="Publication reconciliation"
-        intro="Carried over unchanged from the earlier prototype. The records below are static demonstration content; the reconciliation service itself is exposed by the publications API."
+        intro="Search scholarly sources through the publications API and compare records across sources before reconciliation."
       />
-      <SyntheticBadge origin="SYNTHETIC" />
       <LegacyPublications />
     </>
   );

@@ -1,6 +1,34 @@
 # AI-SCREENING — Research Intelligence Platform
 
-AI/ML-centered research intelligence platform for **grant proposal screening** and **research publication reconciliation**. The MVP is designed as an evidence workspace: AI/ML models surface findings, retrieve supporting evidence, rank similar records, and expose provenance while authorized staff retain the final decision.
+AI/ML-centered research intelligence platform for grant proposal screening, grant lifecycle intelligence, and research publication reconciliation. The system is designed as an evidence workspace: AI/ML models surface findings, retrieve supporting evidence, reconcile records, and expose provenance while authorized staff retain the final decision.
+
+## NCST / NRIF alignment reinforcement
+
+The FY 2025-2026 NCST Annual Report strengthens the case for a platform that sits alongside—not replaces—the national research management infrastructure. The report describes the upgraded RIGMS as supporting grant management from applications through project closing, with improved workflow automation, security, monitoring, reporting and data management. It also describes the Rwanda Research and Innovation Repository as a national knowledge hub for research outputs and identifies fragmented resources, weak interoperability, limited local AI/ML datasets and limited visibility of research as ecosystem gaps.
+
+AI-SCREENING therefore now models an NCST-aligned research intelligence layer across the grant lifecycle:
+
+Application → Administrative screening → Technical review → Award → Implementation → M&E → Closeout → Research-to-impact
+
+### Source hierarchy
+
+The platform distinguishes between:
+
+1. Official strategic/procedural sources — NCST reports and the active NRIF procedures.
+2. Call-specific authoritative sources — the active RFP/RFA/call package.
+3. Institutional systems — RIGMS and the Rwanda Research and Innovation Repository.
+4. Configured AI rules — machine-readable rules approved by authorized staff.
+5. Demo rules — synthetic rules that can never silently become production rules.
+
+Direct RIGMS/repository integration is deliberately marked as authorization-dependent. No public API or credentials are assumed.
+
+### New NCST-alignment APIs
+
+- GET /api/v1/ncst/requirements — source registry and requirement domains.
+- GET /api/v1/ncst/lifecycle — application-to-impact lifecycle model.
+- GET /api/v1/ncst/monitoring-indicators — structured M&E evidence indicators.
+
+Operational call-specific rules require the authorized source document, version/provenance and human approval before activation.
 
 ## Grant-call screening workflow
 
@@ -27,9 +55,24 @@ The current MVP demonstrates an end-to-end screening workflow for grant proposal
 - append-only audit events;
 - source/run coverage states.
 
-**Human-in-the-loop principle:** AI produces findings and evidence. It does not independently reject a proposal, declare plagiarism, or make a funding decision.
+Human-in-the-loop principle: AI produces findings and evidence. It does not independently reject a proposal, declare plagiarism, or make a funding decision.
 
-### 2. AI Publication Reconciliation
+### 2. Grant lifecycle and M&E intelligence
+
+The reinforced architecture extends beyond pre-award screening to the monitoring responsibilities described by NCST:
+
+- quarterly technical-progress evidence;
+- expected outputs and achievements;
+- financial management and compliance evidence;
+- datasets, experiments and field/laboratory evidence;
+- implementation risks and support needs;
+- change detection across submitted reports;
+- closeout evidence reconciliation;
+- research-to-impact, technology-transfer and commercialization evidence.
+
+This is an AI evidence layer for M&E—not an automated funding or compliance decision engine.
+
+### 3. AI Publication Reconciliation
 
 The platform also provides the foundation for:
 
@@ -41,25 +84,44 @@ The platform also provides the foundation for:
 - human verification;
 - synchronization with an authorized national repository.
 
-International research databases are **optional connectors**, not prerequisites for the local-first MVP.
+International research databases are optional connectors, not prerequisites for the local-first MVP.
+
+## NCST Annual Report → product requirements
+
+The report identifies several ecosystem needs that map directly to the architecture:
+
+| NCST-reported need | AI-SCREENING response |
+| --- | --- |
+| Fragmented research outputs/resources | Evidence registry + repository reconciliation |
+| Poor interoperability | Normalized source adapters + provenance-preserving records |
+| Limited visibility of research | Semantic retrieval + missing/duplicate publication detection |
+| Limited local AI/ML datasets | Local-first architecture and authorized-data evaluation gates |
+| Data sovereignty concerns | Controlled deployment, provenance and authorization boundaries |
+| Limited AI/Data Science skills | Explainable workflows and reusable evidence tooling |
+| Research duplication | Semantic similarity, entity resolution and duplicate detection |
+| Stronger governance/accountability | Audit trail, source versions, reviewer actions |
+| Quarterly M&E of funded projects | Structured monitoring indicators and evidence comparison |
+| Research-to-impact gap | Impact/commercialization lifecycle stage and evidence model |
+
+The report's proposed priorities also emphasize resource visibility, governance, emerging skills, academia-industry collaboration, sustainable financing, open data and interoperability. These are treated as architectural alignment targets rather than claims that AI-SCREENING already solves the national problems.
 
 ## Current ML retrieval architecture
 
 The validated retrieval stack is:
 
-`Query → lexical retrieval + sentence embeddings → hybrid ranking → top-N candidates → cross-encoder reranking → evidence → human review`
+Query → lexical retrieval + sentence embeddings → hybrid ranking → top-N candidates → cross-encoder reranking → evidence → human review
 
 The system deliberately separates first-stage retrieval from second-stage reranking:
 
-- **Lexical:** token-based baseline.
-- **Embedding:** sentence-transformer semantic similarity.
-- **Hybrid:** 35% lexical + 65% semantic fusion.
-- **Cross-encoder:** jointly scores the query and candidate pair for second-stage reranking.
+- Lexical: token-based baseline.
+- Embedding: sentence-transformer semantic similarity.
+- Hybrid: 35% lexical + 65% semantic fusion.
+- Cross-encoder: jointly scores the query and candidate pair for second-stage reranking.
 
 Default models:
 
-- Embedding: `sentence-transformers/all-MiniLM-L6-v2`
-- Cross-encoder: `cross-encoder/ms-marco-MiniLM-L-6-v2`
+- Embedding: sentence-transformers/all-MiniLM-L6-v2
+- Cross-encoder: cross-encoder/ms-marco-MiniLM-L-6-v2
 
 Both ML runtimes are configurable and disabled by default in normal CI.
 
@@ -67,9 +129,9 @@ Both ML runtimes are configurable and disabled by default in normal CI.
 
 Three synthetic benchmarks have been implemented:
 
-1. **Benchmark #1 — baseline:** 4 simple synthetic cases.
-2. **Benchmark #2 — adversarial:** 10 harder synthetic cases designed to expose lexical failure modes.
-3. **Benchmark #3 — reranker:** the same adversarial corpus with cross-encoder reranking.
+1. Benchmark #1 — baseline: 4 simple synthetic cases.
+2. Benchmark #2 — adversarial: 10 harder synthetic cases designed to expose lexical failure modes.
+3. Benchmark #3 — reranker: the same adversarial corpus with cross-encoder reranking.
 
 Benchmark #3 results on the synthetic adversarial corpus:
 
@@ -78,27 +140,26 @@ Benchmark #3 results on the synthetic adversarial corpus:
 | Lexical | 1.00 | 0.24 | 0.562 | 0.667 |
 | Embedding | 1.00 | 0.24 | 0.720 | 0.794 |
 | Hybrid | 1.00 | 0.24 | 0.745 | 0.814 |
-| Hybrid + Cross-Encoder | 1.00 | 0.24 | **0.875** | **0.897** |
+| Hybrid + Cross-Encoder | 1.00 | 0.24 | 0.875 | 0.897 |
 
-These are **synthetic diagnostic results**, not production performance claims. Validation on authorized, representative NRIF/RIGMS data is still required before operational use.
+These are synthetic diagnostic results, not production performance claims. Validation on authorized, representative NRIF/RIGMS data is still required before operational use.
 
 ## Evidence and explainability
 
 The MVP follows:
 
-**Prediction → Confidence → Evidence → Explanation → Human decision → Audit trail**
+Prediction → Confidence → Evidence → Explanation → Human decision → Audit trail
 
-Evidence records can retain:
+For grant lifecycle intelligence, the evidence chain can additionally retain:
 
-- source/document ID;
-- document version;
-- page number;
-- chunk ID;
-- evidence span;
-- citation locator;
-- retrieval method;
-- model version;
-- review status.
+- project/report version;
+- reporting period and lifecycle stage;
+- milestone/output identifier;
+- financial evidence locator;
+- dataset/experiment evidence;
+- impact/commercialization evidence;
+- source system and synchronization timestamp;
+- reviewer action and rationale.
 
 Source failures are represented explicitly and are not treated as zero evidence.
 
@@ -114,7 +175,8 @@ The presentation MVP is designed around a real screening workspace:
 - text-overlap evidence;
 - provenance/model contract;
 - reviewer actions;
-- screening queue.
+- screening queue;
+- NCST/NRIF requirement source map.
 
 The public prototype uses synthetic/demo data and clearly identifies that limitation. Commercial terms are outside the scope of this repository and are agreed separately with stakeholders.
 
@@ -128,11 +190,14 @@ Important constraints:
 - role-based access control;
 - secure storage and transmission;
 - authorized integration with RIGMS;
+- authorized repository synchronization;
 - human oversight;
 - explainable evidence;
 - synthetic data until authorized real data is available;
 - model/version provenance;
-- auditability.
+- auditability;
+- explicit data-sovereignty boundaries;
+- approval gates before activating call-specific rules.
 
 ## Stack
 
@@ -146,7 +211,6 @@ Important constraints:
 
 ## Repository structure
 
-```text
 apps/
   api/                 FastAPI application
   web/                 Next.js frontend
@@ -159,44 +223,44 @@ services/
   human_review/        reviewer decisions
   ingestion/           document extraction and chunking
   audit/               audit events
+  ncst_requirements/   NCST/NRIF sources, requirements and lifecycle alignment
 data/
   evaluation/          synthetic benchmark datasets/results
 docs/
   ai-ml/               model and evaluation documentation
 tests/                 automated tests
-```
 
 ## Local development
 
 Install backend development dependencies:
 
-`pip install ".[dev]"`
+pip install ".[dev]"
 
 Run tests:
 
-`pytest`
+pytest
 
 Run linting:
 
-`ruff check .`
+ruff check .
 
 For model-backed retrieval:
 
-`pip install ".[ml]"`
+pip install ".[ml]"
 
 Enable embeddings:
 
-`AI_SCREENING_EMBEDDINGS_ENABLED=true`
+AI_SCREENING_EMBEDDINGS_ENABLED=true
 
 Enable cross-encoder reranking:
 
-`AI_SCREENING_RERANKER_ENABLED=true`
+AI_SCREENING_RERANKER_ENABLED=true
 
 The GitHub Actions model-backed benchmark workflows are manual so normal CI remains fast and deterministic.
 
 ## MVP status
 
-**Implemented and CI-validated:**
+Implemented:
 
 - evidence integrity;
 - document extraction and provenance;
@@ -208,10 +272,25 @@ The GitHub Actions model-backed benchmark workflows are manual so normal CI rema
 - cross-encoder reranking;
 - human review primitives;
 - audit primitives;
+- NCST/NRIF source and requirement alignment layer;
+- grant lifecycle and M&E indicator model;
 - presentation-oriented Grant Screening workspace.
 
-**Next validation gate:** test the screening workflow with an authorized and representative dataset, establish operational baselines, validate retrieval/reranking quality, and agree governance/commercial assumptions with stakeholders.
+Next validation gate: obtain authorized representative NRIF/RIGMS/repository data and integration access, validate call-specific rules against the active source documents, establish operational retrieval and screening baselines, validate M&E evidence workflows, and agree governance with NCST stakeholders.
 
 ## Prototype disclaimer
 
-This public prototype uses synthetic proposals, historical records and demo eligibility rules. It is **not an official NCST/NRIF screening system** and must not be used for funding, eligibility, plagiarism, or other consequential decisions.
+This public prototype uses synthetic proposals, historical records and configured alignment metadata. It is not an official NCST/NRIF screening system and must not be used for funding, eligibility, plagiarism, compliance, or other consequential decisions.
+
+## Free MVP publishing
+
+The Next.js presentation frontend is configured for a static export and can be published at no hosting cost using GitHub Pages.
+
+Deployment flow:
+
+push to main → Next.js static build → GitHub Pages deployment
+
+GitHub Pages hosts the static presentation only. The FastAPI screening endpoint is not hosted by GitHub Pages; live document upload and screening require a separately deployed API. The synthetic presentation remains usable without the API.
+
+The presentation MVP includes the screening workspace, evidence-oriented findings, human-review workflow, screening queue, NCST/NRIF requirement source map and the grant-call screening workflow.
+Cloudflare Pages deployment verified.

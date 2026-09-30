@@ -18,7 +18,8 @@ export const NAV_ITEMS = [
   { href: "/dashboard/sources", label: "Sources" },
 ];
 
-function isActive(pathname: string, href: string) {
+function isActive(rawPathname: string, href: string) {
+  const pathname = rawPathname.replace(/\/+$/, "") || "/";
   return href === "/dashboard" ? pathname === "/dashboard" || pathname === "/dashboard/report" : pathname.startsWith(href);
 }
 

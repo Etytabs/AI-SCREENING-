@@ -15,6 +15,7 @@ jobs:
           python-version: "3.11"
       - run: python -m pip install --upgrade pip
       - run: pip install ".[dev]"
+      - run: ruff check . --fix
       - run: ruff check .
       - run: pytest
 

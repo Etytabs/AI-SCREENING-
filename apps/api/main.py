@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from apps.api.dependencies import get_service
-from apps.api.routes import grants, health, publications, workflow
+from apps.api.routes import grants, health, ncst, publications, workflow
 from services.grant_workflow.seed import seed_demo
 from services.grant_workflow.service import WorkflowError
 
@@ -31,17 +31,19 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="AI-SCREENING Research Intelligence API", version="0.1.0", lifespan=lifespan)
 
-CORS_ORIGINS = [
+cors_origins = [
     origin.strip()
     for origin in os.getenv(
-        "AI_SCREENING_CORS_ORIGINS", "http://localhost:3000,http://localhost:3001"
+        "AI_SCREENING_CORS_ORIGINS",
+        "http://localhost:3000,http://localhost:3001,https://ai-screening.pages.dev",
     ).split(",")
     if origin.strip()
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=CORS_ORIGINS,
+    allow_origins=cors_origins,
+    allow_origin_regex=r"https://[a-z0-9-]+\\.ai-screening\\.pages\\.dev",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -55,6 +57,7 @@ async def workflow_error(_: Request, exc: WorkflowError) -> JSONResponse:
 
 app.include_router(health.router)
 app.include_router(grants.router)
+app.include_router(ncst.router)
 app.include_router(publications.router)
 app.include_router(workflow.router)
 

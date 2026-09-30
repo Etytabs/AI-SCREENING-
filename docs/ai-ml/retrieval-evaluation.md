@@ -1,39 +1,34 @@
-# Retrieval evaluation
+# Retrieval benchmark execution
 
-## Purpose
+The benchmark runner connects the labelled synthetic corpus to the same ranking interfaces used by the screening retrieval path.
 
-The retrieval layer ranks historical records or evidence candidates for a screening query. This evaluation measures ranking quality before a second-stage reranker is introduced.
+## Current baseline
 
-The benchmark is intentionally synthetic until authorized historical proposal data and validated relevance labels are available.
+The lexical pipeline is executable without an ML model and provides the CI reference:
 
-## Metrics
+- Recall@5: 1.00
+- Precision@5: 0.20
+- MRR: 1.00
+- nDCG@5: 1.00
 
-- Recall@K: fraction of labelled relevant candidates appearing in the top K.
-- Precision@K: fraction of the top K results that are labelled relevant.
-- MRR: reciprocal rank of the first relevant result.
-- nDCG@K: position-sensitive ranking quality relative to the ideal ordering.
+These results are from four synthetic cases with one labelled relevant candidate per case. They are a regression baseline, not production performance.
 
-These are retrieval metrics. They are not confidence scores, probabilities of duplication, plagiarism findings, eligibility decisions, or funding recommendations.
+## Embedding and hybrid evaluation
 
-## Benchmark
+The production embedding path uses the configured SentenceTransformer model. CI intentionally keeps that runtime disabled so tests do not download or execute a model.
 
-The synthetic benchmark contains four grant-screening queries and labelled historical candidates.
+When embeddings are enabled, the benchmark runner can evaluate lexical, embedding, and hybrid strategies using the same candidate pools, labels and K.
 
-Each case defines a screening query, candidate historical records, and one or more labelled relevant candidates. The labels are demonstration labels only and must not be represented as official NRIF relevance judgements.
+- lexical — existing lexical ranking;
+- embedding — cosine similarity over the configured embedding model;
+- hybrid — the existing 35% lexical / 65% semantic fusion.
 
-## Evaluation protocol
+## Why the cross-encoder comes later
 
-Compare retrieval strategies using the same candidate pool and relevance labels:
+A cross-encoder changes the retrieval architecture by scoring a query-candidate pair jointly. It should therefore be introduced only after the first-stage lexical, embedding and hybrid baselines have been measured on the same benchmark.
 
-1. lexical baseline;
-2. embedding-only retrieval;
-3. hybrid lexical + embedding retrieval;
-4. later, a true second-stage cross-encoder reranker.
+The next implementation should record model name/revision, K, dataset version, and all four metrics for every run, then compare the cross-encoder against the established first-stage baseline.
 
-Report Recall@K, Precision@K, MRR and nDCG@K for the same K values.
+## CI reference
 
-Record the dataset version, model name/revision, retrieval weights and evaluation date with every experiment.
-
-## Limitations
-
-The synthetic benchmark cannot establish production performance. Before deployment, evaluation should use an authorized, de-identified and representative dataset with reviewer-validated relevance labels, held-out evaluation data, and documented error analysis.
+The retrieval reference results file records the current synthetic lexical baseline and explicitly marks production embedding/hybrid evaluation as not run in CI.

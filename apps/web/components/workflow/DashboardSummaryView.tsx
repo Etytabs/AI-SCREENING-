@@ -109,7 +109,7 @@ export function DashboardSummaryView({ summary }: { summary: DashboardSummary })
           <div>
             <b>Review queue</b>
             <strong>{summary.findings_pending_review}</strong>
-            <span>findings need human review</span>
+            <span>findings awaiting a reviewer</span>
           </div>
           <Link href="/dashboard/review">Open review →</Link>
         </div>

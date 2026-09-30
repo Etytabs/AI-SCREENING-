@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from functools import lru_cache
 from typing import Protocol
 
-
 DEFAULT_RERANKER_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 
 

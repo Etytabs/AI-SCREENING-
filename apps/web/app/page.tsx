@@ -289,6 +289,7 @@ function Publications(){
   const [source,setSource]=useState("crossref");
   const [sources,setSources]=useState<any[]>([]);
   const [records,setRecords]=useState<any[]>([]);
+  const [mode,setMode]=useState<"search"|"compare">("search");
   const [loading,setLoading]=useState(false);
   const [error,setError]=useState("");
 
@@ -303,7 +304,8 @@ function Publications(){
   async function search(){
     setLoading(true); setError("");
     try {
-      const res=await fetch(`${API_BASE}/api/v1/publications/search?q=${encodeURIComponent(query)}&source=${encodeURIComponent(source)}&limit=10`);
+      const endpoint = mode === "compare" ? `${API_BASE}/api/v1/publications/compare?q=${encodeURIComponent(query)}&limit=10` : `${API_BASE}/api/v1/publications/search?q=${encodeURIComponent(query)}&source=${encodeURIComponent(source)}&limit=10`;
+      const res=await fetch(endpoint);
       const data=await res.json();
       if(!res.ok) throw new Error(data.detail || "Research search failed.");
       setRecords(data.records || []);
@@ -319,10 +321,11 @@ function Publications(){
         <select value={source} onChange={e=>setSource(e.target.value)} onFocus={loadSources} style={{padding:10,border:"1px solid var(--line)",background:"transparent"}}>
           <option value="crossref">Crossref</option><option value="doaj">DOAJ</option><option value="pmc">PubMed Central</option><option value="arxiv">arXiv</option><option value="core">CORE</option>
         </select>
-        <button className="dark-button" onClick={search} disabled={loading}>{loading ? "Searching…" : "Search"}</button>
+        <button className="dark-button" onClick={search} disabled={loading}>{loading ? "Searching…" : mode === "compare" ? "Compare sources" : "Search"}</button>
+        <button className={mode === "compare" ? "dark-button" : "text-button"} onClick={()=>setMode(mode === "compare" ? "search" : "compare")}>{mode === "compare" ? "Single source" : "Cross-source comparison"}</button>
       </div>
       {error && <div className="error">{error}</div>}
-      {records.map((r:any)=><div key={r.record_id}><span><b>{r.title || "Untitled record"}</b><small>{r.authors?.slice(0,3).join(", ") || "Author metadata unavailable"} · {r.source_id}</small><small>{r.doi ? `DOI: ${r.doi}` : r.source_url || "Source URL unavailable"}</small></span><button onClick={()=>r.source_url && window.open(r.source_url,"_blank","noopener,noreferrer")}>Open source</button></div>)}
+      {records.map((r:any)=><div key={r.record_id}><span><b>{r.title || "Untitled record"}</b><small>{r.authors?.slice(0,3).join(", ") || "Author metadata unavailable"} · {r.source_id}</small><small>{r.doi ? `DOI: ${r.doi}` : r.source_url || "Source URL unavailable"}{r.similarity !== undefined ? ` · similarity ${Number(r.similarity).toFixed(2)} · ${r.method}` : ""}</small></span><button onClick={()=>r.source_url && window.open(r.source_url,"_blank","noopener,noreferrer")}>Open source</button></div>)}
       {!loading && !records.length && <div style={{padding:"22px 0",color:"var(--muted)"}}>Run a live search to retrieve research records.</div>}
     </section>
     <section className="integration-list" style={{marginTop:24}}>

@@ -1,7 +1,13 @@
 from ml.evidence.state import RunState
 
 
-def derive_run_state(*, requested: int, completed: int, failed: int, blocked: int = 0) -> RunState:
+def derive_run_state(
+    *,
+    requested: int,
+    completed: int,
+    failed: int = 0,
+    blocked: int = 0,
+) -> RunState:
     if requested < 1:
         raise ValueError("requested must be positive")
     if min(completed, failed, blocked) < 0:

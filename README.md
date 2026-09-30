@@ -239,3 +239,4 @@ To enable it, open **Settings → Pages**, set **Source** to **GitHub Actions**,
 GitHub Pages hosts the static presentation only. The FastAPI screening endpoint is not hosted by GitHub Pages; live document upload and screening require a separately deployed API. The synthetic presentation remains usable without the API.
 
 The presentation MVP includes the screening workspace, evidence-oriented findings, human-review workflow, screening queue and stakeholder pricing scenario.
+Cloudflare Pages deployment verified.

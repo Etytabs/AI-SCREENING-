@@ -55,6 +55,17 @@ class DecisionHistory:
         self._decisions.append(entry)
         return entry
 
+    def escalate(self, item_id: str, reviewer_id: str, rationale: str) -> ReviewDecision:
+        entry = ReviewDecision(
+            item_id=item_id,
+            reviewer_id=reviewer_id,
+            decision=ReviewStatus.ESCALATED,
+            rationale=rationale,
+            created_at=datetime.now(UTC),
+        )
+        self._decisions.append(entry)
+        return entry
+
     def request_clarification(
         self,
         item_id: str,

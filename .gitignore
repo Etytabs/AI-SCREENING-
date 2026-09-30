@@ -15,5 +15,8 @@ build/
 coverage/
 .DS_Store
 *.log
+.run/
+*.tsbuildinfo
+*.egg-info/
 data/raw/
 data/private/

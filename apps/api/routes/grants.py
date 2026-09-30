@@ -25,7 +25,10 @@ async def screen_document_upload(
     data = await file.read()
     if not data:
         raise HTTPException(status_code=400, detail="Uploaded document is empty.")
-    with NamedTemporaryFile(suffix=suffix) as tmp:
+    # Windows cannot reopen a NamedTemporaryFile while it is still open.
+    with NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
         tmp.write(data)
-        tmp.flush()
+    try:
         return screen_document(tmp.name, proposal_id)
+    finally:
+        Path(tmp.name).unlink(missing_ok=True)

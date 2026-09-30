@@ -10,6 +10,7 @@ from ml.text_normalization.service import normalize_text
 class ExtractedPage:
     page_number: int
     text: str
+    lines: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -33,6 +34,11 @@ def _file_sha256(file: Path) -> str:
     return digest.hexdigest()
 
 
+def _page(page_number: int, raw_lines: list[str]) -> ExtractedPage:
+    lines = tuple(line for line in (normalize_text(raw) for raw in raw_lines) if line)
+    return ExtractedPage(page_number=page_number, text=" ".join(lines), lines=lines)
+
+
 def extract_document(path: str, source_id: str) -> ExtractedDocument:
     file = Path(path)
     suffix = file.suffix.lower()
@@ -43,7 +49,7 @@ def extract_document(path: str, source_id: str) -> ExtractedDocument:
 
             with fitz.open(file) as doc:
                 pages = tuple(
-                    ExtractedPage(page_number=index + 1, text=normalize_text(page.get_text("text")))
+                    _page(index + 1, page.get_text("text").splitlines())
                     for index, page in enumerate(doc)
                 )
             return ExtractedDocument(
@@ -55,12 +61,23 @@ def extract_document(path: str, source_id: str) -> ExtractedDocument:
             from docx import Document
 
             doc = Document(file)
-            text = normalize_text("\n".join(p.text for p in doc.paragraphs if p.text.strip()))
-            page = ExtractedPage(page_number=1, text=text)
+            page = _page(1, [p.text for p in doc.paragraphs if p.text.strip()])
             return ExtractedDocument(
                 source_id, file.name,
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                text, 1, "success", file_sha256, (page,),
+                page.text, 1, "success", file_sha256, (page,),
+            )
+        if suffix == ".txt":
+            raw = file.read_bytes().decode("utf-8", errors="replace")
+            # Form feeds mark page boundaries in plain-text exports.
+            pages = tuple(
+                _page(index + 1, block.splitlines())
+                for index, block in enumerate(raw.split("\f"))
+            )
+            return ExtractedDocument(
+                source_id, file.name, "text/plain",
+                "\n\n".join(page.text for page in pages),
+                len(pages), "success", file_sha256, pages,
             )
         return ExtractedDocument(
             source_id, file.name, "application/octet-stream", "", None,

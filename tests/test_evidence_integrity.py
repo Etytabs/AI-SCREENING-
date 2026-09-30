@@ -1,5 +1,3 @@
-from tempfile import NamedTemporaryFile
-
 import fitz
 
 from ml.evidence.state import AssessmentState, EvidenceRelationship, ReviewStatus, RunState
@@ -20,36 +18,36 @@ def test_assessment_and_run_states_are_explicit():
     assert derive_run_state(requested=2, completed=0, blocked=2) == RunState.BLOCKED
 
 
-def test_citation_locator_requires_exact_document_text():
-    with NamedTemporaryFile(suffix=".pdf") as tmp:
-        document = fitz.open()
-        page = document.new_page()
-        page.insert_text((72, 72), "Methodology uses annotated maize images.")
-        document.save(tmp.name)
-        document.close()
+def test_citation_locator_requires_exact_document_text(tmp_path):
+    path = tmp_path / "doc.pdf"
+    document = fitz.open()
+    page = document.new_page()
+    page.insert_text((72, 72), "Methodology uses annotated maize images.")
+    document.save(path)
+    document.close()
 
-        from services.ingestion.document import extract_document
+    from services.ingestion.document import extract_document
 
-        extracted = extract_document(tmp.name, "DOC-1")
-        citation = CitationLocator(
-            document_id="DOC-1",
-            document_version=1,
-            page_number=1,
-            start=0,
-            end=11,
-            evidence="Methodology",
-        )
-        assert validate_citation(extracted, citation) is True
+    extracted = extract_document(str(path), "DOC-1")
+    citation = CitationLocator(
+        document_id="DOC-1",
+        document_version=1,
+        page_number=1,
+        start=0,
+        end=11,
+        evidence="Methodology",
+    )
+    assert validate_citation(extracted, citation) is True
 
-        invalid = CitationLocator(
-            document_id="DOC-1",
-            document_version=1,
-            page_number=1,
-            start=0,
-            end=11,
-            evidence="Not in document",
-        )
-        assert validate_citation(extracted, invalid) is False
+    invalid = CitationLocator(
+        document_id="DOC-1",
+        document_version=1,
+        page_number=1,
+        start=0,
+        end=11,
+        evidence="Not in document",
+    )
+    assert validate_citation(extracted, invalid) is False
 
 
 def test_source_failure_is_not_zero_evidence():
@@ -96,15 +94,15 @@ def test_audit_stream_preserves_history():
     assert [event.event_type for event in events] == ["FINDING_CREATED", "FINDING_UPHELD"]
 
 
-def test_screening_exposes_validated_evidence_chain():
-    with NamedTemporaryFile(suffix=".pdf") as tmp:
-        document = fitz.open()
-        page = document.new_page()
-        page.insert_text((72, 72), "Abstract\nMethodology\nBudget")
-        document.save(tmp.name)
-        document.close()
+def test_screening_exposes_validated_evidence_chain(tmp_path):
+    path = tmp_path / "proposal.pdf"
+    document = fitz.open()
+    page = document.new_page()
+    page.insert_text((72, 72), "Abstract\nMethodology\nBudget")
+    document.save(path)
+    document.close()
 
-        result = screen_document(tmp.name, "TEST-EVIDENCE")
+    result = screen_document(str(path), "TEST-EVIDENCE")
 
     assert result["run_state"] == RunState.COMPLETE.value
     assert result["evidence_chain"]

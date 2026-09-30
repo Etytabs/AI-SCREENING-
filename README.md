@@ -2,6 +2,12 @@
 
 AI/ML-centered research intelligence platform for **grant proposal screening** and **research publication reconciliation**. The MVP is designed as an evidence workspace: AI/ML models surface findings, retrieve supporting evidence, rank similar records, and expose provenance while authorized staff retain the final decision.
 
+## Grant-call screening workflow
+
+The dashboard (`/dashboard`) runs a complete grant-call workflow: create a call → upload the call document → deterministic requirement extraction → administrator verification → confirm → upload applications (single, multiple or ZIP) → asynchronous batch screening (extraction, requirement mapping, eligibility, completeness, duplication, text similarity, novelty, evidence validation) → dashboard and results table → review workspace with evidence drawer → reviewer decisions with rationale → audit trail → report.
+
+See [docs/grant-workflow.md](docs/grant-workflow.md) for the steps, REST API, roles, configuration, synthetic demo data and limitations. The API seeds one clearly labelled synthetic climate call with five synthetic applications; storage is in memory and identity is a demo header, not authentication.
+
 ## MVP focus
 
 ### 1. AI Grant Screening
@@ -108,24 +114,9 @@ The presentation MVP is designed around a real screening workspace:
 - text-overlap evidence;
 - provenance/model contract;
 - reviewer actions;
-- screening queue;
-- stakeholder-oriented indicative pricing estimator.
+- screening queue.
 
-The public prototype uses synthetic/demo data and clearly identifies that limitation.
-
-## Indicative commercial model
-
-The UI includes a **configurable pricing estimator for stakeholder discussion**. Pricing is intentionally presented as indicative rather than an approved NCST/NRIF tariff.
-
-The estimator separates:
-
-- one-time implementation/onboarding;
-- monthly platform fee;
-- per-proposal screening volume;
-- optional advanced AI/reconciliation module;
-- support level.
-
-The numbers in the prototype are placeholders for stakeholder modelling and must be replaced by an agreed commercial proposal.
+The public prototype uses synthetic/demo data and clearly identifies that limitation. Commercial terms are outside the scope of this repository and are agreed separately with stakeholders.
 
 ## Data, governance and deployment
 

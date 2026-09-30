@@ -1,0 +1,207 @@
+.screen {
+  --navy: #0b1f3f;
+  --navy-2: #12305e;
+  --blue: #1f4f99;
+  --blue-hover: #2a62b8;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 36px 44px 28px;
+  color: #fff;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px) 0 0 / 56px 56px,
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px) 0 0 / 56px 56px,
+    linear-gradient(160deg, var(--navy-2), var(--navy) 60%);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand b {
+  display: block;
+  font-size: 15px;
+  letter-spacing: 0.14em;
+}
+
+.brand small {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.brandMark {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.headerLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.headerLink:hover {
+  border-color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 64px;
+  align-items: center;
+  margin: auto 0;
+  padding: 40px 0;
+}
+
+.kicker {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.pitch h1 {
+  margin: 18px 0 22px;
+  font-size: 52px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.pitch p {
+  margin: 0;
+  max-width: 460px;
+  font-size: 17px;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 40px;
+  margin-top: 32px;
+  padding: 14px 18px;
+  border-radius: 8px;
+  background: var(--blue);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.cta:hover {
+  background: var(--blue-hover);
+}
+
+.steps {
+  display: grid;
+  gap: 14px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 18px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.steps .stepActive {
+  border-color: rgba(147, 187, 255, 0.55);
+  background: rgba(96, 150, 240, 0.16);
+}
+
+.stepIcon {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.stepActive .stepIcon {
+  border-color: rgba(147, 187, 255, 0.7);
+  background: rgba(96, 150, 240, 0.35);
+}
+
+.steps small {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.steps b {
+  display: block;
+  margin: 2px 0 4px;
+  font-size: 17px;
+}
+
+.steps p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.footnote {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.footnote::before {
+  content: "•";
+  margin-right: 8px;
+}
+
+@media (max-width: 900px) {
+  .screen {
+    padding: 24px 20px;
+  }
+
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+
+  .pitch h1 {
+    font-size: 36px;
+  }
+}

@@ -23,6 +23,7 @@ class ReviewStatus(StrEnum):
     UPHELD = "UPHELD"
     DISMISSED = "DISMISSED"
     CLARIFICATION_REQUESTED = "CLARIFICATION_REQUESTED"
+    ESCALATED = "ESCALATED"
 
 
 class EvidenceRelationship(StrEnum):

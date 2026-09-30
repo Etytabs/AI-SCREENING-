@@ -1,0 +1,28 @@
+name: Retrieval Benchmark #2
+
+on:
+  workflow_dispatch:
+
+jobs:
+  adversarial-model-backed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install --upgrade pip
+      - run: pip install ".[ml]"
+      - name: Run adversarial model-backed benchmark
+        env:
+          AI_SCREENING_EMBEDDINGS_ENABLED: "true"
+          AI_SCREENING_EMBEDDING_MODEL: "sentence-transformers/all-MiniLM-L6-v2"
+        run: >
+          python -m scripts.evaluate_retrieval
+          --dataset data/evaluation/retrieval_benchmark_adversarial.json
+          --output data/evaluation/retrieval_benchmark_2_results.json
+      - name: Upload Benchmark #2 results
+        uses: actions/upload-artifact@v4
+        with:
+          name: retrieval-benchmark-2-results
+          path: data/evaluation/retrieval_benchmark_2_results.json

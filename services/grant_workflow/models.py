@@ -23,6 +23,10 @@ def utcnow() -> datetime:
 
 
 class Role(StrEnum):
+    NCST_GRANT_PERSONNEL = "NCST_GRANT_PERSONNEL"
+    GRANT_INSTITUTION = "GRANT_INSTITUTION"
+    RESEARCHER_APPLICANT = "RESEARCHER_APPLICANT"
+    # Legacy demo roles retained for backward-compatible audit records.
     GRANT_ADMINISTRATOR = "GRANT_ADMINISTRATOR"
     REVIEWER = "REVIEWER"
     SYSTEM_ADMINISTRATOR = "SYSTEM_ADMINISTRATOR"

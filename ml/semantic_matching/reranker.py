@@ -1,8 +1,30 @@
+import os
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import Protocol
 
 
 DEFAULT_RERANKER_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+
+
+@dataclass(frozen=True)
+class RerankerConfig:
+    model_name: str = DEFAULT_RERANKER_MODEL
+    revision: str | None = None
+    enabled: bool = False
+
+    @classmethod
+    def from_env(cls) -> "RerankerConfig":
+        enabled = os.getenv("AI_SCREENING_RERANKER_ENABLED", "false").strip().lower()
+        revision = os.getenv("AI_SCREENING_RERANKER_REVISION", "").strip() or None
+        return cls(
+            model_name=(
+                os.getenv("AI_SCREENING_RERANKER_MODEL", DEFAULT_RERANKER_MODEL).strip()
+                or DEFAULT_RERANKER_MODEL
+            ),
+            revision=revision,
+            enabled=enabled in {"1", "true", "yes", "on"},
+        )
 
 
 class CrossEncoderReranker(Protocol):
@@ -36,6 +58,20 @@ class SentenceTransformerCrossEncoder:
         pairs = [(query, text) for _, text in candidates]
         scores = self._load().predict(pairs)
         return [float(score) for score in scores]
+
+
+@lru_cache(maxsize=2)
+def create_reranker(config: RerankerConfig) -> CrossEncoderReranker | None:
+    if not config.enabled:
+        return None
+    return SentenceTransformerCrossEncoder(
+        model_name=config.model_name,
+        revision=config.revision,
+    )
+
+
+def get_runtime_reranker() -> CrossEncoderReranker | None:
+    return create_reranker(RerankerConfig.from_env())
 
 
 @dataclass(frozen=True)

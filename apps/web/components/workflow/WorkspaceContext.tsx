@@ -43,7 +43,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const storedRole = window.localStorage.getItem(ROLE_KEY) as Role | null;
     if (storedRole && VALID_ROLES.includes(storedRole)) setRoleState(storedRole);
-    else if (storedRole) window.localStorage.setItem(ROLE_KEY, "NCST_GRANT_PERSONNEL");
+    else if (storedRole) {\n      window.localStorage.setItem(ROLE_KEY, "NCST_GRANT_PERSONNEL");\n      setRoleState("NCST_GRANT_PERSONNEL");\n    }
     setCallIdState(window.localStorage.getItem(CALL_KEY));
   }, []);
 

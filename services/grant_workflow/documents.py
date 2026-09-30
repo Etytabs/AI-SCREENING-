@@ -14,7 +14,7 @@ from tempfile import NamedTemporaryFile
 from services.grant_workflow.text_utils import parse_amounts, parse_durations
 from services.ingestion.document import ExtractedDocument, extract_document
 
-SUPPORTED_SUFFIXES = {".pdf", ".docx", ".txt"}
+SUPPORTED_SUFFIXES = {".pdf", ".docx", ".txt", ".md", ".markdown"}
 MAX_ZIP_FILES = 2000
 MAX_ZIP_BYTES = 200 * 1024 * 1024
 

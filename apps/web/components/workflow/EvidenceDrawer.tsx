@@ -91,6 +91,34 @@ export function EvidenceDrawer({ detail, documentNames, canDecide, onClose, onSh
         </ul>
       </section>
 
+      {finding.type === "duplication" && finding.matches.length > 0 && (
+        <section className="drawer-section">
+          <h3>Duplicate / semantic similarity</h3>
+          <p className="uncertainty">Potential duplicate or closely related proposal detected. Similarity is comparison evidence, not an automatic duplicate verdict.</p>
+          <ul className="match-list">
+            {finding.matches.map((m) => (
+              <li key={m.match_id}>
+                <div className="evidence-meta">
+                  <b>{m.title ?? m.record_id}</b>
+                  <span>{Math.round(m.similarity_score * 100)}% similarity</span>
+                  <SyntheticBadge origin={m.data_origin} />
+                </div>
+                <small>Source: {SOURCE_LABELS[m.source_type] ?? m.source_type}</small>
+                <small>
+                  {m.lexical_score !== null && `lexical ${m.lexical_score.toFixed(2)}`}
+                  {m.semantic_score !== null && ` · semantic ${m.semantic_score.toFixed(2)}`}
+                  {m.reranker_score !== null && ` · reranker ${m.reranker_score.toFixed(2)}`}
+                  {m.matched_section && ` · ${m.matched_section.replace(/_/g, " ")}`}
+                </small>
+                <p className="small">{m.explanation}</p>
+                {m.matching_concepts.length > 0 && <p className="concepts">{m.matching_concepts.map((c) => <span key={c}>{c}</span>)}</p>}
+                {m.matched_passage && <div className="source-comparison"><div><b>Matched proposal passage</b><blockquote>{m.matched_passage}</blockquote></div></div>}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {finding.type === "plagiarism" && (() => {
         const publicSource = finding.details.public_source_similarity as {
           status?: string;

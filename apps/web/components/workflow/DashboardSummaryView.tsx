@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { formatAmount, SIGNAL_LABELS } from "../../lib/labels";
 
-function compactAmount(value: number | null | undefined, currency: string) {
+function compactAmount(value: number | null | undefined, currency: string | null) {
   if (value == null) return "Not set";
-  if (value >= 1000000) return `${currency} ${(value / 1000000).toLocaleString(undefined, { maximumFractionDigits: 1 })}M`;
-  if (value >= 1000) return `${currency} ${(value / 1000).toLocaleString(undefined, { maximumFractionDigits: 0 })}K`;
-  return `${currency} ${value.toLocaleString()}`;
+  const unit = currency ?? "RWF";
+  if (value >= 1000000) return `${unit} ${(value / 1000000).toLocaleString(undefined, { maximumFractionDigits: 1 })}M`;
+  if (value >= 1000) return `${unit} ${(value / 1000).toLocaleString(undefined, { maximumFractionDigits: 0 })}K`;
+  return `${unit} ${value.toLocaleString()}`;
 }
 
 function dateLabel(value: string | null | undefined) {

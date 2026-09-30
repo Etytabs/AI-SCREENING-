@@ -1,4 +1,9 @@
-from services.ncst_requirements.models import LifecycleStage, MonitoringIndicator, Requirement, RequirementSource
+from services.ncst_requirements.models import (
+    LifecycleStage,
+    MonitoringIndicator,
+    Requirement,
+    RequirementSource,
+)
 
 
 SOURCE_REGISTRY: tuple[RequirementSource, ...] = (

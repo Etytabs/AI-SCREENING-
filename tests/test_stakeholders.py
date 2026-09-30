@@ -9,4 +9,4 @@ def test_primary_stakeholder_order_and_purposes() -> None:
         "researchers_applicants",
     ]
     assert "pre-submission" in stakeholders[2].purpose
-    assert "potentially" in stakeholders[2].purpose
+    assert "overlap" in stakeholders[2].purpose

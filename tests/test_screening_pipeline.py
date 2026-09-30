@@ -28,7 +28,7 @@ def test_screening_processes_pdf_document():
     assert result["status"] == "screened"
     assert result["extraction"]["extraction_status"] == "success"
     assert result["extraction"]["page_count"] == 1
-    assert result["completeness"]["total"] == 4
+    assert result["completeness"]["total"] == 6
     assert result["human_review_required"] is True
 
 
@@ -44,5 +44,5 @@ def test_screening_processes_docx_document():
 
     assert result["status"] == "screened"
     assert result["extraction"]["extraction_status"] == "success"
-    assert result["completeness"]["total"] == 4
+    assert result["completeness"]["total"] == 6
     assert result["human_review_required"] is True

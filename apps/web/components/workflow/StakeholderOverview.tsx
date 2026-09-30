@@ -6,11 +6,13 @@ import { ApiError } from "../../lib/api";
 import { WorkspaceContext } from "./WorkspaceContext";
 
 export function StakeholderOverview() {
-  const workspace = useContext(WorkspaceContext);\n  const client = workspace?.client;
+  const workspace = useContext(WorkspaceContext);
+  const client = workspace?.client;
   const [stakeholders, setStakeholders] = useState<Stakeholder[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!client) return;
     let cancelled = false;
     client.stakeholders().then((data) => {
       if (!cancelled) setStakeholders(data.stakeholders);
@@ -20,7 +22,8 @@ export function StakeholderOverview() {
     return () => { cancelled = true; };
   }, [client]);
 
-  if (!client) return null;\n  if (error) return <p className="muted">{error}</p>;
+  if (!client) return null;
+  if (error) return <p className="muted">{error}</p>;
   if (!stakeholders.length) return <p className="muted">Loading stakeholder context…</p>;
 
   return (

@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 
 from ml.evidence.state import RunState
-from services.screening.run_state import derive_run_state
 
 
 @dataclass(frozen=True)

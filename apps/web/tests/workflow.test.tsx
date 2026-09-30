@@ -118,7 +118,8 @@ describe("dashboard", () => {
     render(<DashboardSummaryView summary={fx.summary()} />);
     expect(screen.getByText("Climate Resilience Research Call")).toBeTruthy();
     expect(screen.getByText("15 of 15 confirmed")).toBeTruthy();
-    expect(screen.getByText("11 findings awaiting a reviewer")).toBeTruthy();
+    expect(screen.getByText("11")).toBeTruthy();
+    expect(screen.getByText("findings awaiting a reviewer")).toBeTruthy();
     expect(screen.getByText(/Not searched \(1\): OpenAlex/)).toBeTruthy();
     expect(screen.getByText(/never replace, human review/)).toBeTruthy();
     expect(screen.queryByText("Screening in progress")).toBeNull();

@@ -25,18 +25,18 @@ export const NAV_ITEMS = {
     { href: "/dashboard/publications", label: "Research Outputs", icon: "◫" },
   ],
   RESEARCHER_APPLICANT: [
-    { href: "/dashboard", label: "My Workspace" },
+    { href: "/dashboard", label: "My Workspace", icon: "⌂" },
     { href: "/dashboard/calls", label: "Find Funding", icon: "□" },
     { href: "/dashboard/applications", label: "My Applications", icon: "▤" },
     { href: "/dashboard/check", label: "Research Check", icon: "✓" },
     { href: "/dashboard/publications", label: "My Publications", icon: "◫" },
   ],
   GRANT_ADMINISTRATOR: [
-    { href: "/dashboard", label: "Overview" },
-    { href: "/dashboard/calls", label: "Grant Calls" },
-    { href: "/dashboard/applications", label: "Applications" },
-    { href: "/dashboard/screening", label: "AI Screening" },
-    { href: "/dashboard/review", label: "Human Review" },
+    { href: "/dashboard", label: "Overview", icon: "⌂" },
+    { href: "/dashboard/calls", label: "Grant Calls", icon: "□" },
+    { href: "/dashboard/applications", label: "Applications", icon: "▤" },
+    { href: "/dashboard/screening", label: "AI Screening", icon: "◈" },
+    { href: "/dashboard/review", label: "Human Review", icon: "✓" },
   ],
   REVIEWER: [
     { href: "/dashboard", label: "Review Overview", icon: "⌂" },
@@ -44,7 +44,7 @@ export const NAV_ITEMS = {
     { href: "/dashboard/review", label: "Human Review" },
   ],
   SYSTEM_ADMINISTRATOR: [
-    { href: "/dashboard", label: "Overview" },
+    { href: "/dashboard", label: "Overview", icon: "⌂" },
     { href: "/dashboard/sources", label: "Evidence Sources", icon: "◎" },
   ],
 } as const;

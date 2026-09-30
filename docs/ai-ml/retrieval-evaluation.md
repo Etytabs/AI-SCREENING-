@@ -32,3 +32,10 @@ The next implementation should record model name/revision, K, dataset version, a
 ## CI reference
 
 The retrieval reference results file records the current synthetic lexical baseline and explicitly marks production embedding/hybrid evaluation as not run in CI.
+
+
+## Reproducible benchmark command
+
+Run the benchmark from the repository root with `python -m scripts.evaluate_retrieval`. By default it evaluates lexical, embedding and hybrid strategies at K=5. With embeddings disabled, lexical completes and the embedding/hybrid strategies are explicitly recorded as `not_run`.
+
+For a model-backed run, enable the configured SentenceTransformer runtime with `AI_SCREENING_EMBEDDINGS_ENABLED=true`, optionally set `AI_SCREENING_EMBEDDING_MODEL` and `AI_SCREENING_EMBEDDING_REVISION`, then run the same command. The output records the dataset, timestamp, K, model, revision and metrics so runs can be compared without conflating model configuration with results.

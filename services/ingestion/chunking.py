@@ -33,7 +33,8 @@ def chunk_text(
         digest = hashlib.sha256(
             f"{source_id}:{ordinal}:{chunk}".encode()
         ).hexdigest()[:16]
-        chunks.append(DocumentChunk(digest, source_id, chunk, ordinal))
+        chunk_id = f"{source_id}:{ordinal}:{digest}"
+        chunks.append(DocumentChunk(chunk_id, source_id, chunk, ordinal))
         if end >= len(words):
             break
         start = max(start + 1, end - overlap_words)

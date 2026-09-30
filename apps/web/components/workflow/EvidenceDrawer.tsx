@@ -91,6 +91,53 @@ export function EvidenceDrawer({ detail, documentNames, canDecide, onClose, onSh
         </ul>
       </section>
 
+      {finding.type === "plagiarism" && (() => {
+        const publicSource = finding.details.public_source_similarity as {
+          status?: string;
+          human_review_required?: boolean;
+          findings?: Array<{
+            similarity: number;
+            match_type: string;
+            applicant_passage: string;
+            source_passage: string;
+            source: {
+              title?: string;
+              url: string;
+              authors?: string[];
+              publisher?: string | null;
+              published_date?: string | null;
+              metadata_confidence?: number;
+            };
+          }>;
+        } | undefined;
+        if (!publicSource || !publicSource.findings?.length) return null;
+        return (
+          <section className="drawer-section">
+            <h3>Public-source similarity</h3>
+            <p className="uncertainty">Potential text similarity detected. This evidence does not establish plagiarism; an authorized reviewer must compare the passages and verify attribution.</p>
+            <ul className="match-list">
+              {publicSource.findings.map((item, index) => (
+                <li key={item.source.url + index}>
+                  <div className="evidence-meta">
+                    <b>{item.source.title || "Public source"}</b>
+                    <span>{Math.round(item.similarity * 100)}% similarity</span>
+                    <span>{item.match_type.replace(/-/g, " ")}</span>
+                  </div>
+                  {item.source.authors?.length ? <small>Author(s): {item.source.authors.join("; ")}</small> : null}
+                  {item.source.publisher ? <small>Publisher / institution: {item.source.publisher}</small> : null}
+                  {item.source.published_date ? <small>Published: {item.source.published_date}</small> : null}
+                  <small>Attribution metadata confidence: {item.source.metadata_confidence !== undefined ? item.source.metadata_confidence.toFixed(2) : "not available"}</small>
+                  <div className="source-comparison">
+                    <div><b>Applicant passage</b><blockquote>{item.applicant_passage}</blockquote></div>
+                    <div><b>Source passage</b><blockquote>{item.source_passage}</blockquote></div>
+                  </div>
+                  <a className="text-button" href={item.source.url} target="_blank" rel="noreferrer">Open original source ↗</a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      })()}
       {finding.matches.length > 0 && (
         <section className="drawer-section">
           <h3>Compared records ({finding.matches.length})</h3>

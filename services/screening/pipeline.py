@@ -1,4 +1,5 @@
 import json
+import os
 from dataclasses import asdict
 from pathlib import Path
 
@@ -12,6 +13,7 @@ from services.evidence.chain import EvidenceChain
 from services.evidence.citations import CitationLocator, validate_citation
 from services.evidence.retrieval import select_evidence
 from services.ingestion.document import extract_document
+from services.plagiarism.service import check_public_sources
 from services.screening.run_state import derive_run_state
 
 RULES_PATH = Path(__file__).resolve().parents[2] / "data" / "rules" / "nrif_demo_eligibility.json"
@@ -187,6 +189,19 @@ def screen_document(path: str, proposal_id: str) -> dict:
                 "method": result.method,
             })
 
+    public_source_findings = []
+    public_source_status = "disabled"
+    if os.getenv("AI_SCREENING_PUBLIC_SOURCE_CHECK_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}:
+        if os.getenv("GEMINI_API_KEY"):
+            try:
+                public_source_findings = [asdict(item) for item in check_public_sources(doc.text, limit=5)]
+                public_source_status = "completed"
+            except (RuntimeError, ValueError, OSError) as exc:
+                public_source_status = "failed"
+                public_source_findings = [{"status": "SOURCE_CHECK_FAILED", "error": str(exc)}]
+        else:
+            public_source_status = "not_configured"
+
     run_state = derive_run_state(requested=1, completed=1)
     embedding_status = "enabled" if embedder is not None else "disabled"
     return {
@@ -232,6 +247,11 @@ def screen_document(path: str, proposal_id: str) -> dict:
             for candidate in evidence_candidates
         ],
         "text_overlap": overlap,
+        "public_source_similarity": {
+            "status": public_source_status,
+            "findings": public_source_findings,
+            "human_review_required": True,
+        },
         "flags": flags,
         "evidence": evidence,
         "evidence_chain": evidence_chain,

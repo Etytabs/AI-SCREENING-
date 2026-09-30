@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { formatAmount, SIGNAL_LABELS } from "../../lib/labels";
+import { formatAmount } from "../../lib/labels";
 
 function compactAmount(value: number | null | undefined, currency: string | null) {
   if (value == null) return "Not set";
@@ -20,20 +20,6 @@ function dateLabel(value: string | null | undefined) {
 import type { DashboardSummary } from "../../lib/types";
 import { CallStatusBadge, Notice, StatusBadge } from "./ui";
 import { StakeholderOverview } from "./StakeholderOverview";
-
-function CountRow({ label, counts, order }: { label: string; counts: Record<string, number>; order: string[] }) {
-  return (
-    <tr>
-      <th scope="row">{label}</th>
-      {order.map((key) => (
-        <td key={key}>
-          <b>{counts[key] ?? 0}</b>
-          <span>{key === "REVIEW_REQUIRED" ? "review required" : (SIGNAL_LABELS[key] ?? key).toLowerCase()}</span>
-        </td>
-      ))}
-    </tr>
-  );
-}
 
 export function DashboardSummaryView({ summary }: { summary: DashboardSummary }) {
   const call = summary.grant_call;

@@ -92,7 +92,13 @@ def evaluate_text_similarity(ctx: ScreeningContext, run_id: str) -> list[Finding
 
     public_sources = []
     public_source_status = "disabled"
-    if os.getenv("AI_SCREENING_PUBLIC_SOURCE_CHECK_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}:
+    # Public-source similarity is part of the requested plagiarism workflow.
+    # It runs by default when GEMINI_API_KEY is configured; deployments can still
+    # explicitly disable it with AI_SCREENING_PUBLIC_SOURCE_CHECK_ENABLED=false.
+    public_source_enabled = os.getenv("AI_SCREENING_PUBLIC_SOURCE_CHECK_ENABLED", "true").strip().lower() in {
+        "1", "true", "yes", "on"
+    }
+    if public_source_enabled:
         if os.getenv("GEMINI_API_KEY"):
             try:
                 public_sources = [item for _, doc in narrative for item in check_public_sources(doc.text, limit=5)]

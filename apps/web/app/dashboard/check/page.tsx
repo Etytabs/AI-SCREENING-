@@ -6,7 +6,7 @@ import { FileDrop } from "../../../components/workflow/FileDrop";
 import { NoCallSelected, Notice, PageHeader } from "../../../components/workflow/ui";
 import { useWorkspace } from "../../../components/workflow/WorkspaceContext";
 import { ApiError } from "../../../lib/api";
-import type { ApplicationDetail, ScreeningBatch } from "../../../lib/types";
+import type { ApplicationDetail, BatchProgress } from "../../../lib/types";
 
 type Phase = "idle" | "uploading" | "screening" | "done" | "error";
 
@@ -17,7 +17,7 @@ export default function ResearchCheckPage() {
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState<string | null>(null);
   const [uploadErrors, setUploadErrors] = useState<string[]>([]);
-  const [batch, setBatch] = useState<ScreeningBatch | null>(null);
+  const [batch, setBatch] = useState<BatchProgress | null>(null);
   const [detail, setDetail] = useState<ApplicationDetail | null>(null);
 
   const open = !!call && ["READY_FOR_SUBMISSIONS", "SCREENING", "REVIEW"].includes(call.status);
@@ -57,7 +57,6 @@ export default function ResearchCheckPage() {
 
       setPhase("screening");
       const screening = await client.screenCall(call.id, applicationIds);
-      setBatch(screening);
 
       let current = await client.batchProgress(screening.id);
       while (["QUEUED", "RUNNING"].includes(current.status)) {

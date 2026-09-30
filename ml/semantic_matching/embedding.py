@@ -14,20 +14,27 @@ DEFAULT_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 @dataclass(frozen=True)
 class EmbeddingConfig:
     model_name: str = DEFAULT_EMBEDDING_MODEL
+    revision: str | None = None
     enabled: bool = False
 
     @classmethod
     def from_env(cls) -> "EmbeddingConfig":
         enabled = os.getenv("AI_SCREENING_EMBEDDINGS_ENABLED", "false").strip().lower()
+        revision = os.getenv("AI_SCREENING_EMBEDDING_REVISION", "").strip() or None
         return cls(
             model_name=os.getenv("AI_SCREENING_EMBEDDING_MODEL", DEFAULT_EMBEDDING_MODEL).strip()
             or DEFAULT_EMBEDDING_MODEL,
+            revision=revision,
             enabled=enabled in {"1", "true", "yes", "on"},
         )
 
 
 def embedding_model_name(config: EmbeddingConfig | None = None) -> str:
     return (config or EmbeddingConfig()).model_name
+
+
+def embedding_model_revision(config: EmbeddingConfig | None = None) -> str | None:
+    return (config or EmbeddingConfig()).revision
 
 
 def cosine_similarity(left: list[float], right: list[float]) -> float:
@@ -47,7 +54,10 @@ def create_embedder(config: EmbeddingConfig) -> "TextEmbedder | None":
         return None
     from ml.semantic_matching.hybrid import SentenceTransformerEmbedder
 
-    return SentenceTransformerEmbedder(model_name=config.model_name)
+    return SentenceTransformerEmbedder(
+        model_name=config.model_name,
+        revision=config.revision,
+    )
 
 
 def get_runtime_embedder() -> "TextEmbedder | None":

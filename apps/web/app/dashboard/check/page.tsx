@@ -123,7 +123,7 @@ export default function ResearchCheckPage() {
                   ? "Screening submissions…"
                   : "Upload submitted research"
             }
-            hint="You can select multiple proposals or upload a ZIP. For a ZIP, keep each submission in its own folder or use REF__filename.pdf so supporting files stay with the correct application."
+            hint="Select any supported research document directly. Each loose file is treated as one submission and receives an application reference automatically. Use a ZIP with one folder per submission when a submission contains multiple files; REF__filename.pdf is also supported."
             onFiles={check}
           />
         </section>

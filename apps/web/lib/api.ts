@@ -22,7 +22,8 @@ import type {
   UploadResponse,
 } from "./types";
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+export const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "https://ai-screening-dhdm.onrender.com";
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -81,7 +82,7 @@ export function createClient(identity: Identity, base: string = API_BASE) {
   };
 
   return {
-    listCalls: () => request<GrantCall[]>("GET", "/api/v1/grants"),
+    listCalls: () => request<GrantCall[]>( "GET", "/api/v1/grants"),
     getCall: (id: string) => request<GrantCall>("GET", `/api/v1/grants/${id}`),
     createCall: (input: GrantCallInput) => request<GrantCall>("POST", "/api/v1/grants", input),
     updateCall: (id: string, input: Partial<GrantCallInput> & { status?: string }) =>
@@ -115,8 +116,8 @@ export function createClient(identity: Identity, base: string = API_BASE) {
       return request<UploadResponse>("POST", `/api/v1/grants/${id}/applications/batch`, form);
     },
     listApplications: (id: string, filters: Record<string, string | undefined> = {}) =>
-      request<ApplicationRow[]>("GET", `/api/v1/grants/${id}/applications${q(filters)}`),
-    pendingUploads: (id: string) => request<PendingUpload[]>("GET", `/api/v1/grants/${id}/pending-uploads`),
+      request<ApplicationRow[]>( "GET", `/api/v1/grants/${id}/applications${q(filters)}`),
+    pendingUploads: (id: string) => request<PendingUpload[]>( "GET", `/api/v1/grants/${id}/pending-uploads`),
     associateUpload: (uploadId: string, body: { application_id?: string; new_reference?: string }) =>
       request<ApplicationRow>("POST", `/api/v1/pending-uploads/${uploadId}/associate`, body),
     getApplication: (id: string) => request<ApplicationDetail>("GET", `/api/v1/applications/${id}`),
@@ -127,16 +128,16 @@ export function createClient(identity: Identity, base: string = API_BASE) {
     screenApplication: (id: string) => request<ScreeningBatch>("POST", `/api/v1/applications/${id}/screen`),
     batchProgress: (id: string) => request<BatchProgress>("GET", `/api/v1/screening-batches/${id}`),
 
-    listFindings: (applicationId: string) => request<Finding[]>("GET", `/api/v1/applications/${applicationId}/findings`),
+    listFindings: (applicationId: string) => request<Finding[]>( "GET", `/api/v1/applications/${applicationId}/findings`),
     getFinding: (id: string) => request<FindingDetail>("GET", `/api/v1/findings/${id}`),
     decide: (id: string, action: ReviewerAction, note: string) =>
       request<ReviewerDecision>("POST", `/api/v1/findings/${id}/decision`, { action, note }),
     addNote: (id: string, note: string) => request<ReviewerNote>("POST", `/api/v1/findings/${id}/notes`, { note }),
 
     dashboard: (id: string) => request<DashboardSummary>("GET", `/api/v1/grants/${id}/dashboard`),
-    audit: (id: string) => request<AuditLogEntry[]>("GET", `/api/v1/grants/${id}/audit`),
+    audit: (id: string) => request<AuditLogEntry[]>( "GET", `/api/v1/grants/${id}/audit`),
     report: (id: string) => request<ScreeningReport>("GET", `/api/v1/grants/${id}/report`),
-    sources: () => request<DataSource[]>("GET", "/api/v1/sources"),
+    sources: () => request<DataSource[]>( "GET", "/api/v1/sources"),
   };
 }
 

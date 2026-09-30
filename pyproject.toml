@@ -32,3 +32,4 @@ pythonpath = ["."]
 line-length = 100
 target-version = "py311"
 lint.select = ["E", "F", "I"]
+lint.ignore = ["E501"]

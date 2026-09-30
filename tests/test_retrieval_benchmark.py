@@ -26,8 +26,8 @@ class BenchmarkEmbedder:
         return vectors
 
 
-def load_cases() -> list[BenchmarkCase]:
-    data = json.loads(Path("data/evaluation/retrieval_benchmark.json").read_text())
+def load_cases(path: str = "data/evaluation/retrieval_benchmark.json") -> list[BenchmarkCase]:
+    data = json.loads(Path(path).read_text())
     return [
         BenchmarkCase(
             query_id=item["query_id"],
@@ -79,3 +79,14 @@ def test_benchmark_runner_reports_disabled_embedding(monkeypatch):
     assert result["strategies"]["lexical"]["status"] == "completed"
     assert result["strategies"]["embedding"]["status"] == "not_run"
     assert result["strategies"]["hybrid"]["status"] == "not_run"
+
+
+def test_adversarial_benchmark_has_harder_cases():
+    cases = load_cases("data/evaluation/retrieval_benchmark_adversarial.json")
+    assert len(cases) == 10
+    assert any(
+        case.query.lower().split()[0] not in case.candidates[0][1].lower()
+        for case in cases
+    )
+    assert any(len(case.relevant_candidate_ids) > 1 for case in cases)
+    assert all(len(case.candidates) >= 5 for case in cases)

@@ -6,9 +6,11 @@ from ml.eligibility.rules import EligibilityRule, evaluate_rules
 from ml.evidence.state import AssessmentState, EvidenceRelationship, RunState
 from ml.explainability.evidence import Evidence
 from ml.plagiarism.overlap import token_overlap
+from ml.semantic_matching.embedding import EmbeddingConfig, get_runtime_embedder
 from ml.semantic_matching.hybrid import rank_candidates
 from services.evidence.chain import EvidenceChain
 from services.evidence.citations import CitationLocator, validate_citation
+from services.evidence.retrieval import select_evidence
 from services.ingestion.document import extract_document
 from services.screening.run_state import derive_run_state
 
@@ -99,6 +101,8 @@ def screen_document(path: str, proposal_id: str) -> dict:
 
     ruleset_id, rules = load_demo_rules()
     checks = evaluate_rules(_attributes(doc.text), rules)
+    embedder = get_runtime_embedder()
+    embedding_config = EmbeddingConfig.from_env()
     flags = []
     evidence = []
     evidence_chain = []
@@ -150,6 +154,7 @@ def screen_document(path: str, proposal_id: str) -> dict:
     ranked_candidates = rank_candidates(
         doc.text,
         DEMO_HISTORICAL,
+        embedder=embedder,
         top_k=len(DEMO_HISTORICAL),
     )
     for candidate in ranked_candidates:
@@ -160,9 +165,16 @@ def screen_document(path: str, proposal_id: str) -> dict:
                 f"{candidate.fused_score:.4f}",
                 (
                     f"Compared with historical proposal using {candidate.method}; "
-                    "semantic score is unavailable unless the embedding model is enabled."
+                    "similarity is comparison evidence, not a duplicate verdict."
                 ),
             )))
+
+    evidence_candidates = select_evidence(
+        "methodology methods approach",
+        doc,
+        embedder=embedder,
+        top_k=3,
+    )
 
     overlap = []
     for rid, rtext in DEMO_HISTORICAL:
@@ -176,6 +188,7 @@ def screen_document(path: str, proposal_id: str) -> dict:
             })
 
     run_state = derive_run_state(requested=1, completed=1)
+    embedding_status = "enabled" if embedder is not None else "disabled"
     return {
         "proposal_id": proposal_id,
         "status": "screened",
@@ -201,6 +214,23 @@ def screen_document(path: str, proposal_id: str) -> dict:
             }
             for candidate in ranked_candidates
         ],
+        "retrieved_evidence": [
+            {
+                "chunk_id": candidate.chunk_id,
+                "page_number": candidate.page_number,
+                "text": candidate.text,
+                "score": round(candidate.score, 4),
+                "lexical_score": round(candidate.lexical_score, 4),
+                "semantic_score": (
+                    None
+                    if candidate.semantic_score is None
+                    else round(candidate.semantic_score, 4)
+                ),
+                "rank": candidate.rank,
+                "method": candidate.method,
+            }
+            for candidate in evidence_candidates
+        ],
         "text_overlap": overlap,
         "flags": flags,
         "evidence": evidence,
@@ -210,11 +240,15 @@ def screen_document(path: str, proposal_id: str) -> dict:
             "citation_validated_findings": sum(
                 flag["citation_valid"] for flag in flags
             ),
+            "retrieved_chunks": len(evidence_candidates),
             "findings": len(flags),
         },
         "model_versions": {
-            "retrieval": "hybrid-retrieval-v0.1",
-            "embedding_model": "not_enabled",
+            "retrieval": "hybrid-retrieval-v0.2",
+            "embedding_model": (
+                embedding_config.model_name if embedding_config.enabled else "not_enabled"
+            ),
+            "embedding_runtime": embedding_status,
             "rules": ruleset_id,
         },
         "human_review_required": True,

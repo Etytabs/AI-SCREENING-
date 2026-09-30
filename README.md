@@ -182,7 +182,14 @@ The public prototype uses synthetic/demo data and clearly identifies that limita
 
 ## Data, governance and deployment
 
-The architecture is local-first and designed for controlled institutional deployment.
+The repository `main` branch is the single source of truth for the application code. The deployment topology is intentionally simple:
+
+- **Frontend:** Cloudflare Pages, deployed from GitHub `main`.
+- **API:** Render, serving the FastAPI application.
+- **Repository:** GitHub `main` contains the authoritative Next.js frontend, FastAPI backend and AI/ML services.
+- **Preview URLs:** Cloudflare-generated preview URLs are deployment artifacts, not separate source branches.
+
+For the Cloudflare Pages project, configure the Git integration to this repository and the `main` production branch, with the web app rooted at `apps/web`. Set `NEXT_PUBLIC_API_BASE_URL` to the deployed Render API URL. Do not use GitHub Pages for production deployment.
 
 Important constraints:
 

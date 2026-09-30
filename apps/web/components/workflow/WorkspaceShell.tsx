@@ -40,8 +40,8 @@ export const NAV_ITEMS = {
   ],
   REVIEWER: [
     { href: "/dashboard", label: "Review Overview", icon: "⌂" },
-    { href: "/dashboard/applications", label: "Applications" },
-    { href: "/dashboard/review", label: "Human Review" },
+    { href: "/dashboard/applications", label: "Applications", icon: "▤" },
+    { href: "/dashboard/review", label: "Human Review", icon: "✓" },
   ],
   SYSTEM_ADMINISTRATOR: [
     { href: "/dashboard", label: "Overview", icon: "⌂" },

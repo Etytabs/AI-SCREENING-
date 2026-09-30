@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Any
 
 
 STATUS_PASS = "PASS"
@@ -13,7 +12,7 @@ class EligibilityRule:
     criterion_id: str
     label: str
     field: str
-    expected: Any
+    expected: object
     evidence_required: bool = True
     missing_status: str = STATUS_UNKNOWN
 
@@ -25,7 +24,7 @@ class EligibilityCheck:
     status: str
     passed: bool | None
     evidence: str
-    observed: Any = None
+    observed: object = None
 
 
 def _validate_rule(rule: EligibilityRule) -> None:

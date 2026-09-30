@@ -106,9 +106,11 @@ class Actor:
     role: Role
 
 
-ADMIN_ROLES = frozenset({Role.GRANT_ADMINISTRATOR, Role.SYSTEM_ADMINISTRATOR})
-REVIEW_ROLES = frozenset({Role.REVIEWER, Role.GRANT_ADMINISTRATOR})
-AUDIT_ROLES = frozenset({Role.SYSTEM_ADMINISTRATOR, Role.GRANT_ADMINISTRATOR})
+# NCST grant personnel are the operational grant administrators for the real workflow.
+# The legacy roles remain supported for backward-compatible demo/audit records.
+ADMIN_ROLES = frozenset({Role.NCST_GRANT_PERSONNEL, Role.GRANT_ADMINISTRATOR, Role.SYSTEM_ADMINISTRATOR})
+REVIEW_ROLES = frozenset({Role.NCST_GRANT_PERSONNEL, Role.REVIEWER, Role.GRANT_ADMINISTRATOR})
+AUDIT_ROLES = frozenset({Role.NCST_GRANT_PERSONNEL, Role.SYSTEM_ADMINISTRATOR, Role.GRANT_ADMINISTRATOR})
 
 OPEN_FOR_SUBMISSIONS = {GrantCallStatus.READY_FOR_SUBMISSIONS, GrantCallStatus.SCREENING, GrantCallStatus.REVIEW}
 EDITABLE_REQUIREMENT_FIELDS = {"title", "description", "requirement_text", "category", "required", "parameters", "administrator_note"}

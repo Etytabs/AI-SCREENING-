@@ -31,7 +31,7 @@ export function useWorkspace(): WorkspaceValue {
 }
 
 export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
-  const [role, setRoleState] = useState<Role>("GRANT_ADMINISTRATOR");
+  const [role, setRoleState] = useState<Role>("NCST_GRANT_PERSONNEL");
   const [callId, setCallIdState] = useState<string | null>(null);
   const [calls, setCalls] = useState<GrantCall[]>([]);
   const [callsState, setCallsState] = useState<LoadState>("loading");

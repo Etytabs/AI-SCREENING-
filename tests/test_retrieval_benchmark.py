@@ -5,6 +5,7 @@ import pytest
 
 from ml.evaluation.benchmark import BenchmarkCase, evaluate_benchmark
 from ml.semantic_matching.hybrid import rank_candidates_semantic
+from scripts.evaluate_retrieval import evaluate_dataset
 
 
 class BenchmarkEmbedder:
@@ -66,3 +67,15 @@ def test_semantic_ranker_produces_embedding_method():
     )
     assert ranked[0].candidate_id == "a"
     assert ranked[0].method == "embedding:benchmark-embedder-v1"
+
+
+def test_benchmark_runner_reports_disabled_embedding(monkeypatch):
+    monkeypatch.setenv("AI_SCREENING_EMBEDDINGS_ENABLED", "false")
+    result = evaluate_dataset(
+        Path("data/evaluation/retrieval_benchmark.json"),
+        methods=["lexical", "embedding", "hybrid"],
+        k=5,
+    )
+    assert result["strategies"]["lexical"]["status"] == "completed"
+    assert result["strategies"]["embedding"]["status"] == "not_run"
+    assert result["strategies"]["hybrid"]["status"] == "not_run"

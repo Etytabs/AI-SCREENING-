@@ -2,8 +2,8 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 
-from ml.evidence.state import AssessmentState, EvidenceRelationship, RunState
 from ml.eligibility.rules import EligibilityRule, evaluate_rules
+from ml.evidence.state import AssessmentState, EvidenceRelationship, RunState
 from ml.explainability.evidence import Evidence
 from ml.plagiarism.overlap import token_overlap
 from ml.semantic_matching.service import compare_texts
@@ -59,19 +59,28 @@ def _assessment_state(status: str) -> AssessmentState:
     }[status]
 
 
-def _citation_for_check(doc, criterion_id: str, evidence: str) -> tuple[CitationLocator, bool] | None:
-    if not evidence or evidence.startswith("no observed value"):
+def _citation_text(check) -> str | None:
+    if check.status != "PASS":
+        return None
+    if check.criterion == "C03":
+        return "Methodology"
+    return None
+
+
+def _citation_for_check(doc, check) -> tuple[CitationLocator, bool] | None:
+    evidence_text = _citation_text(check)
+    if not evidence_text:
         return None
     for page in doc.pages:
-        position = page.text.lower().find(evidence.lower())
+        position = page.text.lower().find(evidence_text.lower())
         if position >= 0:
             citation = CitationLocator(
                 document_id=doc.source_id,
                 document_version=1,
                 page_number=page.page_number,
                 start=position,
-                end=position + len(evidence),
-                evidence=page.text[position:position + len(evidence)],
+                end=position + len(evidence_text),
+                evidence=page.text[position:position + len(evidence_text)],
             )
             return citation, validate_citation(doc, citation)
     return None
@@ -96,7 +105,13 @@ def screen_document(path: str, proposal_id: str) -> dict:
 
     for check in checks:
         assessment = _assessment_state(check.status)
-        status = "pass" if assessment == AssessmentState.MET else "flag" if assessment == AssessmentState.NOT_MET else "review"
+        status = (
+            "pass"
+            if assessment == AssessmentState.MET
+            else "flag"
+            if assessment == AssessmentState.NOT_MET
+            else "review"
+        )
         flags.append({
             "type": "eligibility",
             "status": status,
@@ -111,7 +126,7 @@ def screen_document(path: str, proposal_id: str) -> dict:
             check.evidence,
         )))
 
-        citation_result = _citation_for_check(doc, check.criterion, check.evidence)
+        citation_result = _citation_for_check(doc, check)
         if citation_result:
             citation, valid = citation_result
             evidence_chain.append(asdict(EvidenceChain.now(
@@ -145,6 +160,7 @@ def screen_document(path: str, proposal_id: str) -> dict:
                 f"{score:.4f}",
                 f"Compared with historical proposal using {method}.",
             )))
+
     overlap = []
     for rid, rtext in DEMO_HISTORICAL:
         result = token_overlap(doc.text, rtext)

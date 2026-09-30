@@ -35,21 +35,31 @@ The benchmark contains 10 cases with five candidates per case. Labels are benchm
 
 Benchmark #2 should be interpreted as a diagnostic evaluation. A semantic or hybrid method performing better is evidence for this synthetic corpus only; it does not establish production performance.
 
-## Strategies
+## Cross-encoder reranking
 
-When embeddings are enabled, the benchmark runner evaluates:
+The retrieval stack now supports a true second-stage cross-encoder:
 
-- lexical — existing lexical ranking;
-- embedding — cosine similarity over the configured embedding model;
-- hybrid — the existing 35% lexical / 65% semantic fusion.
+1. First-stage hybrid retrieval ranks the candidate pool using lexical overlap plus sentence embeddings.
+2. The top `rerank_k` candidates are passed as query-candidate pairs to a cross-encoder.
+3. The cross-encoder scores each pair jointly.
+4. The reranked top `k` candidates are returned with first-stage and cross-encoder scores.
 
-The same candidate pools, labels and K are used for each strategy.
+The default reranker is `cross-encoder/ms-marco-MiniLM-L-6-v2`. It is disabled by default and loaded lazily only when `AI_SCREENING_RERANKER_ENABLED=true`.
 
-## Why the cross-encoder comes later
+This is intentionally distinct from the embedding model. The embedding model represents query and candidate independently; the cross-encoder evaluates the pair jointly.
 
-A cross-encoder changes the retrieval architecture by scoring a query-candidate pair jointly. It should therefore be introduced only after first-stage lexical, embedding and hybrid methods have been measured on a sufficiently difficult benchmark.
+## Benchmark #3
 
-The next decision should be based on Benchmark #2 results, not on an assumed advantage. If first-stage retrieval still produces materially wrong rankings, the next step can be a true cross-encoder reranker evaluated against the same cases.
+Benchmark #3 evaluates:
+
+- lexical;
+- embedding;
+- hybrid;
+- hybrid + cross-encoder reranking.
+
+It uses the same 10-case adversarial corpus and reports Recall@5, Precision@5, MRR and nDCG@5. This allows the reranker to be evaluated against the established first-stage methods without changing the labelled candidate pool.
+
+The benchmark must be treated as synthetic diagnostic evidence. A reranker improvement does not establish production performance until it is validated on an authorized, representative dataset.
 
 ## Reproducible commands
 
@@ -61,14 +71,18 @@ Benchmark #2:
 
 `python -m scripts.evaluate_retrieval --dataset data/evaluation/retrieval_benchmark_adversarial.json --output data/evaluation/retrieval_benchmark_2_results.json`
 
-For a model-backed run, enable the configured SentenceTransformer runtime with `AI_SCREENING_EMBEDDINGS_ENABLED=true`, optionally set `AI_SCREENING_EMBEDDING_MODEL` and `AI_SCREENING_EMBEDDING_REVISION`, then run the command.
+Benchmark #3:
 
-The output records the dataset, timestamp, K, model, revision and metrics.
+`AI_SCREENING_EMBEDDINGS_ENABLED=true AI_SCREENING_RERANKER_ENABLED=true python -m scripts.evaluate_retrieval --dataset data/evaluation/retrieval_benchmark_adversarial.json --k 5 --rerank-k 5 --output data/evaluation/retrieval_benchmark_3_results.json`
+
+The output records dataset, timestamp, K, rerank pool size, embedding model/revision, reranker model/revision and metrics.
 
 ## GitHub Actions
 
 The original manual `Retrieval Benchmark` workflow remains the Benchmark #1 path.
 
-A separate manual `Retrieval Benchmark #2` workflow runs the adversarial corpus with `sentence-transformers/all-MiniLM-L6-v2` and uploads `retrieval_benchmark_2_results.json` as an artifact.
+`Retrieval Benchmark #2` runs the adversarial first-stage comparison with `sentence-transformers/all-MiniLM-L6-v2`.
+
+`Retrieval Benchmark #3 - Reranker` enables both the embedding model and `cross-encoder/ms-marco-MiniLM-L-6-v2`, then uploads `retrieval_benchmark_3_results.json`.
 
 The model-backed workflows are intentionally separate from required CI because model downloads add latency and external runtime dependencies to every commit. Normal CI remains deterministic and model-free.

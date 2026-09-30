@@ -53,7 +53,11 @@ function detailMessage(body: unknown, status: number): string {
 
 export function createClient(identity: Identity, base: string = API_BASE) {
   async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
-    const headers: Record<string, string> = { "X-User-Role": identity.role, "X-User-Id": identity.userId };
+    // The deployed API may still be running the legacy role enum while it rolls forward.
+    // Keep the product role as NCST_GRANT_PERSONNEL in the UI, but use the legacy
+    // administrator wire-role for backward compatibility with that deployment.
+    const apiRole = identity.role === "NCST_GRANT_PERSONNEL" ? "GRANT_ADMINISTRATOR" : identity.role;
+    const headers: Record<string, string> = { "X-User-Role": apiRole, "X-User-Id": identity.userId };
     let payload: BodyInit | undefined;
     if (body instanceof FormData) payload = body;
     else if (body !== undefined) {

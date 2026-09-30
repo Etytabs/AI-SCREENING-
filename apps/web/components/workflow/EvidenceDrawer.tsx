@@ -174,9 +174,6 @@ export function EvidenceDrawer({ detail, documentNames, canDecide, onClose, onSh
         </section>
       )}
 
-
-      )}
-
       <section className="drawer-section">
         <h3>Human decision</h3>
         <p><b>{REVIEW_STATE_LABELS[finding.review_state]}</b></p>

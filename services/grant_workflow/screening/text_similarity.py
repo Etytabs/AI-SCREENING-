@@ -3,11 +3,14 @@
 Passages that also occur in the call's RFP are excluded (applicants legitimately quote
 the call). The result is a signal for reviewer inspection, never a plagiarism finding.
 """
+import os
+
 from ml.evidence.state import EvidenceRelationship
 from ml.plagiarism.overlap import shared_passages
 from ml.scoring.confidence import calibrate_confidence
 from services.grant_workflow.models import (
     Finding,
+    FindingEvidence,
     FindingStatus,
     FindingType,
     SimilarityMatch,
@@ -17,6 +20,7 @@ from services.grant_workflow.screening.context import ScreeningContext
 from services.grant_workflow.screening.evidence import document_evidence, record_evidence
 from services.grant_workflow.screening.similarity import coverage_note
 from services.grant_workflow.text_utils import normalize_for_match
+from services.plagiarism.service import check_public_sources
 
 METHOD = "shared_passage_overlap_v0.1"
 SHINGLE_SIZE = 8
@@ -86,6 +90,28 @@ def evaluate_text_similarity(ctx: ScreeningContext, run_id: str) -> list[Finding
             data_origin=record.data_origin,
         ))
 
+    public_sources = []
+    public_source_status = "disabled"
+    if os.getenv("AI_SCREENING_PUBLIC_SOURCE_CHECK_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}:
+        if os.getenv("GEMINI_API_KEY"):
+            try:
+                public_sources = [item for _, doc in narrative for item in check_public_sources(doc.text, limit=5)]
+                public_source_status = "completed"
+                for item in public_sources:
+                    evidence.append(FindingEvidence(
+                        finding_id=finding_id,
+                        source_id=item.source.url,
+                        source_type="external_web",
+                        text=item.source_passage,
+                        field="public_source_similarity",
+                        section=item.source.attribution.title or item.source.title,
+                        relationship=EvidenceRelationship.UNCERTAIN,
+                    ))
+            except (RuntimeError, ValueError, OSError):
+                public_source_status = "failed"
+        else:
+            public_source_status = "not_configured"
+
     if matches:
         matches.sort(key=lambda m: m.similarity_score, reverse=True)
         top = matches[0]
@@ -100,7 +126,33 @@ def evaluate_text_similarity(ctx: ScreeningContext, run_id: str) -> list[Finding
             ),
             recommended_action="Inspect each shared passage and its source before confirming or dismissing.",
             method=METHOD, evidence=evidence, matches=matches,
-            details={"compared_records": len(ctx.universe), "min_passage_words": MIN_PASSAGE_WORDS, "min_coverage": MIN_COVERAGE},
+            details={
+                "compared_records": len(ctx.universe),
+                "min_passage_words": MIN_PASSAGE_WORDS,
+                "min_coverage": MIN_COVERAGE,
+                "public_source_similarity": {
+                    "status": public_source_status,
+                    "findings": [
+                        {
+                            "finding_id": item.finding_id,
+                            "similarity": item.similarity,
+                            "match_type": item.match_type,
+                            "applicant_passage": item.applicant_passage,
+                            "source_passage": item.source_passage,
+                            "source": {
+                                "title": item.source.attribution.title or item.source.title,
+                                "url": item.source.url,
+                                "authors": list(item.source.attribution.authors),
+                                "publisher": item.source.attribution.publisher,
+                                "published_date": item.source.attribution.published_date,
+                                "metadata_confidence": item.source.attribution.metadata_confidence,
+                            },
+                        }
+                        for item in public_sources
+                    ],
+                    "human_review_required": True,
+                },
+            },
         )]
     return [Finding(
         **base, status=FindingStatus.PASS, signal="NO_SHARED_PASSAGES",

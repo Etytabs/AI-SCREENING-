@@ -1,0 +1,32 @@
+name: Retrieval Benchmark #3 - Reranker
+
+on:
+  workflow_dispatch:
+
+jobs:
+  reranker-model-backed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install --upgrade pip
+      - run: pip install ".[ml]"
+      - name: Run cross-encoder benchmark
+        env:
+          AI_SCREENING_EMBEDDINGS_ENABLED: "true"
+          AI_SCREENING_EMBEDDING_MODEL: "sentence-transformers/all-MiniLM-L6-v2"
+          AI_SCREENING_RERANKER_ENABLED: "true"
+          AI_SCREENING_RERANKER_MODEL: "cross-encoder/ms-marco-MiniLM-L-6-v2"
+        run: >
+          python -m scripts.evaluate_retrieval
+          --dataset data/evaluation/retrieval_benchmark_adversarial.json
+          --k 5
+          --rerank-k 5
+          --output data/evaluation/retrieval_benchmark_3_results.json
+      - name: Upload Benchmark #3 results
+        uses: actions/upload-artifact@v4
+        with:
+          name: retrieval-benchmark-3-results
+          path: data/evaluation/retrieval_benchmark_3_results.json

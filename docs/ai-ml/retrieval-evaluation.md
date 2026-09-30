@@ -39,3 +39,10 @@ The retrieval reference results file records the current synthetic lexical basel
 Run the benchmark from the repository root with `python -m scripts.evaluate_retrieval`. By default it evaluates lexical, embedding and hybrid strategies at K=5. With embeddings disabled, lexical completes and the embedding/hybrid strategies are explicitly recorded as `not_run`.
 
 For a model-backed run, enable the configured SentenceTransformer runtime with `AI_SCREENING_EMBEDDINGS_ENABLED=true`, optionally set `AI_SCREENING_EMBEDDING_MODEL` and `AI_SCREENING_EMBEDDING_REVISION`, then run the same command. The output records the dataset, timestamp, K, model, revision and metrics so runs can be compared without conflating model configuration with results.
+
+
+## Model-backed GitHub Actions run
+
+The repository includes a manual `Retrieval Benchmark` workflow. Trigger it from GitHub Actions when a model-backed measurement is desired. It installs the ML extra, enables `sentence-transformers/all-MiniLM-L6-v2`, runs the same benchmark command, and uploads `retrieval_results.json` as an artifact.
+
+This workflow is intentionally separate from required CI because model downloads add latency and external runtime dependencies to every commit. The normal CI path remains deterministic and model-free.

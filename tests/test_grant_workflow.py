@@ -126,7 +126,9 @@ def test_grant_institution_can_run_the_operational_grant_workflow():
     batch = service.start_screening(GRANT_INSTITUTION, call.id, [application.id])
     assert batch.run_ids
     assert service.audit_log(GRANT_INSTITUTION, call.id)
-\n\ndef test_create_call_requires_admin_and_is_audited():
+
+
+def test_create_call_requires_admin_and_is_audited():
     service = make_service()
     with pytest.raises(PermissionDeniedError):
         service.create_call(REVIEWER, dict(CALL))

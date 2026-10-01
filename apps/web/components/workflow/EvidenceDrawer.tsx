@@ -108,7 +108,6 @@ export function EvidenceDrawer({ detail, documentNames, canDecide, onClose, onSh
       {finding.type !== "duplication" && finding.type !== "plagiarism" && finding.matches.length > 0 && (
         <section className="drawer-section">
           <h3>Compared records ({finding.matches.length})</h3>
-          <p className="uncertainty">Potential duplicate or strong semantic similarity detected. This is comparison evidence, not an automatic duplicate verdict.</p>
           <ul className="match-list">
             {finding.matches.map((m) => (
               <li key={m.match_id}>
@@ -118,23 +117,15 @@ export function EvidenceDrawer({ detail, documentNames, canDecide, onClose, onSh
                   <span>{SOURCE_LABELS[m.source_type] ?? m.source_type}</span>
                 </div>
                 <small>
-                  similarity {m.similarity_score.toFixed(2)}
+                  score {m.similarity_score.toFixed(2)}
                   {m.lexical_score !== null && ` · lexical ${m.lexical_score.toFixed(2)}`}
                   {m.semantic_score !== null && ` · semantic ${m.semantic_score.toFixed(2)}`}
                   {m.reranker_score !== null && ` · reranker ${m.reranker_score.toFixed(2)}`}
+                  {m.matched_section && ` · ${m.matched_section.replace(/_/g, " ")}`}
                 </small>
-                {m.matched_section && <p className="small"><b>Matching section:</b> {m.matched_section.replace(/_/g, " ")}</p>}
-                {m.matching_concepts.length > 0 && <p className="concepts"><b>Matching concepts:</b> {m.matching_concepts.map((c) => <span key={c}>{c}</span>)}</p>}
                 <p className="small">{m.explanation}</p>
-                {m.matched_passage && (
-                  <div className="source-comparison">
-                    <div>
-                      <b>Matched passage</b>
-                      <blockquote>{m.matched_passage}</blockquote>
-                    </div>
-                  </div>
-                )}
-                <p className="muted small">Record reference: {m.record_id}</p>
+                {m.matching_concepts.length > 0 && <p className="concepts">{m.matching_concepts.map((c) => <span key={c}>{c}</span>)}</p>}
+                {m.matched_passage && <blockquote>{m.matched_passage}</blockquote>}
               </li>
             ))}
           </ul>

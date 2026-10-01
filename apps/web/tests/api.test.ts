@@ -25,6 +25,17 @@ describe("api client", () => {
     expect(init.body.get("organization")).toBe("Research Council");
   });
 
+  it("loads stakeholder context with the demo identity headers", async () => {
+    const payload = { stakeholders: [], primary_user_order: [], human_review_required: true };
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify(payload), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(client.stakeholders()).resolves.toEqual(payload);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("http://api.test/api/v1/ncst/stakeholders");
+    expect(init.method).toBe("GET");
+    expect(init.headers).toMatchObject({ "X-User-Role": "REVIEWER", "X-User-Id": "demo-reviewer" });
+  });
+
   it("sends the demo identity headers and JSON body", async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ id: "d-1" }), { status: 201 }));
     vi.stubGlobal("fetch", fetchMock);

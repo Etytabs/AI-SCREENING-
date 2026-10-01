@@ -9,7 +9,7 @@ import { FileDrop } from "../../../components/workflow/FileDrop";
 import { NoCallSelected, Notice, PageHeader } from "../../../components/workflow/ui";
 import { useWorkspace } from "../../../components/workflow/WorkspaceContext";
 import { ApiError } from "../../../lib/api";
-import type { ApplicationDetail, Finding } from "../../../lib/types";
+import type { ApplicationDetail, BatchProgress, Finding } from "../../../lib/types";
 
 type Phase = "idle" | "uploading" | "screening" | "done" | "error";
 

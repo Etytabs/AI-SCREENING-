@@ -2,6 +2,27 @@
 
 import Link from "next/link";
 import { formatAmount, formatDate } from "../../lib/labels";
+
+function compactAmount(value: number | null | undefined, currency: string | null) {
+  if (value == null) return "Not set";
+  const unit = currency ?? "RWF";
+  if (value >= 1000000) return `${unit} ${(value / 1000000).toLocaleString(undefined, { maximumFractionDigits: 1 })}M`;
+  if (value >= 1000) return `${unit} ${(value / 1000).toLocaleString(undefined, { maximumFractionDigits: 0 })}K`;
+  return `${unit} ${value.toLocaleString()}`;
+}
+
+function dateLabel(value: string | null | undefined) {
+  if (!value) return "—";
+  const date = new Date(`${value}T00:00:00`);
+  return Number.isNaN(date.getTime())
+    ? value
+    : new Intl.DateTimeFormat("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }).format(date);
+}
+
 import type { DashboardSummary, RecordedDecision } from "../../lib/types";
 import { CallStatusBadge, Notice } from "./ui";
 
@@ -53,6 +74,20 @@ export function DashboardSummaryView({ summary }: { summary: DashboardSummary })
   const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
   const reviewed = summary.applications_total > 0
     && summary.applications_review_complete === summary.applications_total;
+
+  const currentStep =
+    summary.requirements_confirmed < summary.requirements_total
+      ? 0
+      : summary.applications_total === 0
+        ? 1
+        : !batch || batch.finished < batch.total
+          ? 2
+          : summary.findings_pending_review > 0
+            ? 3
+            : reviewed
+              ? 4
+              : 3;
+
   const steps = [
     {
       label: "Requirements",

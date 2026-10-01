@@ -7,14 +7,53 @@ import type { Role } from "../../lib/types";
 import { SyntheticBadge } from "./ui";
 import { useWorkspace, WorkspaceProvider } from "./WorkspaceContext";
 
-export const NAV_ITEMS = [
-  { href: "/dashboard", label: "Overview" },
-  { href: "/dashboard/check", label: "Research Check" },
-  { href: "/dashboard/calls", label: "Grant Calls" },
-  { href: "/dashboard/applications", label: "Applications" },
-  { href: "/dashboard/duplication", label: "Duplication" },
-  { href: "/dashboard/screening", label: "Screening" },
-];
+export const NAV_ITEMS = {
+  NCST_GRANT_PERSONNEL: [
+    { href: "/dashboard", label: "Overview", icon: "⌂" },
+    { href: "/dashboard/calls", label: "Grant Calls", icon: "□" },
+    { href: "/dashboard/applications", label: "Applications", icon: "▤" },
+    { href: "/dashboard/check", label: "Research Check", icon: "↥" },
+    { href: "/dashboard/duplication", label: "Duplication", icon: "⧉" },
+    { href: "/dashboard/screening", label: "Screening", icon: "◈" },
+    { href: "/dashboard/review", label: "Human Review", icon: "✓" },
+    { href: "/dashboard/publications", label: "Publications", icon: "◫" },
+    { href: "/dashboard/sources", label: "Evidence Sources", icon: "◎" },
+  ],
+  GRANT_INSTITUTION: [
+    { href: "/dashboard", label: "My Workspace", icon: "⌂" },
+    { href: "/dashboard/calls", label: "Funding Calls", icon: "□" },
+    { href: "/dashboard/applications", label: "My Submissions", icon: "▤" },
+    { href: "/dashboard/check", label: "Submission Check", icon: "✓" },
+    { href: "/dashboard/publications", label: "Research Outputs", icon: "◫" },
+  ],
+  RESEARCHER_APPLICANT: [
+    { href: "/dashboard", label: "My Workspace", icon: "⌂" },
+    { href: "/dashboard/calls", label: "Find Funding", icon: "□" },
+    { href: "/dashboard/applications", label: "My Applications", icon: "▤" },
+    { href: "/dashboard/check", label: "Research Check", icon: "✓" },
+    { href: "/dashboard/publications", label: "My Publications", icon: "◫" },
+  ],
+  GRANT_ADMINISTRATOR: [
+    { href: "/dashboard", label: "Overview", icon: "⌂" },
+    { href: "/dashboard/calls", label: "Grant Calls", icon: "□" },
+    { href: "/dashboard/applications", label: "Applications", icon: "▤" },
+    { href: "/dashboard/check", label: "Research Check", icon: "↥" },
+    { href: "/dashboard/duplication", label: "Duplication", icon: "⧉" },
+    { href: "/dashboard/screening", label: "Screening", icon: "◈" },
+    { href: "/dashboard/review", label: "Human Review", icon: "✓" },
+  ],
+  REVIEWER: [
+    { href: "/dashboard", label: "Review Overview", icon: "⌂" },
+    { href: "/dashboard/applications", label: "Applications", icon: "▤" },
+    { href: "/dashboard/review", label: "Human Review", icon: "✓" },
+  ],
+  SYSTEM_ADMINISTRATOR: [
+    { href: "/dashboard", label: "Overview", icon: "⌂" },
+    { href: "/dashboard/sources", label: "Evidence Sources", icon: "◎" },
+  ],
+} as const;
+
+const ROLE_PICKER_OPTIONS: Role[] = ["NCST_GRANT_PERSONNEL", "GRANT_INSTITUTION", "RESEARCHER_APPLICANT"];
 
 function isActive(rawPathname: string, href: string) {
   const pathname = rawPathname.replace(/\/+$/, "") || "/";

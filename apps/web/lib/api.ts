@@ -145,6 +145,7 @@ export function createClient(identity: Identity, base: string = API_BASE) {
     audit: (id: string) => request<AuditLogEntry[]>( "GET", `/api/v1/grants/${id}/audit`),
     report: (id: string) => request<ScreeningReport>("GET", `/api/v1/grants/${id}/report`),
     sources: () => request<DataSource[]>("GET", "/api/v1/sources"),
+    stakeholders: () => request<StakeholderResponse>("GET", "/api/v1/ncst/stakeholders"),
     listDuplicationProjects: () => request<ArchivedProject[]>("GET", "/api/v1/duplication/projects"),
     importDuplicationProject: (input: ArchivedProjectInput) => {
       const form = new FormData();

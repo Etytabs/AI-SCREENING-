@@ -24,6 +24,7 @@ function isActive(rawPathname: string, href: string) {
 function Sidebar() {
   const pathname = usePathname() ?? "/dashboard";
   const { calls, callId, setCallId, call, role, setRole, callsState } = useWorkspace();
+  const navItems = ROLE_NAV_ITEMS[role];
   return (
     <aside className="sidebar ws-sidebar" aria-label="Workspace navigation">
       <div className="ws-call-picker">
@@ -37,7 +38,7 @@ function Sidebar() {
         {call && <SyntheticBadge origin={call.data_origin} />}
       </div>
       <nav>
-        {NAV_ITEMS.map((item) => (
+        {navItems.map((item) => (
           <Link key={item.href} href={item.href} className={isActive(pathname, item.href) ? "side-link active" : "side-link"} aria-current={isActive(pathname, item.href) ? "page" : undefined}>
             <span className="side-link-label">{item.label}</span>
           </Link>

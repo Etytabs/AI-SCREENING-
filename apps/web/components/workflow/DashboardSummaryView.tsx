@@ -2,27 +2,6 @@
 
 import Link from "next/link";
 import { formatAmount, formatDate } from "../../lib/labels";
-
-function compactAmount(value: number | null | undefined, currency: string | null) {
-  if (value == null) return "Not set";
-  const unit = currency ?? "RWF";
-  if (value >= 1000000) return `${unit} ${(value / 1000000).toLocaleString(undefined, { maximumFractionDigits: 1 })}M`;
-  if (value >= 1000) return `${unit} ${(value / 1000).toLocaleString(undefined, { maximumFractionDigits: 0 })}K`;
-  return `${unit} ${value.toLocaleString()}`;
-}
-
-function dateLabel(value: string | null | undefined) {
-  if (!value) return "—";
-  const date = new Date(`${value}T00:00:00`);
-  return Number.isNaN(date.getTime())
-    ? value
-    : new Intl.DateTimeFormat("en-GB", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      }).format(date);
-}
-
 import type { DashboardSummary, RecordedDecision } from "../../lib/types";
 import { CallStatusBadge, Notice } from "./ui";
 
@@ -74,28 +53,14 @@ export function DashboardSummaryView({ summary }: { summary: DashboardSummary })
   const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
   const reviewed = summary.applications_total > 0
     && summary.applications_review_complete === summary.applications_total;
-
-  const currentStep =
-    summary.requirements_confirmed < summary.requirements_total
-      ? 0
-      : summary.applications_total === 0
-        ? 1
-        : !batch || batch.finished < batch.total
-          ? 2
-          : summary.findings_pending_review > 0
-            ? 3
-            : reviewed
-              ? 4
-              : 3;
-
   const steps = [
     {
       label: "Requirements",
       value: `${summary.requirements_confirmed} of ${summary.requirements_total} confirmed`,
-      done: currentStep > 0,
+      done: call.status !== "DRAFT" && call.status !== "REQUIREMENTS_PENDING",
       href: `/dashboard/calls?id=${call.id}`,
     },
-    { label: "Applications", value: `${summary.applications_total} uploaded`, done: currentStep > 1, href: "/dashboard/applications" },
+    { label: "Applications", value: `${summary.applications_total} uploaded`, done: summary.applications_total > 0, href: "/dashboard/applications" },
     {
       label: "Screening",
       value: batch ? `${batch.finished} of ${plural(batch.total, "run")} finished` : "Not started",
@@ -128,15 +93,15 @@ export function DashboardSummaryView({ summary }: { summary: DashboardSummary })
         </div>
         <dl>
           <dt>Funding</dt>
-          <dd title={call.funding_max ? `${formatAmount(call.funding_min, call.currency)} – ${formatAmount(call.funding_max, call.currency)}` : "Not set"}>{call.funding_max ? `${compactAmount(call.funding_min, call.currency)} – ${compactAmount(call.funding_max, call.currency).replace(`${call.currency} `, "")}` : "Not set"}</dd>
+          <dd>{call.funding_max ? `${formatAmount(call.funding_min, call.currency)} – ${formatAmount(call.funding_max, call.currency)}` : "Not set"}</dd>
           <dt>Window</dt>
-          <dd>{dateLabel(call.open_date)} – {dateLabel(call.close_date)}</dd>
+          <dd>{call.open_date ?? "—"} to {call.close_date ?? "—"}</dd>
         </dl>
       </section>
 
       <ol className="workflow-steps" aria-label="Workflow progress">
         {steps.map((step, index) => (
-          <li key={step.label} className={`${step.done ? "done " : ""}${index === currentStep ? "current" : ""}`}>
+          <li key={step.label} className={step.done ? "done" : ""}>
             <Link href={step.href}>
               <span className="step-index" aria-hidden="true">{step.done ? "✓" : index + 1}</span>
               <b>{step.label}</b>

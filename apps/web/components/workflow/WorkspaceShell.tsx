@@ -57,7 +57,7 @@ function Sidebar() {
 export default function WorkspaceShell({ children }: { children: React.ReactNode }) {
   return (
     <WorkspaceProvider>
-      <main className="shell">
+      <main className="shell dashboard-shell-flow">
         <Sidebar />
         <section className="workspace ws-main">{children}</section>
       </main>

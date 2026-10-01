@@ -73,6 +73,17 @@ body .ws-sidebar .side-link:hover { background: var(--surface-2); color: var(--i
 body .ws-sidebar .side-link.active {
   background: var(--ws-accent-soft); color: var(--ws-accent); font-weight: 800;
 }
+
+/* Sidebar navigation is text-only. Suppress legacy icon markup/pseudo-elements. */
+body .ws-sidebar .side-link::before,
+body .ws-sidebar .side-link::after,
+body .ws-sidebar .side-link .side-link-icon {
+  display: none !important;
+}
+body .ws-sidebar .side-link .side-link-label {
+  display: block;
+  min-width: 0;
+}
 body .ws-sidebar .sidebar-foot { border-top: 1px solid var(--line); padding: 16px 10px 0; }
 body main.shell { padding-left: 258px; }
 

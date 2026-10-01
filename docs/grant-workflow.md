@@ -39,7 +39,9 @@ A stage that raises an error produces a `NOT_ASSESSABLE` finding for that check 
 
 | Role | Can |
 | --- | --- |
-| `GRANT_ADMINISTRATOR` | create/edit calls, upload RFPs, verify requirements, upload applications, launch screening, record decisions, read audit |
+| `NCST_GRANT_PERSONNEL` | create/edit calls, upload RFPs, verify requirements, upload applications, launch screening, record decisions, read audit |
+| `GRANT_INSTITUTION` | create/edit calls, upload RFPs, verify requirements, upload applications, launch screening, record decisions, read audit |
+| `GRANT_ADMINISTRATOR` | legacy equivalent of the operational grant-administrator permissions |
 | `REVIEWER` | read calls, applications, findings and evidence; record decisions and notes |
 | `SYSTEM_ADMINISTRATOR` | administrative call actions, sources, audit |
 

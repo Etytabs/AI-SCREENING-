@@ -7,7 +7,7 @@ import type { Role } from "../../lib/types";
 import { SyntheticBadge } from "./ui";
 import { useWorkspace, WorkspaceProvider } from "./WorkspaceContext";
 
-export const NAV_ITEMS = [
+export const CORE_NAV_ITEMS = [
   { href: "/dashboard", label: "Overview" },
   { href: "/dashboard/check", label: "Research Check" },
   { href: "/dashboard/calls", label: "Grant Calls" },
@@ -15,6 +15,16 @@ export const NAV_ITEMS = [
   { href: "/dashboard/duplication", label: "Duplication" },
   { href: "/dashboard/screening", label: "Screening" },
 ];
+
+
+export const ROLE_NAV_ITEMS: Record<Role, typeof CORE_NAV_ITEMS> = {
+  NCST_GRANT_PERSONNEL: CORE_NAV_ITEMS,
+  GRANT_INSTITUTION: CORE_NAV_ITEMS,
+  RESEARCHER_APPLICANT: CORE_NAV_ITEMS.slice(0, 4),
+  GRANT_ADMINISTRATOR: CORE_NAV_ITEMS,
+  REVIEWER: [CORE_NAV_ITEMS[0], CORE_NAV_ITEMS[3], CORE_NAV_ITEMS[5]],
+  SYSTEM_ADMINISTRATOR: [CORE_NAV_ITEMS[0]],
+};
 
 function isActive(rawPathname: string, href: string) {
   const pathname = rawPathname.replace(/\/+$/, "") || "/";

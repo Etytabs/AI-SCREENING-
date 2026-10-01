@@ -1,6 +1,6 @@
 # Architecture Overview
 
-AI-SCREENING is an AI/ML-centered research intelligence platform, not an LLM wrapper.
+shakaHive is an AI/ML-centered research intelligence platform, not an LLM wrapper.
 
 ## Core decision chain
 SOURCE → INGESTION → NORMALIZATION → VALIDATION → MODEL → CONFIDENCE → EVIDENCE → HUMAN REVIEW → AUDIT → RESULT

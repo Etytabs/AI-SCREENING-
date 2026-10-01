@@ -20,7 +20,7 @@ export const FINDING_TYPE_LABELS: Record<FindingType, string> = {
   eligibility: "Eligibility",
   completeness: "Completeness",
   duplication: "Duplication signal",
-  plagiarism: "Text similarity",
+  plagiarism: "Plagiarism check",
   novelty: "Novelty signal",
 };
 
@@ -33,6 +33,19 @@ export const STAGE_LABELS: Record<StageName, string> = {
   TEXT_SIMILARITY: "Text similarity",
   NOVELTY: "Novelty",
   EVIDENCE: "Evidence validation",
+};
+
+// What the screening column answers: has this submission been screened, and what came out of it.
+export const SCREENING_STATE_LABELS: Record<string, string> = {
+  NOT_SCREENED: "NOT SCREENED",
+  QUEUED: "QUEUED",
+  RUNNING: "SCREENING…",
+  PROCESSING: "SCREENING…",
+  SCREENED: "SCREENED · NO ISSUES",
+  REVIEW_REQUIRED: "SCREENED · NEEDS REVIEW",
+  PARTIAL: "SCREENED · INCOMPLETE",
+  BLOCKED: "COULD NOT SCREEN",
+  FAILED: "SCREENING FAILED",
 };
 
 export const REVIEW_STATE_LABELS: Record<ReviewState, string> = {

@@ -267,9 +267,51 @@ export interface SimilarityMatch {
   matched_section: string | null;
   matched_passage: string | null;
   matching_concepts: string[];
+  authors?: string[];
+  published_on?: string | null;
+  publisher?: string | null;
+  source_url?: string | null;
+  doi?: string | null;
   explanation: string;
   method: string;
   data_origin: DataOrigin;
+  match_type?: DuplicationMatchType | null;
+  query_passage?: string | null;
+  query_page?: number | null;
+  query_document_id?: string | null;
+  matched_page?: number | null;
+  query_coverage?: number | null;
+  source_coverage?: number | null;
+  year?: number | null;
+  outcome?: string | null;
+}
+
+export type DuplicationMatchType = "EXACT_DUPLICATE" | "SUBSTANTIAL_SIMILARITY" | "POSSIBLE_SIMILARITY" | "NO_SIGNIFICANT_SIMILARITY" | "NOT_ASSESSABLE";
+
+export type DuplicationSourceType = "historical_application" | "funded_project";
+
+export interface ArchivedProject {
+  id: string;
+  title: string;
+  source_type: DuplicationSourceType;
+  reference: string | null;
+  year: number | null;
+  organization: string | null;
+  filename: string | null;
+  text_length: number;
+  created_at: string;
+  data_origin: DataOrigin;
+  application_id: string | null;
+  grant_call_id: string | null;
+}
+
+export interface ArchivedProjectInput {
+  file: File;
+  title: string;
+  source_type: DuplicationSourceType;
+  reference?: string;
+  year?: number;
+  organization?: string;
 }
 
 export interface Finding {
@@ -361,6 +403,7 @@ export interface ApplicationRow {
   currency: string | null;
   domain: string | null;
   document_count: number;
+  document_names: string[];
   unreadable_documents: number;
   processing_status: string;
   screening_status: string;
@@ -388,6 +431,21 @@ export interface ApplicationDetail {
   latest_run: ScreeningRun | null;
 }
 
+export interface RecordedDecision {
+  decision_id: string;
+  finding_id: string;
+  application_id: string;
+  application_reference: string;
+  document_name: string | null;
+  finding_type: FindingType;
+  finding_title: string;
+  action: ReviewerAction;
+  review_state: ReviewState;
+  reviewer_id: string;
+  note: string;
+  created_at: string;
+}
+
 export interface DashboardSummary {
   grant_call: GrantCall;
   requirements_total: number;
@@ -407,6 +465,7 @@ export interface DashboardSummary {
   latest_batch: BatchProgress | null;
   sources: DataSource[];
   contains_synthetic_data: boolean;
+  decisions?: RecordedDecision[];
   disclaimer: string;
 }
 

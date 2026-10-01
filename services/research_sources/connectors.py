@@ -8,7 +8,7 @@ from services.research_sources.models import ResearchRecord
 
 
 def _get(url: str, headers: dict[str, str] | None = None) -> bytes:
-    request = urllib.request.Request(url, headers=headers or {"User-Agent": "AI-SCREENING/0.1"})
+    request = urllib.request.Request(url, headers=headers or {"User-Agent": "shakaHive/0.1"})
     with urllib.request.urlopen(request, timeout=20) as response:
         return response.read()
 
@@ -67,12 +67,80 @@ def search_core(query: str, rows: int = 10) -> list[ResearchRecord]:
     if not api_key:
         raise RuntimeError("AI_SCREENING_CORE_API_KEY is required for CORE search.")
     params = urllib.parse.urlencode({"q": query, "limit": min(rows, 100)})
-    payload = json.loads(_get("https://api.core.ac.uk/v3/search/works?" + params, {"Authorization": "Bearer " + api_key, "User-Agent": "AI-SCREENING/0.1"}))
+    payload = json.loads(_get("https://api.core.ac.uk/v3/search/works?" + params, {"Authorization": "Bearer " + api_key, "User-Agent": "shakaHive/0.1"}))
     return [ResearchRecord(record_id=str(i.get("id", "")), title=i.get("title", ""), abstract=i.get("abstract", "") or "", doi=i.get("doi"), source_id="core", source_url=i.get("downloadUrl"), full_text_url=i.get("downloadUrl"), provenance={"retrieval_method": "core_api"}) for i in payload.get("results", [])]
 
 
+OPENALEX_WORKS_URL = "https://api.openalex.org/works"
+_OPENALEX_FIELDS = (
+    "id,doi,display_name,publication_year,publication_date,abstract_inverted_index,"
+    "authorships,primary_location,best_oa_location,type"
+)
+
+
+def openalex_contact() -> str | None:
+    """OpenAlex polite-pool contact address (AI_SCREENING_OPENALEX_MAILTO)."""
+    return (os.getenv("AI_SCREENING_OPENALEX_MAILTO") or "").strip() or None
+
+
+def openalex_api_key() -> str | None:
+    return (os.getenv("AI_SCREENING_OPENALEX_API_KEY") or "").strip() or None
+
+
+def reconstruct_abstract(inverted_index: dict[str, list[int]] | None) -> str:
+    """OpenAlex stores abstracts as {word: [positions]}; rebuild the running text."""
+    if not inverted_index:
+        return ""
+    positions: dict[int, str] = {}
+    for word, slots in inverted_index.items():
+        for slot in slots:
+            positions[slot] = word
+    return " ".join(positions[slot] for slot in sorted(positions))
+
+
+def search_openalex(query: str, rows: int = 10) -> list[ResearchRecord]:
+    """Search OpenAlex works. No key is required; a key raises the rate limit."""
+    fields = {"search": query, "per-page": str(min(max(rows, 1), 50)), "select": _OPENALEX_FIELDS}
+    contact, key = openalex_contact(), openalex_api_key()
+    if contact:
+        fields["mailto"] = contact
+    if key:
+        fields["api_key"] = key
+    agent = "shakaHive/0.1" + (f" (mailto:{contact})" if contact else "")
+    payload = json.loads(_get(OPENALEX_WORKS_URL + "?" + urllib.parse.urlencode(fields), {"User-Agent": agent}))
+    records = []
+    for item in payload.get("results", []):
+        work_id = (item.get("id") or "").rsplit("/", 1)[-1]
+        doi_url = item.get("doi")
+        location = item.get("primary_location") or {}
+        best_oa = item.get("best_oa_location") or {}
+        source = location.get("source") or {}
+        records.append(ResearchRecord(
+            record_id=work_id or (doi_url or ""),
+            title=item.get("display_name") or "",
+            abstract=reconstruct_abstract(item.get("abstract_inverted_index")),
+            authors=tuple(
+                (a.get("author") or {}).get("display_name", "")
+                for a in item.get("authorships", []) if (a.get("author") or {}).get("display_name")
+            ),
+            publication_date=item.get("publication_date") or (str(item["publication_year"]) if item.get("publication_year") else None),
+            journal=source.get("display_name"),
+            doi=doi_url.removeprefix("https://doi.org/") if doi_url else None,
+            source_id="openalex",
+            source_url=doi_url or location.get("landing_page_url") or (item.get("id") or None),
+            full_text_url=best_oa.get("pdf_url") or location.get("pdf_url"),
+            affiliations=tuple(dict.fromkeys(
+                institution.get("display_name", "")
+                for a in item.get("authorships", []) for institution in a.get("institutions", [])
+                if institution.get("display_name")
+            )),
+            provenance={"retrieval_method": "openalex_works_api", "work_type": item.get("type") or ""},
+        ))
+    return records
+
+
 def search_source(source_id: str, query: str, rows: int = 10) -> list[ResearchRecord]:
-    connector = {"crossref": search_crossref, "arxiv": search_arxiv, "pmc": search_pmc, "doaj": search_doaj, "core": search_core}.get(source_id)
+    connector = {"crossref": search_crossref, "arxiv": search_arxiv, "pmc": search_pmc, "doaj": search_doaj, "core": search_core, "openalex": search_openalex}.get(source_id)
     if connector is None:
         raise ValueError(f"Source {source_id!r} is discovery-only or has no connector configured.")
     return connector(query, rows)

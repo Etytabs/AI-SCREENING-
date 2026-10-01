@@ -6,6 +6,9 @@ REVIEW_REQUIRED finding and the run finishes as PARTIAL.
 """
 import logging
 from collections.abc import Callable
+from dataclasses import replace
+from datetime import datetime
+from typing import TYPE_CHECKING
 
 from ml.evidence.state import RunState
 from ml.semantic_matching.hybrid import TextEmbedder
@@ -14,12 +17,15 @@ from services.evidence.coverage import SourceCoverage, source_failure_message
 from services.evidence.retrieval import select_evidence
 from services.grant_workflow.audit import WorkflowAudit
 from services.grant_workflow.documents import parse_metadata
+from services.grant_workflow.duplication_inputs import narrative_documents
+from services.grant_workflow.literature import PublishedLiteratureSource, build_queries
 from services.grant_workflow.models import (
     Applicant,
     Application,
     ApplicationDocument,
     ApplicationStatus,
     CriterionStatus,
+    DataOrigin,
     Finding,
     FindingStatus,
     FindingType,
@@ -44,9 +50,13 @@ from services.grant_workflow.screening.similarity import evaluate_duplication
 from services.grant_workflow.screening.text_similarity import evaluate_text_similarity
 from services.screening.run_state import derive_run_state
 
+if TYPE_CHECKING:
+    from services.grant_workflow.duplication_archive import DuplicationArchive
+
 logger = logging.getLogger(__name__)
 
 PIPELINE_VERSION = "grant-screening-v0.1"
+PARAGRAPH_BREAK = "\n\n"
 FINISHED_RUN_STATES = {RunState.COMPLETE, RunState.PARTIAL, RunState.BLOCKED, RunState.FAILED}
 
 _STAGE_TYPES = {
@@ -82,12 +92,18 @@ class ScreeningOrchestrator:
         *,
         embedder_factory: Callable[[], TextEmbedder | None] = lambda: None,
         reranker_factory: Callable[[], CrossEncoderReranker | None] = lambda: None,
+        duplication_archive: "DuplicationArchive | None" = None,
+        duplication_archive_errors: dict[str, str] | None = None,
+        literature: PublishedLiteratureSource | None = None,
     ) -> None:
         self.repo = repo
         self.audit = audit
         self.providers = providers
         self.embedder_factory = embedder_factory
         self.reranker_factory = reranker_factory
+        self.duplication_archive = duplication_archive
+        self.duplication_archive_errors = duplication_archive_errors if duplication_archive_errors is not None else {}
+        self.literature = literature if literature is not None else PublishedLiteratureSource()
 
     # -- persistence helpers -------------------------------------------------
     def _set_stage(self, run: ScreeningRun, stage: StageName, status: StageStatus, message: str | None = None) -> None:
@@ -153,6 +169,106 @@ class ScreeningOrchestrator:
             )
             coverage.append(SourceCoverage(provider.provider_id, RunState.COMPLETE, f"{len(historical)} record(s) compared"))
         return records, coverage
+
+    def _duplication_context(self, ctx: ScreeningContext) -> ScreeningContext:
+        """Expand only duplication's sources; all other checks keep their inputs."""
+        application = ctx.application
+        records = [record for record in ctx.universe if record.source_type != "same_call_application"]
+        coverage = [source for source in ctx.coverage if source.source_id != "same_call_applications"]
+        applications = self.repo.list(Application)
+        active_ids = {item.id for item in applications}
+        counts = {"same_call_applications": 0, "previous_call_applications": 0}
+        unreadable = {key: 0 for key in counts}
+        for other in applications:
+            if other.id == application.id:
+                continue
+            same_call = other.grant_call_id == application.grant_call_id
+            if not same_call and other.submitted_at > application.submitted_at:
+                continue
+            source_id = "same_call_applications" if same_call else "previous_call_applications"
+            selected = narrative_documents(self._documents(other))
+            readable = [
+                (meta, doc) for meta, doc in selected
+                if doc is not None and meta.extraction_status == "success" and doc.text.strip()
+            ]
+            if not readable or len(readable) < len(selected):
+                unreadable[source_id] += 1
+            if not readable:
+                continue
+            single_meta, single_doc = readable[0] if len(readable) == 1 else (None, None)
+            records.append(ComparisonRecord(
+                record_id=other.id,
+                source_type="same_call_application" if same_call else "historical_application",
+                title=f"{other.application_reference} · {other.title or 'Submitted proposal'}",
+                text="\n\n".join(
+                    "\n\n".join("\n".join(p.lines) if p.lines else p.text for p in doc.pages) or doc.text
+                    for _, doc in readable
+                ),
+                data_origin=other.data_origin, application_id=other.id,
+                document_meta=single_meta, document=single_doc,
+                year=other.submitted_at.year, outcome="Submitted",
+            ))
+            counts[source_id] += 1
+        for source_id, count in counts.items():
+            missing = unreadable[source_id]
+            coverage.append(SourceCoverage(
+                source_id, RunState.PARTIAL if missing else RunState.COMPLETE,
+                f"{count} proposal(s) compared; {missing} application(s) with missing or unreadable narrative content",
+            ))
+        if self.duplication_archive is not None:
+            source_id = self.duplication_archive.provider_id
+            try:
+                archived = self.duplication_archive.historical_records()
+                included = 0
+                for item in archived:
+                    # Live application records have current versions and page citations;
+                    # don't count their persistent snapshots twice or match against self.
+                    if item.application_id in active_ids:
+                        continue
+                    submitted_at = item.provenance.get("submitted_at")
+                    if submitted_at and item.grant_call_id != application.grant_call_id:
+                        if datetime.fromisoformat(submitted_at) > application.submitted_at:
+                            continue
+                    records.append(ComparisonRecord(
+                        record_id=item.record_id, source_type=item.source_type,
+                        title=item.title, text=item.text, data_origin=item.data_origin,
+                        application_id=item.application_id, document_meta=item.document_meta,
+                        document=item.document, year=item.year, outcome=item.outcome,
+                    ))
+                    included += 1
+                incomplete = bool(self.duplication_archive_errors)
+                coverage.append(SourceCoverage(
+                    source_id, RunState.PARTIAL if incomplete else RunState.COMPLETE,
+                    f"{included} archived project(s) compared"
+                    + ("; some submitted proposals could not be persisted" if incomplete else ""),
+                ))
+            except Exception:
+                logger.exception("Duplication comparison library unavailable")
+                coverage.append(SourceCoverage(source_id, RunState.FAILED, source_failure_message(source_id)))
+        return replace(ctx, documents=narrative_documents(ctx.documents), universe=records, coverage=coverage)
+
+    def _plagiarism_context(self, ctx: ScreeningContext) -> ScreeningContext:
+        """Add published literature (OpenAlex) to the plagiarism check's comparison universe."""
+        result = self.literature.search(build_queries(ctx.application.title, ctx.narrative_text))
+        records = list(ctx.universe) + [
+            ComparisonRecord(
+                record_id=work.record_id,
+                source_type="published_work",
+                title=work.title or work.record_id,
+                text=PARAGRAPH_BREAK.join(part for part in (work.title, work.abstract) if part),
+                data_origin=DataOrigin.PROVIDER,
+                year=int(work.publication_date[:4]) if (work.publication_date or "")[:4].isdigit() else None,
+                outcome="Published",
+                authors=work.authors,
+                published_on=work.publication_date,
+                publisher=work.journal,
+                source_url=work.source_url,
+                doi=work.doi,
+            )
+            for work in result.records
+        ]
+        coverage = [*ctx.coverage, SourceCoverage(self.literature.provider_id, result.state, result.message)]
+        return replace(ctx, universe=records, coverage=coverage)
 
     def _stage_failure(self, ctx: ScreeningContext, run_id: str, stage: StageName, exc: Exception) -> Finding:
         return Finding(
@@ -240,7 +356,20 @@ class ScreeningOrchestrator:
         for stage, function in _STAGE_FUNCTIONS.items():
             self._set_stage(run, stage, StageStatus.RUNNING)
             try:
-                produced = function(ctx, run.id)
+                stage_ctx = ctx
+                if stage == StageName.DUPLICATION:
+                    stage_ctx = self._duplication_context(ctx)
+                    run.coverage["duplication_sources"] = [
+                        {"source_id": c.source_id, "state": c.state.value, "message": c.message}
+                        for c in stage_ctx.coverage
+                    ]
+                elif stage == StageName.TEXT_SIMILARITY:
+                    stage_ctx = self._plagiarism_context(ctx)
+                    run.coverage["plagiarism_sources"] = [
+                        {"source_id": c.source_id, "state": c.state.value, "message": c.message}
+                        for c in stage_ctx.coverage
+                    ]
+                produced = function(stage_ctx, run.id)
                 findings.extend(produced)
                 self._set_stage(run, stage, StageStatus.COMPLETE, f"{len(produced)} finding(s)")
             except Exception as exc:

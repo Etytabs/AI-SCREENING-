@@ -30,11 +30,12 @@ const STATUS_STYLE: Record<string, { tone: Tone; symbol: string; label: string }
   EXPIRED: { tone: "review", symbol: "!", label: "EXPIRED" },
 };
 
-export function StatusBadge({ status }: { status: string }) {
+export function StatusBadge({ status, label }: { status: string; label?: string }) {
   const style = STATUS_STYLE[status] ?? { tone: "neutral" as Tone, symbol: "·", label: status.replace(/_/g, " ") };
+  const text = label ?? style.label;
   return (
-    <span className={`badge badge-${style.tone}`} aria-label={`Status: ${style.label}`} data-status={status}>
-      <span aria-hidden="true">{style.symbol}</span> {style.label}
+    <span className={`badge badge-${style.tone}`} aria-label={`Status: ${text}`} data-status={status}>
+      <span aria-hidden="true">{style.symbol}</span> {text}
     </span>
   );
 }

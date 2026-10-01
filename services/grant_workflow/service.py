@@ -6,10 +6,11 @@ interfaces so storage, workers and data providers can be replaced independently.
 """
 import dataclasses
 import hashlib
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ml.evidence.state import ReviewStatus, RunState
 from ml.semantic_matching.hybrid import TextEmbedder
@@ -24,7 +25,9 @@ from services.grant_workflow.documents import (
     group_uploads,
     parse_metadata,
 )
+from services.grant_workflow.duplication_inputs import narrative_documents
 from services.grant_workflow.jobs import JobRunner, ThreadPoolJobRunner
+from services.grant_workflow.literature import PublishedLiteratureSource
 from services.grant_workflow.models import (
     Applicant,
     Application,
@@ -78,6 +81,11 @@ from services.grant_workflow.screening.orchestrator import (
 from services.human_review.decision import DecisionHistory
 from services.ingestion.document import ExtractedDocument
 from services.sources.registry import SourceRegistry
+
+if TYPE_CHECKING:
+    from services.grant_workflow.duplication_archive import DuplicationArchive
+
+logger = logging.getLogger(__name__)
 
 
 class WorkflowError(Exception):
@@ -157,17 +165,25 @@ class GrantWorkflowService:
         registry: SourceRegistry | None = None,
         embedder_factory: Callable[[], TextEmbedder | None] = lambda: None,
         reranker_factory: Callable[[], CrossEncoderReranker | None] = lambda: None,
+        duplication_archive: "DuplicationArchive | None" = None,
+        literature: PublishedLiteratureSource | None = None,
     ) -> None:
         self.repo = repo or InMemoryWorkflowRepository()
         self.audit = audit or WorkflowAudit()
         self.jobs = jobs or ThreadPoolJobRunner()
         rigms = RIGMSGrantDataProvider()
         self.providers = providers if providers is not None else [MockGrantDataProvider(), rigms]
-        self.registry = registry or default_source_registry(rigms)
+        self.literature = literature or PublishedLiteratureSource()
+        self.registry = registry or default_source_registry(rigms, self.literature)
         self.decisions = DecisionHistory()
+        self.duplication_archive = duplication_archive
+        self.duplication_archive_errors: dict[str, str] = {}
         self.orchestrator = ScreeningOrchestrator(
             self.repo, self.audit, self.providers,
             embedder_factory=embedder_factory, reranker_factory=reranker_factory,
+            duplication_archive=duplication_archive,
+            duplication_archive_errors=self.duplication_archive_errors,
+            literature=self.literature,
         )
 
     # -- guards -----------------------------------------------------------------
@@ -459,7 +475,33 @@ class GrantWorkflowService:
             "processing_status": _processing_status(documents), "updated_at": utcnow(),
         })
         self.repo.save(updated)
+        self._archive_for_duplication(updated)
         return updated
+
+    def _archive_for_duplication(self, application: Application) -> None:
+        if self.duplication_archive is None or application.data_origin == DataOrigin.SYNTHETIC:
+            return
+        selected = narrative_documents([
+            (meta, self.repo.get_content(meta.id))
+            for meta in self.repo.list(ApplicationDocument, application_id=application.id)
+        ])
+        readable = [
+            (meta, doc) for meta, doc in selected
+            if doc is not None and meta.extraction_status == "success" and doc.text.strip()
+        ]
+        if not readable:
+            return
+        institution = self.repo.get(Institution, application.institution_id) if application.institution_id else None
+        try:
+            self.duplication_archive.snapshot_application(
+                application, readable, organization=institution.name if institution else None,
+            )
+            self.duplication_archive_errors.pop(application.id, None)
+        except Exception:
+            # Archiving is independent of submission and eligibility; expose a
+            # coverage failure to duplication instead of rejecting the upload.
+            logger.exception("Could not archive application %s for duplication", application.id)
+            self.duplication_archive_errors[application.id] = "A submitted proposal could not be saved to the comparison library."
 
     def _open_call(self, call_id: str) -> GrantCall:
         call = self.get_call(call_id)

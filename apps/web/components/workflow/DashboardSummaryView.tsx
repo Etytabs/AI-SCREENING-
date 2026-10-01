@@ -1,28 +1,58 @@
 "use client";
 
 import Link from "next/link";
-import { formatAmount, SIGNAL_LABELS } from "../../lib/labels";
-import type { DashboardSummary } from "../../lib/types";
-import { CallStatusBadge, Notice, StatusBadge } from "./ui";
+import { formatAmount, formatDate } from "../../lib/labels";
+import type { DashboardSummary, RecordedDecision } from "../../lib/types";
+import { CallStatusBadge, Notice } from "./ui";
 
-function CountRow({ label, counts, order }: { label: string; counts: Record<string, number>; order: string[] }) {
+const DECISION_LABELS: Record<string, string> = { CONFIRMED: "Confirmed", DISMISSED: "Dismissed" };
+
+/** Where a reviewer's recorded decision is kept and shown for the whole call. */
+function DecisionLog({ decisions }: { decisions: RecordedDecision[] }) {
   return (
-    <tr>
-      <th scope="row">{label}</th>
-      {order.map((key) => (
-        <td key={key}>
-          <b>{counts[key] ?? 0}</b>
-          <span>{key === "REVIEW_REQUIRED" ? "review required" : (SIGNAL_LABELS[key] ?? key).toLowerCase()}</span>
-        </td>
-      ))}
-    </tr>
+    <section className="drawer-section decision-log" aria-label="Human decisions">
+      <h3>Human decisions ({decisions.length})</h3>
+      {decisions.length === 0 ? (
+        <p className="muted">
+          No reviewer decision has been recorded yet. Confirming or dismissing a finding records it here.
+        </p>
+      ) : (
+        <ul className="decision-log-list">
+          {decisions.map((d) => (
+            <li key={d.decision_id}>
+              <div className="evidence-meta">
+                <b>{d.document_name ?? d.application_reference}</b>
+                <span className={`decision-state ds-${d.review_state.toLowerCase()}`}>
+                  {DECISION_LABELS[d.review_state] ?? d.review_state}
+                </span>
+              </div>
+              <small>{[d.application_reference, d.finding_title, formatDate(d.created_at), d.reviewer_id].filter(Boolean).join(" · ")}</small>
+              <p className="small">{d.note}</p>
+              <Link className="text-button" href={`/dashboard/applications/view?id=${d.application_id}&finding=${d.finding_id}`}>
+                Open the finding
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
 export function DashboardSummaryView({ summary }: { summary: DashboardSummary }) {
   const call = summary.grant_call;
   const batch = summary.latest_batch;
-  const unavailable = summary.sources.filter((s) => s.access_status !== "AVAILABLE");
+  // Four numbers an administrator acts on; the per-check breakdown lives on Applications,
+  // which is also where a finding is opened and reviewed.
+  const headline = [
+    { value: summary.applications_total, label: "applications", href: "/dashboard/applications" },
+    { value: summary.eligibility_counts.PASS ?? 0, label: "eligible", href: "/dashboard/applications" },
+    { value: summary.completeness_counts.FAIL ?? 0, label: "incomplete", href: "/dashboard/applications" },
+    { value: summary.findings_pending_review, label: "awaiting review", href: "/dashboard/applications" },
+  ];
+  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+  const reviewed = summary.applications_total > 0
+    && summary.applications_review_complete === summary.applications_total;
   const steps = [
     {
       label: "Requirements",
@@ -33,17 +63,24 @@ export function DashboardSummaryView({ summary }: { summary: DashboardSummary })
     { label: "Applications", value: `${summary.applications_total} uploaded`, done: summary.applications_total > 0, href: "/dashboard/applications" },
     {
       label: "Screening",
-      value: batch ? `${batch.finished} of ${batch.total} runs finished` : "Not started",
+      value: batch ? `${batch.finished} of ${plural(batch.total, "run")} finished` : "Not started",
       done: !!batch && batch.finished === batch.total,
       href: "/dashboard/screening",
     },
     {
       label: "Review",
-      value: `${summary.findings_pending_review} findings awaiting a reviewer`,
+      value: `${plural(summary.findings_pending_review, "finding")} awaiting a reviewer`,
       done: summary.findings_total > 0 && summary.findings_pending_review === 0,
-      href: "/dashboard/review",
+      href: "/dashboard/applications",
     },
-    { label: "Report", value: "Screening report", done: false, href: "/dashboard/report" },
+    {
+      label: "Report",
+      value: summary.findings_total
+        ? `${plural(summary.findings_total, "finding")} across ${plural(summary.applications_total, "application")}`
+        : "Nothing screened yet",
+      done: reviewed,
+      href: "/dashboard/report",
+    },
   ];
 
   return (
@@ -85,44 +122,24 @@ export function DashboardSummaryView({ summary }: { summary: DashboardSummary })
         </Notice>
       )}
 
-      <section className="summary-table-wrap" aria-label="Screening summary">
-        <div className="eyebrow">SCREENING SIGNALS · {summary.applications_total} APPLICATIONS</div>
-        {summary.applications_total === 0 ? (
-          <Notice kind="empty" title="No applications yet">
-            <Link href="/dashboard/applications">Upload applications</Link> once the requirements are confirmed.
-          </Notice>
-        ) : (
-          <table className="summary-table">
-            <tbody>
-              <CountRow label="Eligibility" counts={summary.eligibility_counts} order={["PASS", "FAIL", "REVIEW_REQUIRED", "NOT_SCREENED"]} />
-              <CountRow label="Completeness" counts={summary.completeness_counts} order={["PASS", "FAIL", "REVIEW_REQUIRED", "NOT_SCREENED"]} />
-              <CountRow label="Novelty signal" counts={summary.novelty_counts} order={["HIGH", "MEDIUM", "LOW", "REVIEW_REQUIRED"]} />
-              <tr>
-                <th scope="row">Similarity</th>
-                <td><b>{summary.duplication_flags}</b><span>possible duplication</span></td>
-                <td><b>{summary.text_similarity_flags}</b><span>shared passages</span></td>
-                <td><b>{summary.findings_reviewed}</b><span>findings reviewed</span></td>
-                <td><b>{summary.applications_review_complete}</b><span>applications fully reviewed</span></td>
-              </tr>
-            </tbody>
-          </table>
-        )}
-      </section>
-
-      <section className="coverage" aria-label="Source coverage">
-        <div className="eyebrow">SOURCE COVERAGE</div>
-        <ul>
-          {summary.sources.filter((s) => s.access_status === "AVAILABLE").map((s) => (
-            <li key={s.source_id}><StatusBadge status="AVAILABLE" /> {s.source_name}</li>
+      {summary.applications_total === 0 ? (
+        <Notice kind="empty" title="No applications yet">
+          <Link href="/dashboard/applications">Upload applications</Link> once the requirements are confirmed.
+        </Notice>
+      ) : (
+        <ul className="headline-stats" aria-label="Screening summary">
+          {headline.map((stat) => (
+            <li key={stat.label}>
+              <Link href={stat.href}>
+                <b>{stat.value}</b>
+                <span>{stat.label}</span>
+              </Link>
+            </li>
           ))}
         </ul>
-        {unavailable.length > 0 && (
-          <p className="muted">
-            Not searched ({unavailable.length}): {unavailable.map((s) => s.source_name).join(", ")}. An unsearched source is not
-            evidence of absence. <Link href="/dashboard/sources">Source details</Link>
-          </p>
-        )}
-      </section>
+      )}
+
+      <DecisionLog decisions={summary.decisions ?? []} />
 
       <p className="disclaimer">{summary.disclaimer}</p>
     </div>

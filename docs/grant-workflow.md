@@ -28,7 +28,7 @@ This document describes the grant-call workflow that is implemented in this repo
 | Requirement mapping | Maps each verified requirement to the most relevant passages. |
 | Eligibility | Checks verified eligibility requirements (country, amount ceiling, duration, required phrases, keyword coverage). A value that cannot be found gives `REVIEW_REQUIRED`, never `FAIL`. |
 | Completeness | Checks required documents. `FAIL` only when every file was readable and the document is absent; unreadable files, conditional requirements and section-only matches give `REVIEW_REQUIRED`. |
-| Duplication | Whole-proposal similarity against other applications in the call and authorized historical records (lexical, or hybrid when embeddings are enabled; optional cross-encoder reranking). Produces a *signal* (`POSSIBLE_DUPLICATION` / `NO_SIGNIFICANT_SIMILARITY` / `NOT_ASSESSABLE`), never a duplication verdict. |
+| Duplication | Exact normalized text, substantial content reuse and optional semantic similarity against same-call proposals, earlier submissions across calls, and the persistent library of submitted/funded projects. Results include match classification and paired passages for human review. |
 | Text similarity | Shared verbatim passages (8-word shingles) between narrative documents, excluding text quoted from the call document. Signal only; not a plagiarism finding. |
 | Novelty | Per-dimension comparison producing `HIGH` / `MEDIUM` / `LOW` / `REVIEW_REQUIRED` signals. Never `FAIL` and never a scientific novelty judgement. |
 | Evidence | Validates every citation against extracted text. A `FAIL` without application or inventory evidence is downgraded to `REVIEW_REQUIRED`. |
@@ -81,6 +81,7 @@ Base path `/api/v1`. Every write action and the audit trail need `X-User-Role`; 
 | GET | `/grants/{call_id}/audit` | Audit trail (Grant/System Administrator) |
 | GET | `/grants/{call_id}/report` | Screening report |
 | GET | `/sources` | Source registry and access status |
+| GET, POST | `/duplication/projects` | List comparison-library metadata / import a prior or funded project (multipart `file`, `title`, `source_type`, optional `reference`, `year`, `organization`) |
 | GET | `/demo/rfp`, `/demo/applications.zip` | Synthetic demo files for trying the upload steps |
 
 Interactive OpenAPI documentation is served at `/docs` when the API runs.
@@ -100,6 +101,7 @@ Uploaded files are marked `UPLOADED`. No real applicant, NCST, NRIF or RIGMS dat
 | `AI_SCREENING_DEMO_SEED` | `true` | Seed the synthetic demo call at API start-up |
 | `AI_SCREENING_CORS_ORIGINS` | `http://localhost:3000,http://localhost:3001` | Allowed browser origins (comma separated) |
 | `AI_SCREENING_SCREENING_WORKERS` | `2` | Background screening threads |
+| `AI_SCREENING_DUPLICATION_DB` | `data/private/duplication.sqlite3` | SQLite comparison library; put this on persistent storage when hosting the API |
 | `AI_SCREENING_RIGMS_URL` | unset | Marks RIGMS as configured (`AUTH_REQUIRED`); no RIGMS calls are made without an agreed API specification |
 | `AI_SCREENING_EMBEDDINGS_ENABLED` | `false` | Hybrid (lexical + embedding) similarity; requires `pip install ".[ml]"` |
 | `AI_SCREENING_RERANKER_ENABLED` | `false` | Cross-encoder reranking of similarity candidates |
@@ -125,13 +127,26 @@ Open `http://localhost:3000/dashboard`.
 
 Checks: `pytest`, `ruff check .`, and in `apps/web`: `npm run lint`, `npx tsc --noEmit`, `npm test`, `npm run build`.
 
+## Duplication workflow
+
+1. Open **Duplication** in the dashboard. Import readable PDF, DOCX or UTF-8 TXT proposals as previously submitted applications or funded projects. Add the project title and optional reference, year and organization. Imports are limited to 20 MB and require a Grant Administrator or System Administrator role.
+2. Upload submissions through the existing Applications workflow. Real uploaded narratives are automatically saved to the local comparison library; synthetic demo applications are not persisted there.
+3. Run screening. Duplication compares each proposal to other applications in the same call, earlier submissions across calls, available historical providers and imported projects. It excludes the application itself and avoids counting its live record and saved snapshot twice. For revised files, it uses the latest version; CVs, declarations and budgets are not substitutes for proposal content.
+4. Open the duplication finding. Review exact-text, substantial-similarity or possible-similarity matches, both passages, source identity and year, and available page citations. Scores measure similarity, not the probability of misconduct. Confirm or dismiss through the existing human decision controls.
+
+After importing additional projects, rerun screening to include them. Existing findings remain records of their original run. Match totals count all assessed candidates; the evidence view shows up to five strongest matches. Missing sources and unreadable narratives are reported explicitly, and a no-match result applies only to the records actually searched.
+
+The comparison library survives API restarts. Back up its SQLite file (including an active WAL, or use SQLite backup) and configure a persistent volume for hosted deployments. The static website calls the API for imports and screening; deploying the frontend alone does not run these features. RIGMS and external funding databases still require authorized connectors; use library imports for records you have available.
+
+The existing eligibility rules and requirement inputs are unchanged. Duplication source expansion happens only inside the duplication stage.
+
 ## Limitations
 
-- **Storage is in memory.** Calls, applications, findings and audit events are lost when the API restarts. The repository interface (`services/grant_workflow/repository.py`) is the seam for a PostgreSQL implementation.
+- **Workflow storage is in memory.** Calls, applications, findings and audit events are lost when the API restarts. The duplication comparison library persists separately in SQLite. The repository interface (`services/grant_workflow/repository.py`) is the seam for a PostgreSQL implementation.
 - **Identity is not authenticated** (see above).
 - **RIGMS is a stub.** `RIGMSGrantDataProvider` always reports itself as unavailable; runs record RIGMS as not searched.
 - **External scholarly sources** (Crossref, PubMed Central, arXiv, DOAJ, CORE, institutional repositories) are registered as optional and `NOT_CONFIGURED`; no connector is implemented.
-- **Similarity is lexical by default.** Semantic similarity and reranking only run when the ML extras are installed and enabled.
+- **Duplication uses text matching by default.** It detects identical text and substantial lexical reuse without downloading models. Semantic paraphrase detection and reranking only run when the ML extras are installed and enabled; text matching alone cannot reliably detect proposals rewritten with different vocabulary.
 - **Requirement extraction is rule-based.** Requirements phrased unusually may be missed or mis-categorised; that is why administrator verification is mandatory before screening.
 - **Scanned PDFs without a text layer** are reported as unreadable; OCR is not implemented.
 - Thresholds and rules have only been exercised on synthetic data. Validation on authorized, representative data is required before operational use.

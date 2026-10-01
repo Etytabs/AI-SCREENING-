@@ -12,10 +12,8 @@ export const NAV_ITEMS = [
   { href: "/dashboard/check", label: "Research Check" },
   { href: "/dashboard/calls", label: "Grant Calls" },
   { href: "/dashboard/applications", label: "Applications" },
+  { href: "/dashboard/duplication", label: "Duplication" },
   { href: "/dashboard/screening", label: "Screening" },
-  { href: "/dashboard/review", label: "Review" },
-  { href: "/dashboard/publications", label: "Publications" },
-  { href: "/dashboard/sources", label: "Sources" },
 ];
 
 function isActive(rawPathname: string, href: string) {

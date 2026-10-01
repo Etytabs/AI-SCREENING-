@@ -2,19 +2,16 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { CheckResultCards } from "../../../components/workflow/CheckResultCards";
+import { DecisionModal } from "../../../components/workflow/DecisionModal";
+import { EvidenceModal } from "../../../components/workflow/EvidenceModal";
 import { FileDrop } from "../../../components/workflow/FileDrop";
-import { NoCallSelected, Notice, PageHeader, SignalBadge, StatusBadge } from "../../../components/workflow/ui";
+import { NoCallSelected, Notice, PageHeader } from "../../../components/workflow/ui";
 import { useWorkspace } from "../../../components/workflow/WorkspaceContext";
 import { ApiError } from "../../../lib/api";
-import type { ApplicationDetail, Finding, FindingType } from "../../../lib/types";
+import type { ApplicationDetail, Finding } from "../../../lib/types";
 
 type Phase = "idle" | "uploading" | "screening" | "done" | "error";
-
-const SECTIONS: { type: FindingType; title: string; note: string }[] = [
-  { type: "eligibility", title: "Eligibility", note: "Checked against the call's verified requirements." },
-  { type: "duplication", title: "Duplication", note: "Compared with other applications in the call and authorized historical records. A signal for review, not a duplication verdict." },
-  { type: "plagiarism", title: "Plagiarism (text similarity)", note: "Shared verbatim passages with other documents. Not proof of plagiarism." },
-];
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -25,9 +22,22 @@ export default function ResearchCheckPage() {
   const [uploadErrors, setUploadErrors] = useState<string[]>([]);
   const [detail, setDetail] = useState<ApplicationDetail | null>(null);
   const [findings, setFindings] = useState<Finding[]>([]);
+  const [evidenceFor, setEvidenceFor] = useState<Finding[] | null>(null);
+  const [deciding, setDeciding] = useState(false);
 
   const open = !!call && ["READY_FOR_SUBMISSIONS", "SCREENING", "REVIEW"].includes(call.status);
   const busy = phase === "uploading" || phase === "screening";
+  const showResults = phase === "done" && !!detail;
+
+  function reset() {
+    setPhase("idle");
+    setDetail(null);
+    setFindings([]);
+    setError(null);
+    setUploadErrors([]);
+    setEvidenceFor(null);
+    setDeciding(false);
+  }
 
   async function check(files: File[]) {
     if (!call) return;
@@ -53,7 +63,14 @@ export default function ResearchCheckPage() {
       setPhase("done");
       refreshCalls();
     } catch (e) {
-      setError(e instanceof ApiError || e instanceof Error ? e.message : "The check failed.");
+      // The selected call can disappear under us (for example after an API restart).
+      // Reload the list so the picker recovers instead of failing on every attempt.
+      if (e instanceof ApiError && e.status === 404) {
+        await refreshCalls();
+        setError("That grant call no longer exists. The call list has been reloaded - pick a call and try again.");
+      } else {
+        setError(e instanceof ApiError || e instanceof Error ? e.message : "The check failed.");
+      }
       setPhase("error");
     }
   }
@@ -71,7 +88,7 @@ export default function ResearchCheckPage() {
         <Notice kind="review" title="Call not open">Confirm this call&apos;s requirements first. <Link href={`/dashboard/calls?id=${call.id}`}>Go to requirement review</Link></Notice>
       )}
 
-      {call && role !== "REVIEWER" && open && (
+      {call && role !== "REVIEWER" && open && !showResults && (
         <section className="panel">
           <p className="muted small">Checking against: <b>{call.name}</b></p>
           <FileDrop
@@ -92,45 +109,32 @@ export default function ResearchCheckPage() {
         <Notice kind="review" title="Some files had problems"><ul>{uploadErrors.map((e) => <li key={e}>{e}</li>)}</ul></Notice>
       )}
 
-      {phase === "done" && detail && (
+      {showResults && detail && (
         <section className="panel">
           <div className="panel-head">
-            <h2>Results · {detail.application.application_reference}</h2>
-            <Link className="ghost-button" href={`/dashboard/applications/view?id=${detail.application.id}`}>Open full review workspace</Link>
+            <h2>Results - {detail.application.application_reference}</h2>
+            <div className="page-actions">
+              <button className="ghost-button" onClick={reset}>Check another document</button>
+              <button className="dark-button" aria-haspopup="dialog" onClick={() => setDeciding(true)}>Human decision</button>
+            </div>
           </div>
           {detail.latest_run?.status === "BLOCKED" && <Notice kind="error" title="Screening blocked">None of the uploaded files could be read.</Notice>}
           {detail.latest_run?.status === "PARTIAL" && <Notice kind="partial" title="Partial screening">Some checks could not complete and are marked REVIEW REQUIRED.</Notice>}
-          {SECTIONS.map((section) => {
-            const items = findings.filter((f) => f.type === section.type);
-            return (
-              <div key={section.type} className="check-section">
-                <h3>{section.title}</h3>
-                <p className="muted small">{section.note}</p>
-                {items.length === 0 ? (
-                  <p className="muted">No result for this check.</p>
-                ) : (
-                  <ul className="check-list">
-                    {items.map((f) => (
-                      <li key={f.finding_id}>
-                        <span>{section.type === "eligibility" ? <StatusBadge status={f.status} /> : <SignalBadge signal={f.signal} />}</span>
-                        <div>
-                          <b>{f.title}</b>
-                          <p>{f.explanation}</p>
-                          {f.matches.length > 0 && (
-                            <p className="small muted">Compared with: {f.matches.map((m) => m.title ?? m.record_id).join(", ")}</p>
-                          )}
-                          <Link className="small" href={`/dashboard/applications/view?id=${detail.application.id}&finding=${f.finding_id}`}>View evidence →</Link>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            );
-          })}
+          <CheckResultCards findings={findings} onOpenEvidence={setEvidenceFor} />
           <p className="disclaimer">These are screening signals for human review. They do not decide eligibility, duplication, plagiarism or funding.</p>
         </section>
       )}
+
+      {evidenceFor && <EvidenceModal findings={evidenceFor} siblingFindings={findings} onClose={() => setEvidenceFor(null)} />}
+
+      {deciding && detail && (
+        <DecisionModal
+          findings={findings}
+          onClose={() => setDeciding(false)}
+          onRecorded={async () => setFindings(await client.listFindings(detail.application.id))}
+        />
+      )}
+
     </>
   );
 }

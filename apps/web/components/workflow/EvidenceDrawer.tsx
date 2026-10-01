@@ -3,10 +3,13 @@
 import { ACTION_LABELS, FINDING_TYPE_LABELS, formatDate, REVIEW_STATE_LABELS } from "../../lib/labels";
 import type { FindingDetail, FindingEvidence, ReviewerAction } from "../../lib/types";
 import { DecisionPanel } from "./DecisionPanel";
+import { DuplicationEvidence } from "./DuplicationEvidence";
+import { PlagiarismEvidence } from "./PlagiarismEvidence";
 import { SignalBadge, StatusBadge, SyntheticBadge } from "./ui";
 
 const SOURCE_LABELS: Record<string, string> = {
   application_document: "Application document",
+  published_work: "Published work",
   rfp: "Call document (requirement)",
   administrator_requirement: "Administrator-authored requirement",
   submission_inventory: "Submission inventory",
@@ -59,6 +62,9 @@ export function EvidenceDrawer({ detail, documentNames, canDecide, onClose, onSh
   const { finding, decisions, notes } = detail;
   const applicationEvidence = finding.evidence.filter((e) => e.source_type === "application_document");
   const showSignal = finding.signal && finding.type !== "eligibility" && finding.type !== "completeness";
+  // Plagiarism reads as three sections only: the index, the matched sources, the decision.
+  // Its own panel already carries the percentage, coverage and limitations.
+  const isPlagiarism = finding.type === "plagiarism";
   return (
     <aside className="evidence-drawer" aria-label="Evidence drawer" role="complementary">
       <header>
@@ -69,29 +75,37 @@ export function EvidenceDrawer({ detail, documentNames, canDecide, onClose, onSh
         <button className="close" onClick={onClose} aria-label="Close evidence drawer">Close ×</button>
       </header>
 
-      <section className="drawer-section">
-        <h3>AI signal</h3>
-        <div className="drawer-badges">
-          <StatusBadge status={finding.status} />
-          {showSignal && <SignalBadge signal={finding.signal} />}
-          <span className="muted small">{finding.confidence !== null ? `confidence ${finding.confidence.toFixed(2)}` : "confidence not computed"}</span>
-        </div>
-        <p>{finding.explanation}</p>
-        <p className="small"><b>Suggested next step:</b> {finding.recommended_action}</p>
-        <p className="muted small">Method: {finding.method}</p>
-      </section>
+      {!isPlagiarism && (
+        <section className="drawer-section">
+          <h3>AI signal</h3>
+          <div className="drawer-badges">
+            <StatusBadge status={finding.status} />
+            {showSignal && <SignalBadge signal={finding.signal} />}
+            {finding.type !== "duplication" && <span className="muted small">{finding.confidence !== null ? `confidence ${finding.confidence.toFixed(2)}` : "confidence not computed"}</span>}
+          </div>
+          <p>{finding.explanation}</p>
+          <p className="small"><b>Suggested next step:</b> {finding.recommended_action}</p>
+          <p className="muted small">Method: {finding.method}</p>
+        </section>
+      )}
 
-      <section className="drawer-section">
-        <h3>Evidence ({finding.evidence.length})</h3>
-        {applicationEvidence.length === 0 && (
-          <p className="uncertainty">No passage from this application could be cited for this finding. Treat the result as unverified until a reviewer checks the documents.</p>
-        )}
-        <ul className="evidence-list">
-          {finding.evidence.map((item) => <EvidenceItem key={item.evidence_id} item={item} documentNames={documentNames} onShow={onShowInDocument} />)}
-        </ul>
-      </section>
+      {!isPlagiarism && (
+        <section className="drawer-section">
+          <h3>Evidence ({finding.evidence.length})</h3>
+          {applicationEvidence.length === 0 && (
+            <p className="uncertainty">No passage from this application could be cited for this finding. Treat the result as unverified until a reviewer checks the documents.</p>
+          )}
+          <ul className="evidence-list">
+            {finding.evidence.map((item) => <EvidenceItem key={item.evidence_id} item={item} documentNames={documentNames} onShow={onShowInDocument} />)}
+          </ul>
+        </section>
+      )}
 
-      {finding.matches.length > 0 && (
+      {finding.type === "duplication" && <DuplicationEvidence finding={finding} documentNames={documentNames} />}
+
+      {finding.type === "plagiarism" && <PlagiarismEvidence finding={finding} />}
+
+      {finding.type !== "duplication" && finding.type !== "plagiarism" && finding.matches.length > 0 && (
         <section className="drawer-section">
           <h3>Compared records ({finding.matches.length})</h3>
           <ul className="match-list">

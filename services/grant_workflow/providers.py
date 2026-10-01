@@ -4,10 +4,14 @@ The core workflow runs entirely on local/synthetic data. RIGMS and external scho
 sources are optional, authorization-dependent connectors.
 """
 import os
-from dataclasses import dataclass
-from typing import Protocol
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Protocol
 
-from services.grant_workflow.models import DataOrigin
+if TYPE_CHECKING:
+    from services.grant_workflow.literature import PublishedLiteratureSource
+
+from services.grant_workflow.models import ApplicationDocument, DataOrigin
+from services.ingestion.document import ExtractedDocument
 from services.sources.registry import SourceAccessStatus, SourceRecord, SourceRegistry
 
 
@@ -25,6 +29,11 @@ class HistoricalRecord:
     outcome: str | None
     organization: str | None
     data_origin: DataOrigin
+    application_id: str | None = None
+    grant_call_id: str | None = None
+    document_meta: ApplicationDocument | None = None
+    document: ExtractedDocument | None = None
+    provenance: dict = field(default_factory=dict)
 
 
 class GrantDataProvider(Protocol):
@@ -85,12 +94,18 @@ _OPTIONAL_EXTERNAL = [
 ]
 
 
-def default_source_registry(rigms: RIGMSGrantDataProvider | None = None) -> SourceRegistry:
+def default_source_registry(
+    rigms: RIGMSGrantDataProvider | None = None,
+    literature: "PublishedLiteratureSource | None" = None,
+) -> SourceRegistry:
+    from services.grant_workflow.literature import PublishedLiteratureSource
+
     rigms = rigms or RIGMSGrantDataProvider()
+    literature = literature or PublishedLiteratureSource()
     sources = [
         SourceRecord(
             source_id="same_call_applications",
-            provider="AI-SCREENING",
+            provider="shakaHive",
             source_name="Applications in the same grant call",
             source_type="internal",
             coverage="All applications uploaded to the grant call",
@@ -99,7 +114,7 @@ def default_source_registry(rigms: RIGMSGrantDataProvider | None = None) -> Sour
         ),
         SourceRecord(
             source_id="historical_applications",
-            provider="AI-SCREENING demo",
+            provider="shakaHive demo",
             source_name="Historical applications and funded projects (synthetic)",
             source_type="internal_synthetic",
             coverage="Synthetic demonstration records only",
@@ -122,6 +137,16 @@ def default_source_registry(rigms: RIGMSGrantDataProvider | None = None) -> Sour
             source_type="authorized_integration",
             coverage="Requires institutional authorization",
             access_status=SourceAccessStatus.NOT_CONFIGURED,
+        ),
+        SourceRecord(
+            source_id=literature.provider_id,
+            provider="OpenAlex",
+            source_name=literature.source_name,
+            source_type="external_optional",
+            base_url="https://api.openalex.org",
+            coverage="Published works with abstracts; searched by the plagiarism check only",
+            methodology="PublishedLiteratureSource (OpenAlex works API)",
+            access_status=literature.status(),
         ),
     ]
     sources.extend(

@@ -1,6 +1,7 @@
 from services.research_sources.models import SourceDefinition
 
 SOURCE_REGISTRY: tuple[SourceDefinition, ...] = (
+    SourceDefinition("openalex", "OpenAlex", "api", "https://api.openalex.org", "global scholarly works, authors and institutions", False, True, notes="Open API; a key or polite-pool mailto address raises the rate limit."),
     SourceDefinition("core", "CORE", "api", "https://core.ac.uk", "global open-access research", True, True, notes="API key required."),
     SourceDefinition("crossref", "Crossref", "api", "https://api.crossref.org", "global scholarly metadata", False, True),
     SourceDefinition("doaj", "Directory of Open Access Journals", "oai_pmh", "https://doaj.org", "open-access journals and articles", False, True),

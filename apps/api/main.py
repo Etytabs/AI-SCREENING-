@@ -7,29 +7,48 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from apps.api.dependencies import get_service
-from apps.api.routes import grants, health, ncst, publications, workflow
+from apps.api.routes import duplication, grants, health, ncst, publications, workflow
+from services.config.env import load_env_file
 from services.grant_workflow.seed import seed_demo
 from services.grant_workflow.service import WorkflowError
+from services.grant_workflow.sgci_call import seed_sgci_call
 
 logger = logging.getLogger(__name__)
 
+# Read .env before anything reads os.getenv (API keys, source configuration).
+load_env_file()
+
+
+def _flag(name: str, default: str = "true") -> bool:
+    return os.getenv(name, default).strip().lower() not in {"0", "false", "no", "off"}
+
 
 def _demo_seed_enabled() -> bool:
-    return os.getenv("AI_SCREENING_DEMO_SEED", "true").strip().lower() not in {"0", "false", "no", "off"}
+    return _flag("AI_SCREENING_DEMO_SEED")
+
+
+def _demo_applications_enabled() -> bool:
+    """Seed the five synthetic submissions, or leave the demo call empty for real uploads."""
+    return _flag("AI_SCREENING_DEMO_APPLICATIONS")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    if _demo_seed_enabled() and getattr(app.state, "workflow", None) is None:
+    if getattr(app.state, "workflow", None) is None:
         service = get_service(Request({"type": "http", "app": app}))
+        if _demo_seed_enabled():
+            try:
+                seed_demo(service, applications=_demo_applications_enabled())
+            except Exception:
+                logger.exception("Synthetic demo seed failed")
         try:
-            seed_demo(service)
+            seed_sgci_call(service)
         except Exception:
-            logger.exception("Synthetic demo seed failed")
+            logger.exception("SGCI call seed failed")
     yield
 
 
-app = FastAPI(title="AI-SCREENING Research Intelligence API", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="shakaHive Research Intelligence API", version="0.1.0", lifespan=lifespan)
 
 cors_origins = [
     origin.strip()
@@ -60,8 +79,9 @@ app.include_router(grants.router)
 app.include_router(ncst.router)
 app.include_router(publications.router)
 app.include_router(workflow.router)
+app.include_router(duplication.router)
 
 
 @app.get("/api/v1")
 def api_info() -> dict[str, str]:
-    return {"name": "AI-SCREENING", "version": "0.1.0", "purpose": "Research intelligence"}
+    return {"name": "shakaHive", "version": "0.1.0", "purpose": "Research intelligence"}

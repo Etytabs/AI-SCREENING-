@@ -2,23 +2,22 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { ScreeningProgressView } from "../../../components/workflow/ScreeningProgressView";
+import { ScreeningStatusDialog } from "../../../components/workflow/ScreeningStatusDialog";
 import { NoCallSelected, Notice, PageHeader, StatusBadge } from "../../../components/workflow/ui";
 import { useWorkspace } from "../../../components/workflow/WorkspaceContext";
 import { ApiError } from "../../../lib/api";
-import { STAGE_LABELS } from "../../../lib/labels";
-import type { ApplicationRow, BatchProgress, StageName } from "../../../lib/types";
+import { SCREENING_STATE_LABELS } from "../../../lib/labels";
+import type { ApplicationRow, BatchProgress } from "../../../lib/types";
 
-const STAGE_HELP: Record<StageName, string> = {
-  DOCUMENT_EXTRACTION: "Reads the text already extracted at upload; unreadable files are reported, never guessed.",
-  REQUIREMENT_MAPPING: "Maps each verified requirement to the most relevant passages in the application.",
-  ELIGIBILITY: "Checks verified eligibility requirements. Missing evidence gives REVIEW REQUIRED, never FAIL.",
-  COMPLETENESS: "Checks the documents the call requires. FAIL only when every file was readable and the document is absent.",
-  DUPLICATION: "Whole-proposal similarity against other applications and authorized historical records.",
-  TEXT_SIMILARITY: "Shared verbatim passages, excluding text quoted from the call document.",
-  NOVELTY: "Per-dimension comparison producing a signal for reviewers, not a novelty judgement.",
-  EVIDENCE: "Validates every citation; a FAIL without application evidence is downgraded to review.",
-};
+/** Label a submission by what was actually uploaded, falling back to the reference. */
+function submissionLabel(row: ApplicationRow): { primary: string; secondary: string } {
+  const [first, ...rest] = row.document_names ?? [];
+  const extra = rest.length ? `${rest.length} more document${rest.length === 1 ? "" : "s"}` : null;
+  return {
+    primary: first ?? row.application_reference,
+    secondary: [row.application_reference, row.title, extra].filter(Boolean).join(" · "),
+  };
+}
 
 export default function ScreeningPage() {
   const { client, callId, call, role, callsState, refreshCalls } = useWorkspace();
@@ -27,6 +26,7 @@ export default function ScreeningPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [statusFor, setStatusFor] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!callId) return;
@@ -74,6 +74,7 @@ export default function ScreeningPage() {
   const canLaunch = role !== "REVIEWER" && !!call && ["READY_FOR_SUBMISSIONS", "SCREENING", "REVIEW"].includes(call.status);
   const unscreened = rows.filter((r) => r.screening_status === "NOT_SCREENED").map((r) => r.id);
   const busy = !!progress && progress.finished < progress.total;
+  const statusRow = rows.find((r) => r.id === statusFor) ?? null;
 
   return (
     <>
@@ -95,14 +96,29 @@ export default function ScreeningPage() {
             ) : (
               <>
                 <table className="data-table select-table">
-                  <thead><tr><th><span className="sr-only">Select</span></th><th>Application</th><th>Screening status</th></tr></thead>
+                  <thead><tr><th><span className="sr-only">Select</span></th><th>Document uploaded</th><th>Screening status</th></tr></thead>
                   <tbody>
                     {rows.map((r) => (
                       <tr key={r.id}>
                         <td><input type="checkbox" aria-label={`Select ${r.application_reference}`} checked={selected.has(r.id)} disabled={!canLaunch || busy}
                           onChange={(e) => setSelected((s) => { const next = new Set(s); if (e.target.checked) next.add(r.id); else next.delete(r.id); return next; })} /></td>
-                        <td><b>{r.application_reference}</b> {r.title}</td>
-                        <td><StatusBadge status={["QUEUED", "RUNNING"].includes(r.screening_status) ? "PROCESSING" : r.screening_status} /></td>
+                        <td>
+                          <b>{submissionLabel(r).primary}</b>
+                          <small className="muted">{submissionLabel(r).secondary}</small>
+                        </td>
+                        <td>
+                          <button
+                            className="status-button"
+                            onClick={() => setStatusFor(r.id)}
+                            aria-haspopup="dialog"
+                            title={`Screening status for ${r.application_reference}`}
+                          >
+                            <StatusBadge
+                              status={["QUEUED", "RUNNING"].includes(r.screening_status) ? "PROCESSING" : r.screening_status}
+                              label={SCREENING_STATE_LABELS[r.screening_status]}
+                            />
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -116,17 +132,7 @@ export default function ScreeningPage() {
             )}
           </section>
 
-          <section className="panel">
-            <h2>Latest batch</h2>
-            {progress ? <ScreeningProgressView progress={progress} rows={rows} /> : <p className="muted">No screening has been run for this call.</p>}
-          </section>
-
-          <section className="panel">
-            <h2>Pipeline stages</h2>
-            <dl className="stage-help">
-              {(Object.keys(STAGE_HELP) as StageName[]).map((s) => (<div key={s}><dt>{STAGE_LABELS[s]}</dt><dd>{STAGE_HELP[s]}</dd></div>))}
-            </dl>
-          </section>
+          {statusRow && <ScreeningStatusDialog row={statusRow} onClose={() => setStatusFor(null)} />}
         </>
       )}
     </>

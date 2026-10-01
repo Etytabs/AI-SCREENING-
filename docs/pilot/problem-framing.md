@@ -7,7 +7,7 @@ NCST / National Research and Innovation Fund (NRIF) technical staff responsible 
 Applicants submit through RIGMS → staff check completeness and eligibility → plagiarism/similarity screening → eligible proposals proceed to peer review.
 
 ## Product objective
-AI-SCREENING should reduce repetitive screening effort while improving consistency and traceability. It complements RIGMS and existing plagiarism tooling; it does not replace either system or make final funding decisions.
+shakaHive should reduce repetitive screening effort while improving consistency and traceability. It complements RIGMS and existing plagiarism tooling; it does not replace either system or make final funding decisions.
 
 ## MVP AI capabilities
 1. Document extraction from PDF/DOCX.

@@ -1,4 +1,4 @@
-# AI-SCREENING — Research Intelligence Platform
+# shakaHive — Research Intelligence Platform
 
 AI/ML-centered research intelligence platform for grant proposal screening, grant lifecycle intelligence, and research publication reconciliation. The system is designed as an evidence workspace: AI/ML models surface findings, retrieve supporting evidence, reconcile records, and expose provenance while authorized staff retain the final decision.
 
@@ -6,7 +6,7 @@ AI/ML-centered research intelligence platform for grant proposal screening, gran
 
 The FY 2025-2026 NCST Annual Report strengthens the case for a platform that sits alongside—not replaces—the national research management infrastructure. The report describes the upgraded RIGMS as supporting grant management from applications through project closing, with improved workflow automation, security, monitoring, reporting and data management. It also describes the Rwanda Research and Innovation Repository as a national knowledge hub for research outputs and identifies fragmented resources, weak interoperability, limited local AI/ML datasets and limited visibility of research as ecosystem gaps.
 
-AI-SCREENING therefore now models an NCST-aligned research intelligence layer across the grant lifecycle:
+shakaHive therefore now models an NCST-aligned research intelligence layer across the grant lifecycle:
 
 Application → Administrative screening → Technical review → Award → Implementation → M&E → Closeout → Research-to-impact
 
@@ -90,7 +90,7 @@ International research databases are optional connectors, not prerequisites for 
 
 The report identifies several ecosystem needs that map directly to the architecture:
 
-| NCST-reported need | AI-SCREENING response |
+| NCST-reported need | shakaHive response |
 | --- | --- |
 | Fragmented research outputs/resources | Evidence registry + repository reconciliation |
 | Poor interoperability | Normalized source adapters + provenance-preserving records |
@@ -103,7 +103,7 @@ The report identifies several ecosystem needs that map directly to the architect
 | Quarterly M&E of funded projects | Structured monitoring indicators and evidence comparison |
 | Research-to-impact gap | Impact/commercialization lifecycle stage and evidence model |
 
-The report's proposed priorities also emphasize resource visibility, governance, emerging skills, academia-industry collaboration, sustainable financing, open data and interoperability. These are treated as architectural alignment targets rather than claims that AI-SCREENING already solves the national problems.
+The report's proposed priorities also emphasize resource visibility, governance, emerging skills, academia-industry collaboration, sustainable financing, open data and interoperability. These are treated as architectural alignment targets rather than claims that shakaHive already solves the national problems.
 
 ## Current ML retrieval architecture
 

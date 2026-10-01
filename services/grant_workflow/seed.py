@@ -29,12 +29,22 @@ def demo_applications_zip() -> bytes:
     return buffer.getvalue()
 
 
-def seed_demo(service: GrantWorkflowService, *, screen: bool = True) -> GrantCall:
+def seed_demo(
+    service: GrantWorkflowService, *, screen: bool = True, applications: bool = True
+) -> GrantCall:
+    """Seed the demonstration call.
+
+    With ``applications=False`` only the call and its confirmed requirements are created,
+    giving an open call to upload real documents into without the synthetic submissions
+    cluttering the screening list.
+    """
     call = service.create_call(DEMO_SEED_ACTOR, dict(DEMO_CALL), data_origin=DataOrigin.SYNTHETIC)
     _, criteria = service.upload_rfp(DEMO_SEED_ACTOR, call.id, DEMO_RFP_FILENAME, demo_rfp_bytes())
     for criterion in criteria:
         service.verify_requirement(DEMO_SEED_ACTOR, criterion.id, note=DEMO_VERIFICATION_NOTE)
     service.confirm_requirements(DEMO_SEED_ACTOR, call.id)
+    if not applications:
+        return service.get_call(call.id)
     files = [UploadedFile(path, text.encode("utf-8")) for path, text in DEMO_APPLICATION_FILES.items()]
     service.upload_applications(DEMO_SEED_ACTOR, call.id, files, data_origin=DataOrigin.SYNTHETIC)
     if screen:

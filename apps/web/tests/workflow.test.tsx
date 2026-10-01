@@ -114,14 +114,81 @@ describe("application upload", () => {
 });
 
 describe("dashboard", () => {
-  it("summarises counts, workflow progress, coverage gaps and the disclaimer", () => {
+  it("summarises workflow progress, the headline counts and the disclaimer", () => {
     render(<DashboardSummaryView summary={fx.summary()} />);
     expect(screen.getByText("Climate Resilience Research Call")).toBeTruthy();
     expect(screen.getByText("15 of 15 confirmed")).toBeTruthy();
     expect(screen.getByText("11 findings awaiting a reviewer")).toBeTruthy();
-    expect(screen.getByText(/Not searched \(1\): OpenAlex/)).toBeTruthy();
+    // the report tile reports the run too, rather than a fixed label
+    expect(screen.getByText("60 findings across 5 applications")).toBeTruthy();
+    const stats = within(screen.getByRole("list", { name: "Screening summary" }));
+    expect(stats.getAllByRole("listitem").map((li) => li.textContent)).toEqual([
+      "5applications", "3eligible", "3incomplete", "11awaiting review",
+    ]);
     expect(screen.getByText(/never replace, human review/)).toBeTruthy();
     expect(screen.queryByText("Screening in progress")).toBeNull();
+  });
+
+  it("keeps recorded human decisions on the overview, labelled confirmed or dismissed", () => {
+    const summary = fx.summary({
+      decisions: [
+        {
+          decision_id: "d1", finding_id: "f-1", application_id: "app-1", application_reference: "APP-0006",
+          document_name: "Ndinayo_Eric_Plagiarism_Detection_Test.pdf", finding_type: "plagiarism",
+          finding_title: "Plagiarism check", action: "CONFIRM", review_state: "CONFIRMED",
+          reviewer_id: "admin", note: "Copied verbatim from a published paper.", created_at: "2026-09-30T10:00:00Z",
+        },
+        {
+          decision_id: "d2", finding_id: "f-2", application_id: "app-2", application_reference: "APP-0007",
+          document_name: "proposal.pdf", finding_type: "duplication", finding_title: "Proposal duplication check",
+          action: "DISMISS", review_state: "DISMISSED", reviewer_id: "admin",
+          note: "Same applicant's own earlier work.", created_at: "2026-09-29T10:00:00Z",
+        },
+      ],
+    });
+    render(<DashboardSummaryView summary={summary} />);
+    const log = within(screen.getByRole("region", { name: "Human decisions" }));
+    expect(log.getByText("Human decisions (2)")).toBeTruthy();
+    expect(log.getByText("Ndinayo_Eric_Plagiarism_Detection_Test.pdf")).toBeTruthy();
+    expect(log.getByText("Confirmed")).toBeTruthy();
+    expect(log.getByText("Dismissed")).toBeTruthy();
+    expect(log.getByText("Copied verbatim from a published paper.")).toBeTruthy();
+    expect(log.getAllByRole("link", { name: "Open the finding" })[0].getAttribute("href")).toBe(
+      "/dashboard/applications/view?id=app-1&finding=f-1",
+    );
+  });
+
+  it("says so plainly when no decision has been recorded yet", () => {
+    render(<DashboardSummaryView summary={fx.summary()} />);
+    const log = within(screen.getByRole("region", { name: "Human decisions" }));
+    expect(log.getByText(/No reviewer decision has been recorded yet/)).toBeTruthy();
+  });
+
+  it("keeps every workflow tile tied to the summary, including singular wording", () => {
+    render(<DashboardSummaryView summary={fx.summary({
+      applications_total: 1, findings_total: 1, findings_pending_review: 1,
+      latest_batch: fx.batch({ total: 1, finished: 1 }),
+    })} />);
+    expect(screen.getByText("1 uploaded")).toBeTruthy();
+    expect(screen.getByText("1 of 1 run finished")).toBeTruthy();
+    expect(screen.getByText("1 finding awaiting a reviewer")).toBeTruthy();
+    expect(screen.getByText("1 finding across 1 application")).toBeTruthy();
+  });
+
+  it("says nothing is screened yet rather than showing a fixed report label", () => {
+    render(<DashboardSummaryView summary={fx.summary({
+      applications_total: 0, findings_total: 0, findings_pending_review: 0, latest_batch: null,
+    })} />);
+    expect(screen.getByText("Nothing screened yet")).toBeTruthy();
+    expect(screen.getByText("Not started")).toBeTruthy();
+  });
+
+  it("drops the per-check grid and the source coverage list from the overview", () => {
+    render(<DashboardSummaryView summary={fx.summary()} />);
+    expect(screen.queryByText("SOURCE COVERAGE")).toBeNull();
+    expect(screen.queryByText(/Not searched/)).toBeNull();
+    expect(screen.queryByText("Novelty signal")).toBeNull();
+    expect(screen.queryByText("possible duplication")).toBeNull();
   });
 
   it("shows processing and partial states and an empty state", () => {
@@ -229,6 +296,14 @@ describe("evidence drawer", () => {
 });
 
 describe("reviewer decision", () => {
+  it("offers only confirm and dismiss", () => {
+    render(<DecisionPanel canDecide onDecide={vi.fn(noop)} onNote={vi.fn(noop)} />);
+    expect(screen.getByLabelText("Confirm finding")).toBeTruthy();
+    expect(screen.getByLabelText("Dismiss finding")).toBeTruthy();
+    expect(screen.queryByLabelText("Escalate")).toBeNull();
+    expect(screen.queryByLabelText("Request further review")).toBeNull();
+  });
+
   it("requires a rationale", async () => {
     const onDecide = vi.fn(noop);
     render(<DecisionPanel canDecide onDecide={onDecide} onNote={vi.fn(noop)} />);
@@ -241,11 +316,11 @@ describe("reviewer decision", () => {
     const onDecide = vi.fn(noop);
     const onNote = vi.fn(noop);
     render(<DecisionPanel canDecide onDecide={onDecide} onNote={onNote} />);
-    fireEvent.click(screen.getByLabelText("Escalate"));
+    fireEvent.click(screen.getByLabelText("Dismiss finding"));
     fireEvent.change(screen.getByLabelText(/Rationale/), { target: { value: " Budget total contradicts annex " } });
     fireEvent.click(screen.getByRole("button", { name: "Record decision" }));
-    await waitFor(() => expect(onDecide).toHaveBeenCalledWith("ESCALATE", "Budget total contradicts annex"));
-    expect((await screen.findByRole("status")).textContent).toContain("Decision recorded: Escalate");
+    await waitFor(() => expect(onDecide).toHaveBeenCalledWith("DISMISS", "Budget total contradicts annex"));
+    expect((await screen.findByRole("status")).textContent).toContain("Decision recorded: Dismiss finding");
     fireEvent.change(screen.getByLabelText(/Rationale/), { target: { value: "Follow up next week" } });
     fireEvent.click(screen.getByRole("button", { name: "Add note only" }));
     await waitFor(() => expect(onNote).toHaveBeenCalledWith("Follow up next week"));

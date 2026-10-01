@@ -47,6 +47,7 @@ from services.grant_workflow.views import WorkflowViews
 from services.sources.registry import SourceAccessStatus
 
 ADMIN = Actor("admin-1", Role.GRANT_ADMINISTRATOR)
+GRANT_INSTITUTION = Actor("institution-1", Role.GRANT_INSTITUTION)
 REVIEWER = Actor("reviewer-1", Role.REVIEWER)
 SYSADMIN = Actor("sysadmin-1", Role.SYSTEM_ADMINISTRATOR)
 CALL = {"name": "Test call", "organization": "Test fund", "funding_max": 50_000_000, "currency": "RWF"}
@@ -106,7 +107,26 @@ def seeded():
 
 
 # -- grant calls & RFP ---------------------------------------------------------------
-def test_create_call_requires_admin_and_is_audited():
+
+
+def test_grant_institution_can_run_the_operational_grant_workflow():
+    service = make_service()
+    call = service.create_call(GRANT_INSTITUTION, dict(CALL))
+    _, criteria = service.upload_rfp(
+        GRANT_INSTITUTION, call.id, DEMO_RFP_FILENAME, DEMO_RFP_TEXT.encode()
+    )
+    for criterion in criteria:
+        service.verify_requirement(GRANT_INSTITUTION, criterion.id)
+    call = service.confirm_requirements(GRANT_INSTITUTION, call.id)
+    assert call.status == GrantCallStatus.READY_FOR_SUBMISSIONS
+
+    application, _ = service.create_application(
+        GRANT_INSTITUTION, call.id, files(proposal__txt=PROPOSAL)
+    )
+    batch = service.start_screening(GRANT_INSTITUTION, call.id, [application.id])
+    assert batch.run_ids
+    assert service.audit_log(GRANT_INSTITUTION, call.id)
+\n\ndef test_create_call_requires_admin_and_is_audited():
     service = make_service()
     with pytest.raises(PermissionDeniedError):
         service.create_call(REVIEWER, dict(CALL))

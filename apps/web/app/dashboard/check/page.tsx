@@ -94,7 +94,9 @@ export default function ResearchCheckPage() {
       // submissions, the Applications workspace is the correct review surface.
       if (applicationIds.length === 1) {
         const application = await client.getApplication(applicationIds[0]);
+        const resultFindings = await client.listFindings(applicationIds[0]);
         setDetail(application);
+        setFindings(resultFindings);
       }
 
       setPhase("done");

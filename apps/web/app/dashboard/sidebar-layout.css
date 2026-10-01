@@ -1,0 +1,39 @@
+/* Non-persistent dashboard sidebar: keep navigation in normal document flow. */
+.dashboard-shell-flow {
+  margin-top: 60px;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  align-items: stretch;
+  min-height: calc(100vh - 60px);
+  padding-left: 0 !important;
+}
+
+.dashboard-shell-flow .ws-sidebar {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  bottom: auto !important;
+  width: auto !important;
+  min-height: calc(100vh - 60px);
+  height: auto !important;
+  overflow: visible !important;
+  z-index: auto !important;
+}
+
+.dashboard-shell-flow .ws-main {
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .dashboard-shell-flow {
+    display: block;
+    min-height: 0;
+    margin-top: 60px;
+  }
+
+  .dashboard-shell-flow .ws-sidebar {
+    min-height: 0;
+    width: 100% !important;
+    position: relative !important;
+  }
+}

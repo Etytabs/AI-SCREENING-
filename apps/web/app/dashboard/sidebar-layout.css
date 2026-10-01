@@ -1,5 +1,5 @@
-/* Non-persistent dashboard sidebar: keep navigation in normal document flow. */
-.dashboard-shell-flow {
+/* Keep the dashboard sidebar in normal document flow. */
+.shell.dashboard-shell-flow {
   margin-top: 60px;
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
@@ -8,7 +8,7 @@
   padding-left: 0 !important;
 }
 
-.dashboard-shell-flow .ws-sidebar {
+.shell.dashboard-shell-flow .ws-sidebar {
   position: relative !important;
   top: auto !important;
   left: auto !important;
@@ -20,18 +20,18 @@
   z-index: auto !important;
 }
 
-.dashboard-shell-flow .ws-main {
+.shell.dashboard-shell-flow .ws-main {
   min-width: 0;
 }
 
 @media (max-width: 900px) {
-  .dashboard-shell-flow {
+  .shell.dashboard-shell-flow {
     display: block;
     min-height: 0;
     margin-top: 60px;
   }
 
-  .dashboard-shell-flow .ws-sidebar {
+  .shell.dashboard-shell-flow .ws-sidebar {
     min-height: 0;
     width: 100% !important;
     position: relative !important;

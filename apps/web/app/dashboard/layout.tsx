@@ -1,4 +1,6 @@
 import "./workspace.css";
+import "./skin.css";
+import "./check-cards.css";
 import WorkspaceShell from "../../components/workflow/WorkspaceShell";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

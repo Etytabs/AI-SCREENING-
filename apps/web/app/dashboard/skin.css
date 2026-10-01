@@ -1,0 +1,254 @@
+/* ===========================================================================
+   MODERN SKIN
+   Visual layer only: colour, radius, elevation, type. Every selector here
+   already exists in workspace.css or globals.css; nothing below changes
+   layout, structure or behaviour. All colours resolve through theme tokens,
+   so light and dark both work without touching any component.
+   =========================================================================== */
+
+/* --- app chrome ---------------------------------------------------------- */
+body .navbar {
+  height: 64px;
+  padding: 0 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  box-shadow: var(--shadow-1);
+}
+body .nav-spacer { height: 64px; }
+body .nav-brand span {
+  width: 36px; height: 36px;
+  border: 0; border-radius: var(--radius-sm);
+  background: var(--ws-accent); color: #fff;
+  font-weight: 800; letter-spacing: .04em;
+}
+body .nav-brand b { letter-spacing: .08em; font-weight: 800; }
+body .nav-links a {
+  border-bottom: 0; border-radius: 999px;
+  padding: 7px 14px; letter-spacing: .04em;
+  transition: background .15s, color .15s;
+}
+body .nav-links a:hover { background: var(--surface-2); color: var(--ink); }
+body .nav-links a.active { background: var(--ws-accent-soft); color: var(--ws-accent); }
+
+.theme-toggle {
+  display: inline-flex; align-items: center; gap: 9px;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface-2); color: var(--muted);
+  padding: 5px 12px 5px 6px;
+  font: 800 12px Inter, system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.theme-toggle:hover { border-color: var(--ws-accent); color: var(--ink); }
+.theme-toggle-track {
+  width: 34px; height: 20px; flex: 0 0 auto;
+  display: flex; align-items: center;
+  border-radius: 999px; background: var(--line); padding: 2px;
+  transition: background .18s;
+}
+.theme-toggle[aria-checked="true"] .theme-toggle-track { background: var(--ws-accent); justify-content: flex-end; }
+.theme-toggle-thumb {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--surface); color: var(--muted);
+  display: grid; place-items: center; font-size: 10px; line-height: 1;
+  box-shadow: var(--shadow-1);
+}
+.theme-toggle-label { min-width: 34px; text-align: left; }
+
+/* --- sidebar ------------------------------------------------------------- */
+body .sidebar.ws-sidebar {
+  top: 64px; width: 258px;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  padding: 18px 12px;
+}
+body .ws-sidebar .sidebar-label { color: var(--muted); padding: 0 10px 8px; letter-spacing: .13em; }
+body .ws-sidebar .ws-call-picker { padding: 0 10px 16px; border-bottom: 1px solid var(--line); }
+body .ws-sidebar nav { display: grid; gap: 2px; margin-top: 14px; }
+body .ws-sidebar .side-link {
+  border-left: 0; border-radius: var(--radius-sm);
+  padding: 10px 14px; color: var(--muted); font-weight: 600;
+  transition: background .15s, color .15s;
+}
+body .ws-sidebar .side-link:hover { background: var(--surface-2); color: var(--ink); }
+body .ws-sidebar .side-link.active {
+  background: var(--ws-accent-soft); color: var(--ws-accent); font-weight: 800;
+}
+body .ws-sidebar .sidebar-foot { border-top: 1px solid var(--line); padding: 16px 10px 0; }
+body main.shell { padding-left: 258px; }
+
+/* --- typography: sans, tighter, modern ----------------------------------- */
+.ws-main .page-head h1,
+.ws-main .panel h2,
+.ws-main .call-summary h2,
+.ws-main .check-section h3,
+.ws-main .upload-more > summary,
+.evidence-drawer h2,
+.modal h2 {
+  font-family: Inter, system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+.ws-main .page-head h1 { font-size: 30px; }
+.ws-main .panel h2 { font-size: 20px; }
+.ws-main .call-summary h2 { font-size: 24px; }
+.evidence-drawer h2, .modal h2 { font-size: 21px; }
+.ws-main .check-section h3, .ws-main .upload-more > summary { font-size: 17px; }
+.ws-main .eyebrow, .evidence-drawer .eyebrow, .modal .eyebrow {
+  letter-spacing: .12em; font-weight: 800; color: var(--muted); font-size: 11px;
+}
+
+/* --- surfaces: cards instead of hairline boxes --------------------------- */
+.ws-main .panel { border-top: 0; padding: 8px 0 22px; }
+.ws-main .page-head { border-bottom: 1px solid var(--line); }
+
+.workflow-steps, .headline-stats {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+}
+.workflow-steps a, .headline-stats a { transition: background .15s; }
+.workflow-steps a:hover, .headline-stats a:hover { background: var(--surface-2); }
+.headline-stats b, .summary-table td b, .similarity-split b, .similarity-dial strong {
+  font-family: Inter, system-ui, sans-serif; font-weight: 700; letter-spacing: -.02em;
+}
+.step-index { border-radius: 50%; border-color: var(--line); color: var(--muted); }
+.workflow-steps .done .step-index { background: var(--ws-accent); border-color: var(--ws-accent); color: #fff; }
+
+.evidence-item, .match-list li, .similarity-split li, .similarity-dial {
+  background: var(--surface);
+  border-color: var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-1);
+}
+.confirm-bar {
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--surface); box-shadow: var(--shadow-1);
+}
+.add-requirement { border-color: var(--line); border-radius: var(--radius); background: var(--surface-2); }
+
+/* --- badges: soft pills --------------------------------------------------- */
+.badge {
+  border-radius: 999px; padding: 3px 10px;
+  border-color: transparent; letter-spacing: .05em;
+}
+.badge-pass { color: var(--ws-pass); background: var(--ws-pass-soft); }
+.badge-fail { color: var(--ws-fail); background: var(--ws-fail-soft); }
+.badge-review { color: var(--ws-review); background: var(--ws-review-soft); }
+.badge-processing { color: var(--ws-accent); background: var(--ws-accent-soft); }
+.badge-partial { color: var(--ws-partial); background: var(--ws-partial-soft); border-style: solid; border-color: var(--ws-partial); }
+.badge-neutral { color: var(--muted); background: var(--surface-2); }
+.synthetic-badge {
+  border-radius: 999px; border-style: solid;
+  border-color: var(--line); background: var(--surface-2); color: var(--muted);
+}
+.call-status { border-radius: 999px; border-color: var(--line); padding: 3px 11px; }
+.concepts span { border-radius: 999px; background: var(--surface-2); border-color: var(--line); padding: 1px 9px; }
+.req-code { border-radius: var(--radius-sm); border-color: var(--line); background: var(--surface-2); padding: 1px 7px; }
+
+/* --- controls ------------------------------------------------------------ */
+.ws-main input:not([type="checkbox"]):not([type="radio"]),
+.ws-main select,
+.ws-main textarea,
+.ws-call-picker select,
+.ws-identity select {
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  transition: border-color .15s, box-shadow .15s;
+}
+.ws-main input:focus-visible, .ws-main select:focus-visible, .ws-main textarea:focus-visible,
+.ws-call-picker select:focus-visible, .ws-identity select:focus-visible {
+  outline: 0; border-color: var(--ws-accent); box-shadow: 0 0 0 3px var(--ring);
+}
+.ws-main .dark-button, .ws-main .ghost-button, .ws-main .action-button { border-radius: var(--radius-sm); }
+.ws-main .dark-button, .ws-main .action-button {
+  background: var(--ws-accent); border-color: var(--ws-accent); color: #fff;
+  box-shadow: var(--shadow-1); transition: filter .15s;
+}
+.ws-main .dark-button:hover:not(:disabled), .ws-main .action-button:hover:not(:disabled) { filter: brightness(1.08); }
+.ws-main .ghost-button { border-color: var(--line-strong); background: var(--surface); color: var(--ink); }
+.ws-main .ghost-button:hover:not(:disabled) { background: var(--surface-2); border-color: var(--ws-accent); }
+.modal .dark-button { background: var(--ws-accent); border-color: var(--ws-accent); color: #fff; border-radius: var(--radius-sm); }
+.segmented { border-radius: var(--radius-sm); border-color: var(--line-strong); overflow: hidden; }
+.segmented button { border-right-color: var(--line-strong); }
+.segmented button[aria-pressed="true"], .segmented button.active { background: var(--ws-accent); color: #fff; }
+.text-button { font-weight: 700; }
+
+/* --- tables -------------------------------------------------------------- */
+.data-table th { border-bottom: 1px solid var(--line); color: var(--muted); letter-spacing: .08em; }
+.data-table td { border-bottom: 1px solid var(--line); }
+.data-table tbody tr { transition: background .12s; }
+.data-table tbody tr:hover { background: var(--surface-2); }
+.summary-table th, .summary-table td,
+dl.summary-table dt, dl.summary-table dd { border-bottom: 1px solid var(--line); }
+
+/* --- notices ------------------------------------------------------------- */
+.notice { border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow-1); }
+.notice-error { background: var(--ws-fail-soft); }
+.notice-review { background: var(--ws-review-soft); }
+.uncertainty { background: var(--ws-review-soft); border-radius: var(--radius-sm); border-color: var(--ws-review); }
+
+/* --- review workspace ---------------------------------------------------- */
+.review-grid { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.doc-scroll { background: var(--surface-3); }
+.ws-paper, .doc-pages .ws-paper { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow-2); }
+.doc-tabs button.active { border-bottom-color: var(--ws-accent); color: var(--ws-accent); background: var(--surface-2); }
+.finding-row { border-radius: var(--radius-sm); border-bottom: 1px solid var(--line); transition: background .12s; }
+.finding-row:hover { background: var(--surface-2); }
+.finding-row.selected { background: var(--ws-accent-soft); border-left-color: var(--ws-accent); }
+.finding-row > small { color: var(--muted); }
+.doc-empty { background: var(--surface); border-color: var(--line); border-radius: var(--radius); box-shadow: var(--shadow-1); }
+.review-summary { border-bottom: 1px solid var(--line); }
+.review-ai-head { border-bottom: 1px solid var(--line); }
+
+/* --- drawer and modal ---------------------------------------------------- */
+.evidence-drawer {
+  top: 64px; background: var(--surface);
+  border-left: 1px solid var(--line); box-shadow: var(--shadow-3);
+}
+.evidence-drawer > header { background: var(--surface); border-bottom: 1px solid var(--line); }
+.drawer-section { border-bottom: 1px solid var(--line); }
+.modal {
+  border-radius: var(--radius); border: 1px solid var(--line);
+  background: var(--surface); box-shadow: var(--shadow-3);
+}
+.modal > header { background: var(--surface); border-bottom: 1px solid var(--line); }
+.modal-backdrop { background: rgba(8, 15, 28, .58); backdrop-filter: blur(2px); }
+
+/* --- progress and similarity bars ---------------------------------------- */
+.bar, .similarity-bar { border-radius: 999px; border: 0; background: var(--surface-3); overflow: hidden; }
+.bar > span, .similarity-bar i { border-radius: 999px; }
+
+/* --- misc ---------------------------------------------------------------- */
+.req-text { background: var(--surface-2); border-left-color: var(--line-strong); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+.evidence-item blockquote, .match-list blockquote { border-left-color: var(--line-strong); }
+.decision-panel fieldset { border-radius: var(--radius-sm); border-color: var(--line); }
+.disclaimer { border-top: 1px solid var(--line); }
+.doc-pages mark { background: var(--ws-review-soft); outline-color: var(--ws-review); color: inherit; }
+.requirements-bar, .drawer-section, .check-section { border-bottom-color: var(--line); }
+
+@media (max-width: 900px) {
+  body main.shell { padding-left: 0; }
+  body .sidebar.ws-sidebar { padding: 0; }
+}
+
+/* --- human decision log on the overview ---------------------------------- */
+.decision-log { border-bottom: 0; padding-top: 22px; }
+.decision-log-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 10px; }
+.decision-log-list li {
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--surface); box-shadow: var(--shadow-1); padding: 12px 14px;
+}
+.decision-log-list small { display: block; color: var(--muted); font-size: 12px; margin-top: 3px; }
+.decision-log-list p { margin: 8px 0 4px; }
+.decision-state {
+  border-radius: 999px; padding: 2px 10px;
+  font: 800 11px Inter, system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase;
+}
+.decision-state.ds-confirmed { color: var(--ws-pass); background: var(--ws-pass-soft); }
+.decision-state.ds-confirmed::before { content: "✓ "; }
+.decision-state.ds-dismissed { color: var(--muted); background: var(--surface-2); }
+.decision-state.ds-dismissed::before { content: "✕ "; }

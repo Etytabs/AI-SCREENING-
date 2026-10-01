@@ -1,6 +1,8 @@
 import type {
   ApplicationDetail,
   ApplicationRow,
+  ArchivedProject,
+  ArchivedProjectInput,
   AuditLogEntry,
   BatchProgress,
   DashboardSummary,
@@ -142,8 +144,18 @@ export function createClient(identity: Identity, base: string = API_BASE) {
     dashboard: (id: string) => request<DashboardSummary>("GET", `/api/v1/grants/${id}/dashboard`),
     audit: (id: string) => request<AuditLogEntry[]>( "GET", `/api/v1/grants/${id}/audit`),
     report: (id: string) => request<ScreeningReport>("GET", `/api/v1/grants/${id}/report`),
-    sources: () => request<DataSource[]>( "GET", "/api/v1/sources"),
-    stakeholders: () => request<StakeholderResponse>("GET", "/api/v1/ncst/stakeholders"),
+    sources: () => request<DataSource[]>("GET", "/api/v1/sources"),
+    listDuplicationProjects: () => request<ArchivedProject[]>("GET", "/api/v1/duplication/projects"),
+    importDuplicationProject: (input: ArchivedProjectInput) => {
+      const form = new FormData();
+      form.append("file", input.file);
+      form.append("title", input.title);
+      form.append("source_type", input.source_type);
+      if (input.reference) form.append("reference", input.reference);
+      if (input.year !== undefined) form.append("year", String(input.year));
+      if (input.organization) form.append("organization", input.organization);
+      return request<ArchivedProject>("POST", "/api/v1/duplication/projects", form);
+    },
   };
 }
 

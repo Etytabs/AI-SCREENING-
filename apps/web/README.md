@@ -1,4 +1,4 @@
-# AI-SCREENING Web Application
+# shakaHive Web Application
 
 Next.js 14 (App Router) + TypeScript + plain CSS.
 

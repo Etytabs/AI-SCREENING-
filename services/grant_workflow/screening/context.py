@@ -28,6 +28,11 @@ class ComparisonRecord:
     document: ExtractedDocument | None = None
     year: int | None = None
     outcome: str | None = None
+    authors: tuple[str, ...] = ()
+    published_on: str | None = None
+    publisher: str | None = None
+    source_url: str | None = None
+    doi: str | None = None
 
 
 @dataclass

@@ -1,0 +1,91 @@
+/* Research Check results: three side-by-side cards.
+   Presentation only; every value rendered comes from the findings. */
+
+.check-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin: 18px 0 8px;
+  align-items: start;
+}
+
+.check-card {
+  --tone: var(--muted);
+  --tone-soft: var(--surface-2);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, var(--tone-soft) 0%, var(--surface) 42%);
+  box-shadow: var(--shadow-1);
+  padding: 18px 18px 14px;
+}
+.check-card.tone-accent { --tone: var(--ws-accent); --tone-soft: var(--ws-accent-soft); }
+.check-card.tone-pass   { --tone: var(--ws-pass);   --tone-soft: var(--ws-pass-soft); }
+.check-card.tone-review { --tone: var(--ws-review); --tone-soft: var(--ws-review-soft); }
+.check-card.tone-fail   { --tone: var(--ws-fail);   --tone-soft: var(--ws-fail-soft); }
+
+.check-card > header h3 {
+  font: 700 19px Inter, system-ui, sans-serif;
+  letter-spacing: -.01em;
+  margin: 0 0 4px;
+}
+.check-card > header p { margin: 0; line-height: 1.45; }
+
+.check-metric {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 16px 0 0;
+}
+.check-metric strong {
+  font: 700 40px/1 Inter, system-ui, sans-serif;
+  letter-spacing: -.03em;
+  color: var(--tone);
+}
+.check-metric strong i { font-style: normal; font-size: .62em; margin-left: 1px; }
+
+.check-meter {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  overflow: hidden;
+  margin: 12px 0 0;
+}
+.check-meter i { display: block; height: 100%; border-radius: 999px; background: var(--tone); }
+
+.check-summary {
+  margin: 14px 0 0;
+  flex: 1 1 auto;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.check-card-foot { margin-top: 12px; align-self: start; }
+
+@media (max-width: 1240px) {
+  .check-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 820px) {
+  .check-cards { grid-template-columns: minmax(0, 1fr); }
+  .check-metric strong { font-size: 34px; }
+}
+
+/* the evidence popup is wider than the status popup: it carries passages */
+.modal.modal-wide { width: min(760px, 100%); }
+.modal.modal-wide .drawer-section:first-child { padding-top: 0; }
+.modal.modal-wide .drawer-section:last-child { border-bottom: 0; }
+
+/* switching between the findings behind one card, inside the popup */
+.evidence-switcher { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+.evidence-switcher button {
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface-2); color: var(--muted);
+  padding: 5px 12px; font-size: 12px; font-weight: 700;
+}
+.evidence-switcher button:hover { color: var(--ink); border-color: var(--ws-accent); }
+.evidence-switcher button.active { background: var(--ws-accent-soft); border-color: var(--ws-accent); color: var(--ws-accent); }

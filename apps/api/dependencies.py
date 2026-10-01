@@ -10,6 +10,7 @@ from fastapi import Depends, Header, HTTPException, Request
 
 from ml.semantic_matching.embedding import get_runtime_embedder
 from ml.semantic_matching.reranker import get_runtime_reranker
+from services.grant_workflow.duplication_archive import DuplicationArchive
 from services.grant_workflow.jobs import ThreadPoolJobRunner
 from services.grant_workflow.models import Role
 from services.grant_workflow.service import Actor, GrantWorkflowService
@@ -21,6 +22,7 @@ def build_service() -> GrantWorkflowService:
         jobs=ThreadPoolJobRunner(max_workers=int(os.getenv("AI_SCREENING_SCREENING_WORKERS", "2"))),
         embedder_factory=get_runtime_embedder,
         reranker_factory=get_runtime_reranker,
+        duplication_archive=DuplicationArchive(),
     )
 
 

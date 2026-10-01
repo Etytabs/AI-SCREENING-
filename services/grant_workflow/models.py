@@ -401,10 +401,23 @@ class SimilarityMatch(BaseModel):
     lexical_score: float | None = None
     semantic_score: float | None = None
     reranker_score: float | None = None
+    match_type: str | None = None
+    query_passage: str | None = None
+    query_page: int | None = None
+    query_document_id: str | None = None
+    query_coverage: float | None = None
+    source_coverage: float | None = None
+    year: int | None = None
+    outcome: str | None = None
     matched_section: str | None = None
     matched_page: int | None = None
     matched_passage: str | None = None
     matching_concepts: list[str] = Field(default_factory=list)
+    authors: list[str] = Field(default_factory=list)
+    published_on: str | None = None
+    publisher: str | None = None
+    source_url: str | None = None
+    doi: str | None = None
     explanation: str
     method: str
     data_origin: DataOrigin = DataOrigin.UPLOADED

@@ -6,6 +6,25 @@ const client = createClient({ role: "REVIEWER", userId: "demo-reviewer" }, "http
 afterEach(() => vi.unstubAllGlobals());
 
 describe("api client", () => {
+  it("uploads historical project metadata and a file as multipart data with identity headers", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ id: "project-1" }), { status: 201 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const file = new File(["Research objectives"], "previous.txt", { type: "text/plain" });
+    await client.importDuplicationProject({ file, title: "Previous project", source_type: "funded_project", year: 2024, reference: "FUND-17", organization: "Research Council" });
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("http://api.test/api/v1/duplication/projects");
+    expect(init.method).toBe("POST");
+    expect(init.headers).toMatchObject({ "X-User-Role": "REVIEWER", "X-User-Id": "demo-reviewer" });
+    expect(init.headers["Content-Type"]).toBeUndefined();
+    expect(init.body).toBeInstanceOf(FormData);
+    expect(init.body.get("file")).toBe(file);
+    expect(init.body.get("source_type")).toBe("funded_project");
+    expect(init.body.get("title")).toBe("Previous project");
+    expect(init.body.get("year")).toBe("2024");
+    expect(init.body.get("reference")).toBe("FUND-17");
+    expect(init.body.get("organization")).toBe("Research Council");
+  });
+
   it("sends the demo identity headers and JSON body", async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ id: "d-1" }), { status: 201 }));
     vi.stubGlobal("fetch", fetchMock);

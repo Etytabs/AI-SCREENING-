@@ -8,9 +8,9 @@ const SparkIcon = () => <svg {...icon}><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 
 const ArrowIcon = () => <svg {...icon} width={18} height={18}><path d="M5 12h14M13 6l6 6-6 6" /></svg>;
 
 const steps = [
-  { label: "Proposal", detail: "Upload a PDF or DOCX grant proposal for text extraction.", Icon: DocumentIcon },
-  { label: "AI comparison", detail: "Completeness, eligibility, similarity and overlap evidence.", Icon: SparkIcon, active: true },
-  { label: "Human review", detail: "An authorized reviewer records the decision and rationale.", Icon: ShieldIcon },
+  { label: "Proposal", detail: "Upload a PDF or DOCX research grant proposal for screening.", Icon: DocumentIcon },
+  { label: "AI Screening", detail: "Check the proposal for eligibility, duplication, and plagiarism.", Icon: SparkIcon, active: true },
+  { label: "Human Review", detail: "Review the evidence and record the final decision and rationale.", Icon: ShieldIcon },
 ];
 
 export default function Home() {
@@ -19,16 +19,16 @@ export default function Home() {
       <header className={styles.header}>
         <div className={styles.brand}>
           <span className={styles.brandMark}><ShieldIcon /></span>
-          <div><b>AI-SCREENING</b><small>Research Intelligence</small></div>
+          <div><b>shakaHive</b><small>Research Intelligence</small></div>
         </div>
         <Link href="/dashboard" className={styles.headerLink}>Dashboard <ArrowIcon /></Link>
       </header>
 
       <section className={styles.hero}>
         <div className={styles.pitch}>
-          <div className={styles.kicker}>AI-SCREENING · Research intelligence platform</div>
-          <h1>Evidence in focus.<br />People in control.</h1>
-          <p>A private workspace for grant screening and publication reconciliation, with source-backed evidence and accountable human review.</p>
+          <div className={styles.kicker}>shakaHive · AI-assisted grant screening</div>
+          <h1>Smarter grant screening.<br />Human decisions.</h1>
+          <p>AI-assisted screening of research grant proposals for eligibility, duplication, and plagiarism, with source-backed evidence for human review.</p>
           <Link href="/dashboard" className={styles.cta}><span>Open dashboard</span><ArrowIcon /></Link>
         </div>
         <ol className={styles.steps}>

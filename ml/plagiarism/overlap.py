@@ -23,6 +23,12 @@ class SharedPassage:
     right_text: str
     word_count: int
     exact: bool
+    left_start_word: int = 0
+
+    @property
+    def left_word_range(self) -> range:
+        """Word positions covered in the left text, for union coverage across sources."""
+        return range(self.left_start_word, self.left_start_word + self.word_count)
 
 
 @dataclass(frozen=True)
@@ -30,6 +36,7 @@ class PassageOverlap:
     passages: tuple[SharedPassage, ...]
     left_coverage: float
     method: str
+    left_word_count: int = 0
 
 
 _WORD = re.compile(r"\S+")
@@ -52,7 +59,7 @@ def shared_passages(left: str, right: str, *, shingle_size: int = 8) -> PassageO
     left_words = [_normalize_word(w) for w, _, _ in left_spans]
     right_words = [_normalize_word(w) for w, _, _ in right_spans]
     if len(left_words) < shingle_size or len(right_words) < shingle_size:
-        return PassageOverlap((), 0.0, f"word_shingle_{shingle_size}")
+        return PassageOverlap((), 0.0, f"word_shingle_{shingle_size}", len(left_words))
 
     right_index: dict[tuple[str, ...], list[int]] = {}
     for i in range(len(right_words) - shingle_size + 1):
@@ -79,10 +86,10 @@ def shared_passages(left: str, right: str, *, shingle_size: int = 8) -> PassageO
                 best_len, best_j = length, j
         left_text = left[left_spans[i][1]:left_spans[i + best_len - 1][2]]
         right_text = right[right_spans[best_j][1]:right_spans[best_j + best_len - 1][2]]
-        passages.append(SharedPassage(left_text, right_text, best_len, left_text == right_text))
+        passages.append(SharedPassage(left_text, right_text, best_len, left_text == right_text, i))
         for k in range(i, i + best_len):
             covered[k] = True
         i += best_len
 
     coverage = sum(covered) / len(left_words)
-    return PassageOverlap(tuple(passages), coverage, f"word_shingle_{shingle_size}")
+    return PassageOverlap(tuple(passages), coverage, f"word_shingle_{shingle_size}", len(left_words))

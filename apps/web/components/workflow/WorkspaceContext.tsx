@@ -67,7 +67,15 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       setCalls(list);
       setCallsState("ready");
       setCallsError(null);
-      setCallIdState((current) => (current && list.some((c) => c.id === current) ? current : list[0]?.id ?? null));
+      setCallIdState((current) => {
+        // A stored selection can outlive the call it points at (for example after the
+        // API is restarted). Fall back to a call that exists and persist the correction,
+        // so the stale id does not come back on the next load.
+        const next = current && list.some((c) => c.id === current) ? current : list[0]?.id ?? null;
+        if (next) window.localStorage.setItem(CALL_KEY, next);
+        else window.localStorage.removeItem(CALL_KEY);
+        return next;
+      });
     } catch (error) {
       setCallsState("error");
       setCallsError(error instanceof ApiError ? error.message : "Unable to load grant calls.");

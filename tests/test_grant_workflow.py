@@ -356,7 +356,13 @@ def test_text_similarity_finds_shared_passages(seeded):
     assert finding.signal == "SHARED_PASSAGES_FOUND"
     assert finding.matches[0].application_id == apps["DEMO-APP-001"].id
     assert "not proof of plagiarism" in finding.explanation
-    assert findings_by_code(service, apps["DEMO-APP-003"].id)["plagiarism"].status == FindingStatus.PASS
+    assert finding.details["similarity_index"] > 0
+    assert finding.details["band"] in {"MODERATE_SIMILARITY", "HIGH_SIMILARITY"}
+    # The OpenAlex lookup is off in tests, so missing coverage must be stated, not hidden.
+    assert finding.details["published_literature_searched"] is False
+    assert "openalex could not be searched" in finding.explanation
+    clean = findings_by_code(service, apps["DEMO-APP-003"].id)["plagiarism"]
+    assert clean.status == FindingStatus.PASS and clean.details["similarity_index"] == 0.0
 
 
 def test_novelty_signals(seeded):

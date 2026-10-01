@@ -98,7 +98,7 @@ def evaluate_dataset(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Evaluate AI-SCREENING retrieval strategies.")
+    parser = argparse.ArgumentParser(description="Evaluate shakaHive retrieval strategies.")
     parser.add_argument("--dataset", default="data/evaluation/retrieval_benchmark.json")
     parser.add_argument("--k", type=int, default=5)
     parser.add_argument("--rerank-k", type=int, default=5)

@@ -10,7 +10,7 @@ interface Props {
   onNote: (note: string) => Promise<void>;
 }
 
-const ACTIONS: ReviewerAction[] = ["CONFIRM", "DISMISS", "REQUEST_REVIEW", "ESCALATE"];
+const ACTIONS: ReviewerAction[] = ["CONFIRM", "DISMISS"];
 
 export function DecisionPanel({ canDecide, onDecide, onNote }: Props) {
   const [action, setAction] = useState<ReviewerAction>("CONFIRM");

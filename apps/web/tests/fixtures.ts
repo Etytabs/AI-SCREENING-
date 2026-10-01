@@ -36,7 +36,7 @@ export function row(overrides: Partial<ApplicationRow> = {}): ApplicationRow {
   return {
     id: "app-1", application_reference: "APP-001", title: "Drought early warning", applicant_name: "A. Uwimana",
     institution_name: "University of Rwanda", country: "Rwanda", requested_amount: 40000000, currency: "RWF", domain: "climate",
-    document_count: 5, unreadable_documents: 0, processing_status: "EXTRACTED", screening_status: "SCREENED", status: "IN_REVIEW",
+    document_count: 5, document_names: ["proposal.pdf", "budget.pdf", "cv.pdf"], unreadable_documents: 0, processing_status: "EXTRACTED", screening_status: "SCREENED", status: "IN_REVIEW",
     eligibility: "PASS", completeness: "PASS", duplication: "NO_SIGNIFICANT_SIMILARITY", text_similarity: "NO_SHARED_PASSAGES",
     novelty: "MEDIUM", open_findings: 0, reviewed_findings: 0, total_findings: 12, review_progress: "PENDING",
     last_screened_at: NOW, latest_run_id: "run-1", data_origin: "SYNTHETIC", ...overrides,
@@ -67,7 +67,7 @@ export function findingDetail(overrides: Partial<Finding> = {}): FindingDetail {
 
 export function source(overrides: Partial<DataSource> = {}): DataSource {
   return {
-    source_id: "same_call_applications", provider: "AI-SCREENING", source_name: "Applications in this call",
+    source_id: "same_call_applications", provider: "shakaHive", source_name: "Applications in this call",
     source_type: "internal", access_status: "AVAILABLE", required_for_core_workflow: true, coverage: null, methodology: null,
     ...overrides,
   };
@@ -85,7 +85,7 @@ export function summary(overrides: Partial<DashboardSummary> = {}): DashboardSum
     novelty_counts: { HIGH: 1, MEDIUM: 1, LOW: 2, REVIEW_REQUIRED: 1 }, findings_total: 60, findings_by_status: {},
     findings_reviewed: 4, findings_pending_review: 11, applications_review_complete: 0, latest_batch: batch(),
     sources: [source(), source({ source_id: "openalex", source_name: "OpenAlex", access_status: "NOT_CONFIGURED", required_for_core_workflow: false })],
-    contains_synthetic_data: true, disclaimer: "AI screening signals support, and never replace, human review.", ...overrides,
+    decisions: [], contains_synthetic_data: true, disclaimer: "AI screening signals support, and never replace, human review.", ...overrides,
   };
 }
 

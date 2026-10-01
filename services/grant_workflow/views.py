@@ -52,6 +52,7 @@ class ApplicationRow(BaseModel):
     currency: str | None
     domain: str | None
     document_count: int
+    document_names: list[str]
     unreadable_documents: int
     processing_status: str
     screening_status: str
@@ -68,6 +69,23 @@ class ApplicationRow(BaseModel):
     last_screened_at: Any = None
     latest_run_id: str | None
     data_origin: DataOrigin
+
+
+class RecordedDecision(BaseModel):
+    """One reviewer decision, joined to the document and finding it was taken on."""
+
+    decision_id: str
+    finding_id: str
+    application_id: str
+    application_reference: str
+    document_name: str | None
+    finding_type: str
+    finding_title: str
+    action: str
+    review_state: str
+    reviewer_id: str
+    note: str
+    created_at: Any
 
 
 class DashboardSummary(BaseModel):
@@ -89,6 +107,7 @@ class DashboardSummary(BaseModel):
     latest_batch: BatchProgress | None
     sources: list[DataSource]
     contains_synthetic_data: bool
+    decisions: list[RecordedDecision] = Field(default_factory=list)
     disclaimer: str = DISCLAIMER
 
 
@@ -137,6 +156,16 @@ def _signal(findings: list[Finding], kind: FindingType) -> str:
     return matching[0].signal or matching[0].status.value
 
 
+def _document_names(documents: list[ApplicationDocument]) -> list[str]:
+    """Uploaded filenames, proposal first, so a list can be labelled by what was submitted."""
+    return [
+        document.filename
+        for document in sorted(
+            documents, key=lambda d: (d.document_type != "proposal", d.uploaded_at, d.filename)
+        )
+    ]
+
+
 class WorkflowViews:
     def __init__(self, service: GrantWorkflowService) -> None:
         self.service = service
@@ -172,6 +201,7 @@ class WorkflowViews:
             currency=application.currency,
             domain=application.domain,
             document_count=len(documents),
+            document_names=_document_names(documents),
             unreadable_documents=sum(1 for d in documents if d.extraction_status != "success"),
             processing_status=application.processing_status.value,
             screening_status=application.screening_status.value,
@@ -208,6 +238,47 @@ class WorkflowViews:
                 rows = [r for r in rows if getattr(r, key) == filters[key]]
         return sorted(rows, key=lambda r: r.application_reference)
 
+    def decisions(self, call_id: str) -> list[RecordedDecision]:
+        """Reviewer decisions already recorded for this call, newest first.
+
+        A read model only: it joins stored decisions to their finding and document and
+        makes no judgement of its own.
+        """
+        self.service.get_call(call_id)
+        applications = {a.id: a for a in self.repo.list(Application, grant_call_id=call_id)}
+        documents = {
+            app_id: _document_names(self.repo.list(ApplicationDocument, application_id=app_id))
+            for app_id in applications
+        }
+        findings = {
+            finding.finding_id: finding
+            for app_id in applications
+            for finding in self.service.list_findings(app_id)
+        }
+        records = []
+        for decision in self.repo.list(ReviewerDecision, grant_call_id=call_id):
+            finding = findings.get(decision.finding_id)
+            application = applications.get(decision.application_id)
+            if finding is None or application is None:
+                continue
+            names = documents.get(decision.application_id) or []
+            records.append(RecordedDecision(
+                decision_id=decision.id,
+                finding_id=decision.finding_id,
+                application_id=decision.application_id,
+                application_reference=application.application_reference,
+                document_name=names[0] if names else None,
+                finding_type=finding.type.value,
+                finding_title=finding.title,
+                action=decision.action.value,
+                review_state=decision.new_state.value,
+                reviewer_id=decision.reviewer_id,
+                note=decision.note,
+                created_at=decision.created_at,
+            ))
+        records.sort(key=lambda item: item.created_at, reverse=True)
+        return records
+
     def dashboard(self, call_id: str) -> DashboardSummary:
         call = self.service.get_call(call_id)
         rows = self.application_rows(call_id)
@@ -233,6 +304,7 @@ class WorkflowViews:
             applications_review_complete=sum(1 for r in rows if r.review_progress == "COMPLETE"),
             latest_batch=self.service.latest_batch(call_id),
             sources=sources,
+            decisions=self.decisions(call_id),
             contains_synthetic_data=call.data_origin == DataOrigin.SYNTHETIC or any(r.data_origin == DataOrigin.SYNTHETIC for r in rows),
         )
 

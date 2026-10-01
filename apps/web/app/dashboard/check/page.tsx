@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { CheckResultCards } from "../../../components/workflow/CheckResultCards";
+import { DecisionModal } from "../../../components/workflow/DecisionModal";
+import { EvidenceModal } from "../../../components/workflow/EvidenceModal";
 import { FileDrop } from "../../../components/workflow/FileDrop";
 import { NoCallSelected, Notice, PageHeader } from "../../../components/workflow/ui";
 import { useWorkspace } from "../../../components/workflow/WorkspaceContext";
 import { ApiError } from "../../../lib/api";
-import type { ApplicationDetail, BatchProgress } from "../../../lib/types";
+import type { ApplicationDetail, Finding } from "../../../lib/types";
 
 type Phase = "idle" | "uploading" | "screening" | "done" | "error";
 
@@ -19,9 +22,23 @@ export default function ResearchCheckPage() {
   const [uploadErrors, setUploadErrors] = useState<string[]>([]);
   const [batch, setBatch] = useState<BatchProgress | null>(null);
   const [detail, setDetail] = useState<ApplicationDetail | null>(null);
+  const [findings, setFindings] = useState<Finding[]>([]);
+  const [evidenceFor, setEvidenceFor] = useState<Finding[] | null>(null);
+  const [deciding, setDeciding] = useState(false);
 
   const open = !!call && ["READY_FOR_SUBMISSIONS", "SCREENING", "REVIEW"].includes(call.status);
   const busy = phase === "uploading" || phase === "screening";
+  const showResults = phase === "done" && !!detail;
+
+  function reset() {
+    setPhase("idle");
+    setDetail(null);
+    setFindings([]);
+    setError(null);
+    setUploadErrors([]);
+    setEvidenceFor(null);
+    setDeciding(false);
+  }
 
   async function check(files: File[]) {
     if (!call || !files.length) return;
@@ -83,7 +100,14 @@ export default function ResearchCheckPage() {
       setPhase("done");
       await refreshCalls();
     } catch (e) {
-      setError(e instanceof ApiError || e instanceof Error ? e.message : "The check failed.");
+      // The selected call can disappear under us (for example after an API restart).
+      // Reload the list so the picker recovers instead of failing on every attempt.
+      if (e instanceof ApiError && e.status === 404) {
+        await refreshCalls();
+        setError("That grant call no longer exists. The call list has been reloaded - pick a call and try again.");
+      } else {
+        setError(e instanceof ApiError || e instanceof Error ? e.message : "The check failed.");
+      }
       setPhase("error");
     }
   }
@@ -114,7 +138,7 @@ export default function ResearchCheckPage() {
         </Notice>
       )}
 
-      {call && role !== "REVIEWER" && open && (
+      {call && role !== "REVIEWER" && open && !showResults && (
         <section className="panel">
           <p className="muted small">
             Funding call: <b>{call.name}</b>
@@ -176,25 +200,32 @@ export default function ResearchCheckPage() {
         </section>
       )}
 
-      {phase === "done" && detail && (
+      {showResults && detail && (
         <section className="panel">
           <div className="panel-head">
-            <div>
-              <p className="muted small">Submission result</p>
-              <h2>{detail.application.application_reference}</h2>
+            <h2>Results - {detail.application.application_reference}</h2>
+            <div className="page-actions">
+              <button className="ghost-button" onClick={reset}>Check another document</button>
+              <button className="dark-button" aria-haspopup="dialog" onClick={() => setDeciding(true)}>Human decision</button>
             </div>
-            <Link
-              className="ghost-button"
-              href={`/dashboard/applications/view?id=${detail.application.id}`}
-            >
-              Open full review workspace
-            </Link>
           </div>
-          <p className="muted">
-            The detailed findings are available in the application review workspace, with evidence and human-review actions.
-          </p>
+          {detail.latest_run?.status === "BLOCKED" && <Notice kind="error" title="Screening blocked">None of the uploaded files could be read.</Notice>}
+          {detail.latest_run?.status === "PARTIAL" && <Notice kind="partial" title="Partial screening">Some checks could not complete and are marked REVIEW REQUIRED.</Notice>}
+          <CheckResultCards findings={findings} onOpenEvidence={setEvidenceFor} />
+          <p className="disclaimer">These are screening signals for human review. They do not decide eligibility, duplication, plagiarism or funding.</p>
         </section>
       )}
+
+      {evidenceFor && <EvidenceModal findings={evidenceFor} siblingFindings={findings} onClose={() => setEvidenceFor(null)} />}
+
+      {deciding && detail && (
+        <DecisionModal
+          findings={findings}
+          onClose={() => setDeciding(false)}
+          onRecorded={async () => setFindings(await client.listFindings(detail.application.id))}
+        />
+      )}
+
     </>
   );
 }

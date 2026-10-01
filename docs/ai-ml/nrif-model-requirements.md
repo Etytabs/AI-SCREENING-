@@ -1,7 +1,7 @@
 # NRIF Model Requirements
 
 ## Model boundaries
-AI-SCREENING separates four classes of intelligence:
+shakaHive separates four classes of intelligence:
 
 - deterministic completeness/eligibility rules;
 - semantic retrieval and embedding similarity;

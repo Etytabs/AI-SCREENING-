@@ -3,10 +3,13 @@
 import { ACTION_LABELS, FINDING_TYPE_LABELS, formatDate, REVIEW_STATE_LABELS } from "../../lib/labels";
 import type { FindingDetail, FindingEvidence, ReviewerAction } from "../../lib/types";
 import { DecisionPanel } from "./DecisionPanel";
+import { DuplicationEvidence } from "./DuplicationEvidence";
+import { PlagiarismEvidence } from "./PlagiarismEvidence";
 import { SignalBadge, StatusBadge, SyntheticBadge } from "./ui";
 
 const SOURCE_LABELS: Record<string, string> = {
   application_document: "Application document",
+  published_work: "Published work",
   rfp: "Call document (requirement)",
   administrator_requirement: "Administrator-authored requirement",
   submission_inventory: "Submission inventory",
@@ -59,6 +62,9 @@ export function EvidenceDrawer({ detail, documentNames, canDecide, onClose, onSh
   const { finding, decisions, notes } = detail;
   const applicationEvidence = finding.evidence.filter((e) => e.source_type === "application_document");
   const showSignal = finding.signal && finding.type !== "eligibility" && finding.type !== "completeness";
+  // Plagiarism reads as three sections only: the index, the matched sources, the decision.
+  // Its own panel already carries the percentage, coverage and limitations.
+  const isPlagiarism = finding.type === "plagiarism";
   return (
     <aside className="evidence-drawer" aria-label="Evidence drawer" role="complementary">
       <header>
@@ -69,76 +75,37 @@ export function EvidenceDrawer({ detail, documentNames, canDecide, onClose, onSh
         <button className="close" onClick={onClose} aria-label="Close evidence drawer">Close ×</button>
       </header>
 
-      <section className="drawer-section">
-        <h3>AI signal</h3>
-        <div className="drawer-badges">
-          <StatusBadge status={finding.status} />
-          {showSignal && <SignalBadge signal={finding.signal} />}
-          <span className="muted small">{finding.confidence !== null ? `confidence ${finding.confidence.toFixed(2)}` : "confidence not computed"}</span>
-        </div>
-        <p>{finding.explanation}</p>
-        <p className="small"><b>Suggested next step:</b> {finding.recommended_action}</p>
-        <p className="muted small">Method: {finding.method}</p>
-      </section>
+      {!isPlagiarism && (
+        <section className="drawer-section">
+          <h3>AI signal</h3>
+          <div className="drawer-badges">
+            <StatusBadge status={finding.status} />
+            {showSignal && <SignalBadge signal={finding.signal} />}
+            {finding.type !== "duplication" && <span className="muted small">{finding.confidence !== null ? `confidence ${finding.confidence.toFixed(2)}` : "confidence not computed"}</span>}
+          </div>
+          <p>{finding.explanation}</p>
+          <p className="small"><b>Suggested next step:</b> {finding.recommended_action}</p>
+          <p className="muted small">Method: {finding.method}</p>
+        </section>
+      )}
 
-      <section className="drawer-section">
-        <h3>Evidence ({finding.evidence.length})</h3>
-        {applicationEvidence.length === 0 && (
-          <p className="uncertainty">No passage from this application could be cited for this finding. Treat the result as unverified until a reviewer checks the documents.</p>
-        )}
-        <ul className="evidence-list">
-          {finding.evidence.map((item) => <EvidenceItem key={item.evidence_id} item={item} documentNames={documentNames} onShow={onShowInDocument} />)}
-        </ul>
-      </section>
+      {!isPlagiarism && (
+        <section className="drawer-section">
+          <h3>Evidence ({finding.evidence.length})</h3>
+          {applicationEvidence.length === 0 && (
+            <p className="uncertainty">No passage from this application could be cited for this finding. Treat the result as unverified until a reviewer checks the documents.</p>
+          )}
+          <ul className="evidence-list">
+            {finding.evidence.map((item) => <EvidenceItem key={item.evidence_id} item={item} documentNames={documentNames} onShow={onShowInDocument} />)}
+          </ul>
+        </section>
+      )}
 
-      {finding.type === "plagiarism" && (() => {
-        const publicSource = finding.details.public_source_similarity as {
-          status?: string;
-          human_review_required?: boolean;
-          findings?: Array<{
-            similarity: number;
-            match_type: string;
-            applicant_passage: string;
-            source_passage: string;
-            source: {
-              title?: string;
-              url: string;
-              authors?: string[];
-              publisher?: string | null;
-              published_date?: string | null;
-              metadata_confidence?: number;
-            };
-          }>;
-        } | undefined;
-        if (!publicSource || !publicSource.findings?.length) return null;
-        return (
-          <section className="drawer-section">
-            <h3>Public-source similarity</h3>
-            <p className="uncertainty">Potential text similarity detected. This evidence does not establish plagiarism; an authorized reviewer must compare the passages and verify attribution.</p>
-            <ul className="match-list">
-              {publicSource.findings.map((item, index) => (
-                <li key={item.source.url + index}>
-                  <div className="evidence-meta">
-                    <b>{item.source.title || "Public source"}</b>
-                    <span>{Math.round(item.similarity * 100)}% similarity</span>
-                    <span>{item.match_type.replace(/-/g, " ")}</span>
-                  </div>
-                  {item.source.authors?.length ? <small>Author(s): {item.source.authors.join("; ")}</small> : null}
-                  {item.source.publisher ? <small>Publisher / institution: {item.source.publisher}</small> : null}
-                  {item.source.published_date ? <small>Published: {item.source.published_date}</small> : null}
-                  <small>Attribution metadata confidence: {item.source.metadata_confidence !== undefined ? item.source.metadata_confidence.toFixed(2) : "not available"}</small>
-                  <div className="source-comparison">
-                    <div><b>Applicant passage</b><blockquote>{item.applicant_passage}</blockquote></div>
-                    <div><b>Source passage</b><blockquote>{item.source_passage}</blockquote></div>
-                  </div>
-                  <a className="text-button" href={item.source.url} target="_blank" rel="noreferrer">Open original source ↗</a>
-                </li>
-              ))}
-            </ul>
-          </section>
-        );
-      })()}
-      {finding.type === "duplication" && finding.matches.length > 0 && (
+      {finding.type === "duplication" && <DuplicationEvidence finding={finding} documentNames={documentNames} />}
+
+      {finding.type === "plagiarism" && <PlagiarismEvidence finding={finding} />}
+
+      {finding.type !== "duplication" && finding.type !== "plagiarism" && finding.matches.length > 0 && (
         <section className="drawer-section">
           <h3>Compared records ({finding.matches.length})</h3>
           <p className="uncertainty">Potential duplicate or strong semantic similarity detected. This is comparison evidence, not an automatic duplicate verdict.</p>

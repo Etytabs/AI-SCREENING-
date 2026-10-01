@@ -39,7 +39,7 @@ function Sidebar() {
       <nav>
         {NAV_ITEMS.map((item) => (
           <Link key={item.href} href={item.href} className={isActive(pathname, item.href) ? "side-link active" : "side-link"} aria-current={isActive(pathname, item.href) ? "page" : undefined}>
-            <span>{item.label}</span>
+            <span className="side-link-label">{item.label}</span>
           </Link>
         ))}
       </nav>

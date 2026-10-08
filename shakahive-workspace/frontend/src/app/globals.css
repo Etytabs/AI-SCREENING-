@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 150 18% 97%;
+    --foreground: 168 22% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 168 22% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 168 22% 11%;
+    --primary: 164 68% 32%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 152 17% 92%;
+    --secondary-foreground: 168 22% 16%;
+    --muted: 150 14% 93%;
+    --muted-foreground: 165 8% 43%;
+    --accent: 152 17% 92%;
+    --accent-foreground: 168 22% 16%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 155 13% 87%;
+    --input: 155 13% 87%;
+    --ring: 164 68% 32%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 168 18% 8%;
+    --foreground: 150 12% 93%;
+    --card: 168 15% 11%;
+    --card-foreground: 150 12% 93%;
+    --popover: 168 15% 11%;
+    --popover-foreground: 150 12% 93%;
+    --primary: 158 62% 48%;
+    --primary-foreground: 168 22% 8%;
+    --secondary: 168 12% 18%;
+    --secondary-foreground: 150 12% 93%;
+    --muted: 168 12% 17%;
+    --muted-foreground: 155 8% 65%;
+    --accent: 168 12% 18%;
+    --accent-foreground: 150 12% 93%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 168 10% 23%;
+    --input: 168 10% 23%;
+    --ring: 158 62% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .workspace-shell { @apply min-h-screen bg-background text-foreground; }
+  .workspace-sidebar { @apply fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-white/10 bg-[#15211e] px-4 py-5 text-white lg:flex; }
+  .workspace-sidebar-mobile-open { @apply flex w-[min(20rem,calc(100vw-3rem))] shadow-2xl; }
+  .workspace-sidebar-backdrop { @apply fixed inset-0 z-20 bg-black/45; }
+  .brand-lockup { @apply mb-12 flex items-center gap-3 px-2; }
+  .brand-mark { @apply flex h-10 w-10 items-center justify-center rounded-md bg-[#b8e36b] text-[#15211e]; }
+  .brand-lockup strong { @apply block text-sm font-bold tracking-[0.12em]; }
+  .brand-lockup small { @apply mt-0.5 block text-[11px] text-white/55; }
+  .sidebar-label { @apply mb-3 px-3 text-[10px] font-semibold tracking-[0.16em] text-white/40; }
+  .sidebar-nav { @apply space-y-1; }
+  .sidebar-link { @apply flex items-center gap-3 rounded-md px-3 py-2.5 text-[13px] text-white/65 transition-colors hover:bg-white/5 hover:text-white; }
+  .sidebar-link-active { @apply bg-white/10 text-white; }
+  .sidebar-link-active svg { @apply text-[#b8e36b]; }
+  .sidebar-spacer { @apply flex-1; }
+  .sidebar-create { @apply mb-5 flex items-center gap-2 rounded-md bg-[#b8e36b] px-3 py-3 text-[13px] font-semibold text-[#15211e] transition-colors hover:bg-[#c8ed84]; }
+  .sidebar-tenant { @apply flex items-start gap-2.5 border-t border-white/10 px-2 pt-4; }
+  .sidebar-tenant strong { @apply block text-xs font-medium; }
+  .sidebar-tenant small { @apply mt-1 block text-[10px] leading-4 text-white/45; }
+  .tenant-dot { @apply mt-1 h-2 w-2 shrink-0 rounded-full bg-[#b8e36b]; }
+  .workspace-main { @apply min-h-screen lg:pl-64; }
+  .workspace-topbar { @apply sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-background/90 px-5 backdrop-blur-md md:px-8; }
+  .topbar-context { @apply text-xs font-medium text-muted-foreground; }
+  .topbar-context span { @apply mx-2 text-border; }
+  .topbar-actions { @apply flex items-center gap-3; }
+  .workspace-status { @apply hidden items-center gap-2 text-xs text-muted-foreground sm:flex; }
+  .status-dot { @apply h-2 w-2 rounded-full bg-emerald-500; }
+  .icon-button { @apply flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-foreground transition-colors hover:bg-accent; }
+  .avatar-link { @apply flex h-8 w-8 items-center justify-center rounded-full bg-[#b8e36b] text-xs font-semibold text-[#15211e]; }
+  .workspace-content { @apply mx-auto w-full max-w-[1440px] px-5 py-7 md:px-8 md:py-9; }
+}

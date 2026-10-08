@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # NOVARAai - Grant Screening Platform
+  novarai-backend:
+    build: ./backend-simple
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///novarai.db
+    volumes:
+      - ./backend-simple:/app
+      - novarai_uploads:/app/uploads
+    networks:
+      - novarai-network
+
+  novarai-frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://novarai-backend:8000
+    depends_on:
+      - novarai-backend
+    networks:
+      - novarai-network
+
+  # AI-SCREENING - Advanced ML Service
+  ai-screening-api:
+    build: ./AI-SCREENING-
+    ports:
+      - "8001:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/ai_screening
+      - AI_SCREENING_EMBEDDINGS_ENABLED=false
+      - AI_SCREENING_RERANKER_ENABLED=false
+    depends_on:
+      - postgres
+    networks:
+      - ai-screening-network
+
+  postgres:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=ai_screening
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ai-screening-network
+
+volumes:
+  novarai_uploads:
+  postgres_data:
+
+networks:
+  novarai-network:
+    driver: bridge
+  ai-screening-network:
+    driver: bridge

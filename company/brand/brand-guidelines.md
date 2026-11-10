@@ -1,13 +1,13 @@
 # ShakaHive Brand Identity Guidelines
 
-**Status:** Proposed visual direction — not final trademark clearance.  
+**Status:** Current team-selected brand asset pack; legal/trademark clearance remains separate.  
 **Company:** ShakaHive  
-**Category descriptor:** Research Intelligence  
-**Brand line:** Intelligence that connects research to impact.
+**Category:** Research Intelligence  
+**Brand line in supplied artwork:** Many hands, one hive.
 
 ## 1. Brand positioning
 
-ShakaHive is a research intelligence company building evidence-led AI tools for research funding, monitoring and innovation workflows.
+ShakaHive is the company and Research Intelligence platform. AI-Assisted Grant Screening is its first product. The company identity must remain broader than the first product.
 
 Brand attributes: intelligent, trustworthy, precise, collaborative, responsible and forward-looking.
 
@@ -16,79 +16,52 @@ Brand attributes: intelligent, trustworthy, precise, collaborative, responsible 
 - Company: ShakaHive
 - Category: Research Intelligence
 - First product: AI-Assisted Grant Screening
-- Optional product working name: HiveScreen (requires team approval)
+- HiveScreen: proposed product working name only; use only after team approval.
 
-The company identity must remain broader than its first product.
+## 3. Current logo source of truth
 
-## 3. Logo concept
+Use the exact logo and identity assets supplied in the ShakaHive-Brand-Assets-PNG pack. Do not redraw, stretch, skew, recolour, crop or approximate the symbol or wordmark. Preserve transparent backgrounds. Choose the supplied light/dark and horizontal/icon variants appropriate to the surface.
 
-Proposed symbol: a distinctive connected geometric mark combining a subtle honeycomb/network motif and a central intelligence node. It should communicate connection, evidence and research collaboration without relying on a literal bee illustration.
+The supplied pack includes full logo, transparent symbol variants, horizontal lockups, logo tiles, social avatars/banner, app icon, icon export, favicon sizes, palette swatches and brand overview. The detailed file inventory is in docs/implementation/brand-asset-manifest.md.
 
-Required logo lockups:
-- Primary horizontal wordmark.
-- Stacked wordmark.
-- Symbol-only app icon.
-- Monochrome dark and light versions.
-- Small-size favicon variant.
-
-The final vector master should be created and approved in SVG/PDF format. PNG exports should be generated from that master. Do not redraw or stretch the mark.
-
-## 4. Colour palette
+## 4. Official supplied palette
 
 | Token | Hex | Use |
 |---|---|---|
-| Deep Hive | #102D32 | Primary brand, dark navigation |
-| Research Teal | #176B63 | Primary actions and interactive states |
-| Hive Amber | #E7A64B | Accent and highlights |
-| Soft Canvas | #F4F6F3 | Main light background |
-| Graphite | #24383A | Text and dark surfaces |
-| Mist Green | #D9E5DF | Secondary surface |
+| Deep Teal | #046975 | Primary brand and navigation |
+| Hive Teal | #1A8E85 | Supporting brand and interactive surfaces |
+| Honey Gold | #FBAA10 | Accent and highlights |
+| Comb Yellow | #F7DC8A | Soft accent surface |
+| Night Hive | #05343B | Dark surfaces |
+| Wax Cream | #FFF8E6 | Warm light background |
 
-Semantic UI colours should be separate from brand accents: success #21845A, warning #B7791F, error #C64C4C, information #3676A8, border #DFE6E1. Verify WCAG 2.2 AA contrast for actual text/background combinations before release.
+These values replace the older proposed palette in previous draft notes. Do not mix the two palettes.
 
 ## 5. Typography
 
-- Manrope: brand headlines and marketing headings.
-- Inter: product interface, body text and documentation.
-- IBM Plex Mono: code, technical identifiers and data values.
+- Fredoka SemiBold: headings.
+- Nunito Regular / Bold: body and interface text.
 
-Use a restrained type scale, clear hierarchy and generous spacing.
+Use a permitted font distribution method, record font source/licensing, and define fallback stacks.
 
 ## 6. Visual language
 
-Use clean layouts, structured evidence panels, precise diagrams, restrained geometric network motifs and clear data visualisation. Avoid generic AI gradients, excessive glow, busy honeycomb backgrounds and decorative effects that reduce readability.
+Use clear layouts, structured evidence panels, restrained geometric motifs and legible data visualization. Avoid generic AI gradients, excessive glow, busy honeycomb backgrounds and decorative effects that reduce readability.
 
 ## 7. Voice and messaging
 
 Voice: confident but not exaggerated; clear, evidence-based and responsible.
 
-Prefer:
-- "AI-assisted screening"
-- "Evidence-backed findings"
-- "Similarity signal requiring review"
-- "Source not searched / access unavailable"
+Prefer “AI-assisted screening”, “evidence-backed findings”, “similarity signal requiring review” and “source not searched / access unavailable”.
 
-Avoid:
-- "AI makes funding decisions"
-- "Guaranteed plagiarism detection"
-- "Fully automated scientific judgement"
-- Claims of official institutional integration without authorization.
+Avoid claims that AI makes funding decisions, guarantees plagiarism detection, makes autonomous scientific judgements or is officially integrated with an institution unless that is demonstrably true and authorized.
 
 ## 8. Product interface
 
-The product should prioritise legibility, accessibility, source provenance, confidence context and clear human-review actions. Colour must never be the only way to communicate a finding's status.
+Prioritize legibility, accessibility, provenance, confidence context and clear human-review actions. Colour must never be the only way to communicate a finding's status. The supplied brand colours do not remove the need to test actual UI contrast pairs against WCAG 2.2 AA.
 
 ## 9. Asset governance
 
-Store approved source assets in `assets/brand/`. Include SVG master, PNG exports, monochrome versions, app icon, favicon, colour tokens, typography notes and usage examples. Track the asset owner, version and approval date. Generated concept artwork is inspiration only until a designer produces and the team approves production-ready vector assets.
+Keep supplied originals unchanged under assets/brand/. Maintain a manifest with filename, intended use, dimensions, transparency, version and approval status. Use horizontal lockups for suitable headers, symbol-only assets for compact contexts and supplied favicon sizes for browser use. Do not use social avatars/banners as product logos.
 
-## 10. Approval checklist
-
-- [ ] Logo symbol and wordmark approved.
-- [ ] Trademark and domain checks completed.
-- [ ] Palette contrast tested.
-- [ ] Typography and licensing checked.
-- [ ] Light/dark logo variants approved.
-- [ ] App icon and favicon tested at small sizes.
-- [ ] Product UI tokens aligned to brand.
-- [ ] Brand owner and change process agreed.
+The supplied pack is the current selected visual source. It does not establish trademark clearance, font licensing or legal ownership. Record the brand owner and approval/change process separately.

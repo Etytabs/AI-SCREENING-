@@ -1,16 +1,21 @@
 :root {
-  --sh-deep-hive: #102D32;
-  --sh-research-teal: #176B63;
-  --sh-hive-amber: #E7A64B;
-  --sh-soft-canvas: #F4F6F3;
-  --sh-graphite: #24383A;
-  --sh-mist-green: #D9E5DF;
-  --sh-success: #21845A;
-  --sh-warning: #B7791F;
-  --sh-error: #C64C4C;
-  --sh-info: #3676A8;
-  --sh-border: #DFE6E1;
-  --sh-font-heading: "Manrope", sans-serif;
-  --sh-font-body: "Inter", sans-serif;
-  --sh-font-mono: "IBM Plex Mono", monospace;
+  /* ShakaHive supplied brand palette */
+  --sh-deep-teal: #046975;
+  --sh-hive-teal: #1A8E85;
+  --sh-honey-gold: #FBAA10;
+  --sh-comb-yellow: #F7DC8A;
+  --sh-night-hive: #05343B;
+  --sh-wax-cream: #FFF8E6;
+
+  /* UI semantic tokens: validate contrast in each component context */
+  --sh-success: #237A52;
+  --sh-warning: #8A5A00;
+  --sh-error: #B42318;
+  --sh-info: #245E91;
+  --sh-border: #D6E3DF;
+  --sh-text: #05343B;
+  --sh-surface: #FFF8E6;
+
+  --sh-font-heading: "Fredoka", "Trebuchet MS", sans-serif;
+  --sh-font-body: "Nunito", "Segoe UI", sans-serif;
 }

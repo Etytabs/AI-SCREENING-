@@ -1,0 +1,21 @@
+:root {
+  /* ShakaHive supplied brand palette */
+  --sh-deep-teal: #046975;
+  --sh-hive-teal: #1A8E85;
+  --sh-honey-gold: #FBAA10;
+  --sh-comb-yellow: #F7DC8A;
+  --sh-night-hive: #05343B;
+  --sh-wax-cream: #FFF8E6;
+
+  /* UI semantic tokens: validate contrast in each component context */
+  --sh-success: #237A52;
+  --sh-warning: #8A5A00;
+  --sh-error: #B42318;
+  --sh-info: #245E91;
+  --sh-border: #D6E3DF;
+  --sh-text: #05343B;
+  --sh-surface: #FFF8E6;
+
+  --sh-font-heading: "Fredoka", "Trebuchet MS", sans-serif;
+  --sh-font-body: "Nunito", "Segoe UI", sans-serif;
+}

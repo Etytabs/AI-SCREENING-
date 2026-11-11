@@ -1,156 +1,165 @@
 # ADR-002: Authorization and Organization Isolation
 
-- **Status:** Proposed — requires team and pilot-stakeholder review
+- **Status:** Proposed revision — aligned with founder's Phase 1 pilot direction; permission details require team review
 - **Date:** 11 November 2026
 - **Decision owners:** Software Developer / AI Platform Developer (technical recommendation); Team Leader (coordination and approval)
 - **Implementation owner:** Full-Stack Developer
 - **Related:** ADR-001; Phase 0 audit; Phase 1 Architecture & Implementation Plan; GitHub Issue #5
 
-## Context
+## 1. Context and current repository evidence
 
-The current workflow has role-based action checks in parts of the service layer, but the documented API states that read endpoints do not check a role. The frontend sends caller-selected role and user headers, which are not authenticated. The current workflow documentation lists these operational roles:
+The current workflow has role-based action checks in parts of the service layer, but the documented API states that read endpoints do not check a role. The frontend sends caller-selected role and user headers, which are not authenticated. The repository does not establish a complete user-membership model or prove consistent access enforcement for API reads, documents, jobs, exports and audit records.
 
-- `NCST_GRANT_PERSONNEL`
-- `GRANT_INSTITUTION`
-- `GRANT_ADMINISTRATOR` (legacy equivalent)
-- `REVIEWER`
-- `SYSTEM_ADMINISTRATOR`
+Authentication in ADR-001 establishes a verified ShakaHive-managed user. This ADR defines how the ShakaHive team grants that user access to the MVP and its resources.
 
-The current role names and service checks describe demo workflow behaviour; they are not yet an approved institutional permission policy. The inspected repository does not establish a complete organization/tenant membership model or prove organization isolation at API, database, file-storage or job-worker boundaries.
+## 2. Founder-confirmed pilot direction
 
-Authentication in ADR-001 provides a verified subject. This ADR defines how that subject is granted access to actions and resources.
+The founder has confirmed:
 
-## Decision drivers
+1. **Initial deployment scope:** one institution, as a test MVP platform.
+2. **Access administration:** the ShakaHive team manages user invitations and reviewer assignments.
+3. **Reviewer access:** reviewers access the MVP when invited/assigned. GitHub repository access is a separate invitation and is not automatic.
+4. **GitHub:** the ShakaHive team decides separately whether a reviewer should be invited to the repository.
 
-1. Deny-by-default access control on every protected API operation.
-2. Least privilege and separation of duties.
-3. Organization/tenant isolation across API, database, documents, jobs, exports and audit records.
-4. Resource-level authorization, not role-only checks.
-5. Explicit reviewer assignment and scope.
-6. Consistent enforcement for reads, writes, downloads, exports and background processing.
-7. Auditable privileged actions and policy changes.
-8. Testable policies that can evolve without scattering role comparisons throughout route handlers.
+The initial scope is therefore a **single-institution controlled test environment**, not a multi-institution SaaS rollout. This does not mean the MVP may assume that every authenticated user can see every record. User-level permissions and reviewer assignment still apply.
 
-## Proposed authorization model
+The founder's answer does not yet define programme-manager permissions. This ADR deliberately leaves that role disabled/unassigned until the team specifies its required access.
 
-Adopt a policy-based authorization layer using **role-based permissions scoped to an organization and resource relationship**. A role alone is insufficient to grant access.
+## 3. Decision drivers
 
-A request's authorization context should be derived from:
-- The verified principal from ADR-001.
-- Active organization membership(s) loaded from trusted server-side records.
-- The user's role/permission grants within the selected organization.
-- The target resource's organization, ownership and workflow relationships.
-- Explicit assignments, such as reviewer-to-application or reviewer-to-call assignment, where the approved workflow requires them.
-- The requested action (for example, read, create, update, upload, screen, decide, export, download, administer).
+- Deny-by-default authorization for every protected API operation.
+- A simple, manageable permission model for one institution and a controlled test MVP.
+- ShakaHive-controlled invitations, role assignment and reviewer assignment.
+- Least privilege and separation of duties.
+- Resource-level authorization, not role-only checks.
+- Consistent enforcement for reads, writes, downloads, exports and background processing.
+- Clear distinction between MVP permissions and GitHub repository permissions.
+- Avoid premature multi-tenant complexity while preserving a safe path to future expansion.
 
-Do not accept organization IDs, role names, ownership, reviewer assignment or permission claims from the browser as proof of access. Client values may identify the requested organization/resource, but the server must validate membership and relationship before proceeding.
+## 4. Proposed MVP authorization model
 
-### Enforcement layers
+Adopt a centralized, server-side permission policy based on:
+
+- A verified user principal from ADR-001.
+- An active MVP account/invitation record.
+- A server-side application role assigned by an authorized ShakaHive team administrator.
+- The target resource and its workflow state.
+- An explicit reviewer assignment when the actor is a reviewer.
+- The requested action (read, create, update, upload, screen, decide, export, download or administer).
+
+A role alone is not enough. Every resource access must be checked against the user's account state, assigned role and resource scope.
+
+Do not accept role, reviewer assignment, ownership or permission claims from browser headers, query parameters or request bodies as proof of access.
+
+### Initial organization scope
+
+- Model the first test deployment as one institution/workspace.
+- All MVP business data belongs to that configured workspace.
+- Do not expose organization switching or cross-organization sharing in the first MVP.
+- Do not build a multi-institution administration interface or complex cross-tenant workflows as part of this phase.
+- Keep organization/workspace ownership explicit in the data model where this supports integrity and a future migration, but do not claim multi-tenant isolation is implemented merely because an `organization_id` column exists.
+- Before any second institution is onboarded, conduct a separate tenant-isolation design and security review covering database, files, jobs, search indexes, exports, audit and backups.
+
+## 5. Proposed MVP roles and permissions
+
+These are proposed application permissions for the controlled test MVP, not institutional job titles. ShakaHive team members assign them individually.
+
+| MVP role | Initial access | Restrictions / notes |
+|---|---|---|
+| ShakaHive Team Administrator | Invite/suspend MVP users; assign/revoke application roles and reviewer assignments; administer test workspace; access operational administration required to run the MVP | Privileged actions audited; individual accounts only; no shared administrator login |
+| Grant Administrator / Test Operator | Manage grant calls and RFPs; verify requirements; upload/associate applications; initiate screening; view authorized results; manage reviewer assignments if explicitly delegated | Only within the single test workspace; destructive and privileged actions audited |
+| Reviewer | Access only the call/application/document/evidence items assigned by the ShakaHive team; add notes and submit review decisions within assigned scope | No user administration, call configuration, reviewer assignment, bulk export or unassigned application access |
+| Programme Manager | **Not enabled until permissions are specified and approved** | The founder's response did not define whether this role may see metadata, proposal content, findings, reports or decisions. Do not grant a broad default role. |
+| Platform Operator | Operational health and service administration only where needed | No default proposal-content access; any support access must be explicitly approved, time-bound and audited |
+
+The existing code's role labels (`NCST_GRANT_PERSONNEL`, `GRANT_INSTITUTION`, `GRANT_ADMINISTRATOR`, `REVIEWER`, `SYSTEM_ADMINISTRATOR`) are legacy/demo labels. Do not carry them into the new permission model unchanged without mapping each to an approved MVP role and permission set.
+
+### ShakaHive team authority
+
+The ShakaHive team is responsible for:
+- Inviting individual users to the MVP.
+- Assigning and revoking application roles.
+- Assigning reviewers to the relevant grant call and/or applications.
+- Suspending accounts and removing access.
+- Deciding separately who receives GitHub repository access.
+
+The implementation must represent these powers as explicit server-side permissions. Do not make every team member a super-administrator by default; identify which named team members are authorized to administer accounts and role assignments.
+
+## 6. Reviewer assignment and access rules
+
+- A reviewer must have an active, verified MVP account and an explicit assignment before seeing proposal content.
+- Assignment scope must be defined (whole grant call, individual applications, or both) and enforced on every relevant API operation.
+- A reviewer can read only the assigned application, its permitted documents, findings and evidence.
+- A reviewer can add notes and submit only the review actions allowed by the MVP workflow.
+- A reviewer cannot assign themselves, expand their own scope, invite users, change grant requirements or access unassigned submissions.
+- Removing an assignment or suspending the account must revoke access on subsequent requests and invalidate relevant sessions/capabilities.
+- Bulk endpoints, reports, document-content routes, exports and background jobs must apply the same assignment checks.
+
+**Open product detail:** the founder confirmed reviewer access and ShakaHive-managed assignment, but did not specify whether assignments apply to entire calls or individual applications. Resolve this before implementing reviewer authorization.
+
+## 7. GitHub access is a separate authorization domain
+
+- MVP access and GitHub repository access are independent.
+- The ShakaHive team invites a reviewer to GitHub only when repository collaboration is required.
+- Grant the least GitHub permission appropriate to the contribution (for example, read-only access for review where supported).
+- Do not grant GitHub access merely because someone is an MVP reviewer.
+- Do not grant MVP access merely because someone is a repository collaborator.
+- GitHub repository permissions do not control proposal/document access in the MVP.
+- Record and periodically review GitHub collaborators separately from MVP users.
+
+## 8. Enforcement layers
 
 1. **API boundary:** every protected route declares its authentication and permission requirement. Public routes are explicitly allowlisted.
-2. **Application/service layer:** domain operations authorize the actor against the target resource and workflow state; route-level checks alone are not enough for reused service methods.
-3. **Repository/data layer:** queries are scoped to the authorized organization/resource. Consider database row-level security as defence in depth after evaluating connection pooling and transaction-scoped tenant context.
-4. **Object storage:** file keys are private; downloads require a server authorization decision and short-lived access mechanism where signed URLs are used.
-5. **Background jobs:** jobs carry immutable actor, organization and resource identifiers from the authorized enqueue operation. Workers validate the job's scope and current resource state before processing; a queue message is not itself an authorization grant.
-6. **Audit:** privileged access, membership/role changes, exports, document access and reviewer decisions generate appropriately protected audit events.
+2. **Application/service layer:** domain operations authorize the actor against the target resource and workflow state.
+3. **Repository/data layer:** queries are scoped to the single configured workspace and relevant resource assignment. Do not rely only on frontend filtering.
+4. **Document access:** documents remain private; each read/download verifies the user's application permission and reviewer assignment.
+5. **Background jobs:** jobs carry trusted workspace, actor and resource identifiers from the authorized enqueue operation. Workers validate resource scope and current state.
+6. **Audit:** invitations, account suspension, role changes, reviewer assignments, exports, document access and reviewer decisions generate protected audit events.
 
-## Proposed role and permission design
-
-Treat these as candidate application roles to validate with the intended institution, not finalized institutional job titles.
-
-| Candidate role | Proposed scope | Candidate permissions | Important restrictions |
-|---|---|---|---|
-| Grant administrator | One or more explicitly assigned organizations | Manage grant calls/RFPs, verify requirements, manage submissions, initiate screening, view authorized results, manage reviewer assignments, view relevant audit/report data | Cannot access another organization without membership; privileged actions audited |
-| Reviewer | Explicitly assigned call/application set within an organization | Read assigned call/application/evidence; add notes; submit review decisions within assigned scope | No call configuration, bulk export or access to unassigned applications unless separately granted |
-| Programme manager | Explicitly assigned organization/calls | Read programme-level status and approved reports; monitor progress | No document-content access or decision authority unless explicitly granted |
-| Platform operator | Operational platform scope, not automatic business-data scope | Health/operations, service administration and controlled support actions | No default access to proposal content; time-bound, approved break-glass access with audit if support access is required |
-| Organization administrator | Organization membership administration, if required | Invite/deactivate members and assign approved organization roles | Cannot grant platform-wide privileges or access other organizations |
-| System administrator | Cross-platform operational role only if required | Manage platform configuration and support controls | Must not automatically imply unrestricted proposal-content access; separate operational and data-access permissions |
-
-The current `SYSTEM_ADMINISTRATOR` and `GRANT_ADMINISTRATOR` labels must be mapped deliberately. Do not carry forward broad legacy privileges by name alone. Confirm whether `NCST_GRANT_PERSONNEL` and `GRANT_INSTITUTION` are distinct institutional roles or deployment-specific labels.
-
-## Resource ownership and access rules to validate
-
-At minimum, define and test authorization for:
-- Organization membership and user administration.
-- Grant calls and RFP versions.
-- Requirements and requirement verification state.
-- Applicants, applications and uploaded documents.
-- Pending uploads and manual associations.
-- Screening batches/runs and stage-level status.
-- Findings, evidence, reviewer notes and decisions.
-- Reports, dashboards, audit records and exports.
-- Duplication archive records and imported documents.
-- Source configuration and integration credentials.
-
-A user may access a child resource only when the server can establish an authorized path to its parent resource and organization. Never authorize a document or finding solely because its opaque ID is known.
-
-## Policy evaluation contract
-
-Centralize authorization behind a small, testable policy interface. Conceptually:
+Centralize policy behind a testable contract such as:
 
 `authorize(principal, action, resource, context) -> allow | deny`
 
-The policy layer must:
-- Fail closed when principal, membership, resource owner or policy context is missing.
-- Return a consistent forbidden/not-found response strategy that does not disclose cross-organization resource existence.
-- Avoid trusting role/tenant fields supplied by request headers or request bodies.
-- Keep policy evaluation separate from UI navigation and button visibility.
-- Support explicit, logged break-glass procedures without silently bypassing policy.
+Fail closed when identity, account status, role, assignment, resource ownership or policy context is missing. Do not introduce a policy framework/library unless implementation demonstrates a need.
 
-The exact Python module/API and whether a policy library is needed should be determined during implementation design; avoid introducing a framework without a demonstrated need.
+## 9. Consequences
 
-## Database and tenant isolation
+- The first MVP can use a simpler single-workspace model rather than implementing a full multi-institution tenant administration product.
+- Every protected read/write/download/export still needs backend authorization.
+- A server-side user, role and reviewer-assignment model is required.
+- The ShakaHive team needs a defined administrator roster and account-management procedure.
+- Programme Manager access remains unimplemented until explicitly defined.
+- GitHub collaborator management remains outside the MVP authorization system.
+- A second institution requires a new architecture/security decision before onboarding.
+- Existing synthetic demo roles and seed data must be mapped to the new test-workspace permissions without enabling demo authorization in the MVP deployment.
 
-The preferred direction is organization-scoped data access enforced in application/repository queries, with PostgreSQL row-level security considered as additional defence in depth.
-
-Before adopting RLS, validate:
-- Tenant context is set transaction-locally and cannot leak through pooled connections.
-- Background workers establish the correct tenant context for every job.
-- Migration, administrative and support paths have explicit, restricted policies.
-- Tests prove cross-tenant reads and writes fail even when identifiers are guessed.
-- The application does not rely on a privileged database connection that silently bypasses intended row policies.
-
-The final tenant model and RLS decision must be recorded with the PostgreSQL persistence ADR before implementation.
-
-## Consequences
-
-- Every route must be inventoried as public or protected, with action/resource requirements.
-- Existing service-level role checks need to be reconciled with a central policy contract.
-- Read routes, file downloads, exports and background tasks require the same scrutiny as writes.
-- The database schema needs organization membership and ownership relationships before tenant-aware persistence is considered complete.
-- The frontend should consume server-provided capabilities for presentation only; it cannot grant permissions.
-- Tests must cover both allowed and denied cases and verify that errors do not leak cross-tenant data.
-- Existing synthetic demo roles and seed data must be adapted to explicit test organizations and memberships without enabling demo authorization in staging/pilot.
-
-## Security and acceptance criteria
+## 10. Security and acceptance criteria
 
 - All API routes are inventoried; unclassified routes are treated as protected.
 - Every protected read/write/download/export checks a verified principal and required permission.
-- Missing identity, missing membership and unknown policy context fail closed.
-- Cross-organization access is denied for calls, applications, documents, findings, reports and audit records.
+- Only invited, active users can access the MVP.
+- Role assignment and reviewer assignment are performed only by authorized ShakaHive team administrators.
 - Reviewers cannot read or decide on unassigned resources.
-- Organization administrators cannot elevate themselves to platform-wide roles.
-- Platform operators do not receive automatic access to confidential proposal content.
-- Authorization is enforced in service/repository paths, not only in frontend or route UI.
-- Background jobs cannot be forged to process another organization's resources.
-- Tests cover horizontal/vertical privilege escalation, guessed IDs, bulk endpoints, exports, signed downloads, stale membership and role revocation.
-- Audit events capture role/membership changes and defined privileged operations without copying confidential document contents into logs.
+- Cross-resource access is denied even when an identifier is guessed.
+- Account suspension and assignment removal take effect on subsequent requests.
+- The single-workspace boundary is enforced server-side, not just by UI filters.
+- Documents, findings, reports, audit records and background jobs follow the same permission rules.
+- GitHub access is not inferred from MVP roles, and MVP access is not inferred from GitHub membership.
+- Tests cover horizontal/vertical privilege escalation, guessed IDs, bulk endpoints, exports, document downloads, stale assignments and revoked accounts.
+- Privileged account and permission changes are audited without copying proposal content into logs.
 
-## Open questions before final decision
+## 11. Remaining questions for team confirmation
 
-1. Which organizations/tenants are in the first controlled environment: one institution, multiple institutions, or ShakaHive-managed demo tenants only?
-2. Who is authorized to invite users and approve organization membership?
-3. Which roles are recognized by the institution, and are `NCST_GRANT_PERSONNEL` and `GRANT_INSTITUTION` distinct permissions?
-4. Can a reviewer be assigned to individual applications, whole calls, or both?
-5. Should programme managers see metadata/status only, or also proposal content and findings?
-6. What operational tasks require platform-wide administration, and who can approve break-glass access?
-7. Are any cross-organization collaborations or shared calls required in the first release?
-8. What audit retention and review requirements apply?
+1. Which named ShakaHive team members will have permission to invite users and administer roles?
+2. Should reviewer assignments apply to an entire grant call, individual applications, or both?
+3. Which review actions can reviewers perform (notes, confirm, dismiss, request further review, escalate)?
+4. What should the Programme Manager role be allowed to see and do? Until decided, it remains disabled.
+5. Should Grant Administrator and ShakaHive Team Administrator be separate roles, or can selected team members hold both?
+6. What minimum GitHub permission is needed when a reviewer is separately invited to the repository?
 
-## Implementation boundary
+## 12. Implementation boundary
 
-This ADR proposes the policy model but does not finalize institutional roles, tenant topology, PostgreSQL RLS, or a policy framework. Resolve the open questions with stakeholders, record the accepted permission matrix and tenant enforcement strategy, then implement Issue #5 in coordination with ADR-001 and the PostgreSQL persistence work.
+This ADR incorporates the founder's initial pilot scope and operating model. It does not yet authorize multi-institution onboarding, define Programme Manager permissions, select an authentication provider, or implement application authorization. Resolve the remaining questions, approve the MVP permission matrix and then implement Issue #5 in coordination with ADR-001.
 
 ## References
 

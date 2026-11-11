@@ -66,8 +66,8 @@ These are proposed application permissions for the controlled test MVP, not inst
 
 | MVP role | Initial access | Restrictions / notes |
 |---|---|---|
-| ShakaHive Team Administrator | Invite/suspend MVP users; assign/revoke application roles and reviewer assignments; administer test workspace; access operational administration required to run the MVP | Privileged actions audited; individual accounts only; no shared administrator login |
-| Grant Administrator / Test Operator | Manage grant calls and RFPs; verify requirements; upload/associate applications; initiate screening; view authorized results; manage reviewer assignments if explicitly delegated | Only within the single test workspace; destructive and privileged actions audited |
+| ShakaHive Team Administrator | Manage ShakaHive-controlled MVP accounts: invite/suspend users, assign/revoke application roles and reviewer assignments, and administer workspace access | A distinct platform-administration role. Only specifically authorized ShakaHive team members hold it; privileged actions are audited; individual accounts only; no shared administrator login |
+| Grant Administrator / Test Operator | Operate the grant-screening workflow: manage grant calls and RFPs, verify requirements, upload/associate applications, initiate screening and view authorized results | A distinct product/workflow role. It does not automatically grant authority to invite users, administer accounts or change platform-wide roles; reviewer assignment is permitted only if separately delegated |
 | Reviewer | Access only the call/application/document/evidence items assigned by the ShakaHive team; add notes and submit review decisions within assigned scope | No user administration, call configuration, reviewer assignment, bulk export or unassigned application access |
 | Programme Manager | **Not enabled until permissions are specified and approved** | The founder's response did not define whether this role may see metadata, proposal content, findings, reports or decisions. Do not grant a broad default role. |
 | Platform Operator | Operational health and service administration only where needed | No default proposal-content access; any support access must be explicitly approved, time-bound and audited |
@@ -76,14 +76,15 @@ The existing code's role labels (`NCST_GRANT_PERSONNEL`, `GRANT_INSTITUTION`, `G
 
 ### ShakaHive team authority
 
-The ShakaHive team is responsible for:
-- Inviting individual users to the MVP.
-- Assigning and revoking application roles.
-- Assigning reviewers to the relevant grant call and/or applications.
-- Suspending accounts and removing access.
-- Deciding separately who receives GitHub repository access.
+ShakaHive's company-level operating responsibilities must remain distinct from the grant-screening product's institutional workflow:
+- **ShakaHive Team Administrator** manages platform accounts, invitations, application-role assignment/revocation and reviewer assignments.
+- **Grant Administrator / Test Operator** operates grant calls, RFPs, applications and screening within the configured test workspace.
+- Reviewer assignment may be delegated to a Grant Administrator, but only through an explicit permission; it is not inherent in that role.
+- GitHub repository access is decided and administered separately from MVP access.
 
-The implementation must represent these powers as explicit server-side permissions. Do not make every team member a super-administrator by default; identify which named team members are authorized to administer accounts and role assignments.
+This separation is intentional even though the current team is delivering the MVP as part of a competition. ShakaHive should be represented as the product/company operating model, not merely as a temporary competition team. Keeping platform administration separate from institutional grant operations creates a clearer responsibility boundary and a more credible path to scaling the product to additional institutions later. The first deployment nevertheless remains a single-institution controlled test MVP; this role separation does not claim that multi-institution capabilities already exist.
+
+The implementation must represent these powers as explicit server-side permissions. Do not make every ShakaHive team member a super-administrator by default; identify which named team members are authorized to administer accounts and role assignments.
 
 ## 6. Reviewer assignment and access rules
 
@@ -134,6 +135,7 @@ Fail closed when identity, account status, role, assignment, resource ownership 
 - The first MVP can use a simpler single-workspace model rather than implementing a full multi-institution tenant administration product.
 - Every protected read/write/download/export still needs backend authorization.
 - A server-side user, role and reviewer-assignment model is required.
+- ShakaHive Team Administrator and Grant Administrator are separate roles with distinct permission boundaries; an individual may hold both only if explicitly assigned both roles.
 - The ShakaHive team needs a defined administrator roster and account-management procedure.
 - Programme Manager access remains unimplemented until explicitly defined.
 - GitHub collaborator management remains outside the MVP authorization system.
@@ -159,12 +161,11 @@ Fail closed when identity, account status, role, assignment, resource ownership 
 
 1. Which named ShakaHive team members will have permission to invite users and administer roles?
 2. What should the Programme Manager role be allowed to see and do? Until decided, it remains disabled.
-3. Should Grant Administrator and ShakaHive Team Administrator be separate roles, or can selected team members hold both?
-4. What minimum GitHub permission is needed when a reviewer is separately invited to the repository?
+3. What minimum GitHub permission is needed when a reviewer is separately invited to the repository?
 
 ## 12. Implementation boundary
 
-This ADR incorporates the founder's initial pilot scope and operating model. It does not yet authorize multi-institution onboarding, define Programme Manager permissions, select an authentication provider, or implement application authorization. Resolve the remaining questions, approve the MVP permission matrix and then implement Issue #5 in coordination with ADR-001.
+This ADR incorporates the founder's initial pilot scope and operating model, including the separation of ShakaHive platform administration from grant-workflow administration. It does not yet authorize multi-institution onboarding, define Programme Manager permissions, select an authentication provider, or implement application authorization. Resolve the remaining questions, approve the MVP permission matrix and then implement Issue #5 in coordination with ADR-001.
 
 ## References
 

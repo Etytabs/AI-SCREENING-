@@ -1,6 +1,6 @@
 # ADR-002: Authorization and Organization Isolation
 
-- **Status:** Proposed revision — aligned with founder's Phase 1 pilot direction; permission details require team review
+- **Status:** Proposed revision — founder-confirmed reviewer assignment scope and review actions; remaining role and administration details require team review
 - **Date:** 11 November 2026
 - **Decision owners:** Software Developer / AI Platform Developer (technical recommendation); Team Leader (coordination and approval)
 - **Implementation owner:** Full-Stack Developer
@@ -88,14 +88,21 @@ The implementation must represent these powers as explicit server-side permissio
 ## 6. Reviewer assignment and access rules
 
 - A reviewer must have an active, verified MVP account and an explicit assignment before seeing proposal content.
-- Assignment scope must be defined (whole grant call, individual applications, or both) and enforced on every relevant API operation.
-- A reviewer can read only the assigned application, its permitted documents, findings and evidence.
-- A reviewer can add notes and submit only the review actions allowed by the MVP workflow.
-- A reviewer cannot assign themselves, expand their own scope, invite users, change grant requirements or access unassigned submissions.
+- Support both **call-level** and **application-level** reviewer assignments.
+- A call-level assignment grants access to applications within that call, subject to the reviewer's other permissions and the call's active state.
+- An application-level assignment grants access only to the specifically assigned application and its permitted documents, findings and evidence.
+- The ShakaHive team may use either assignment scope. The effective scope must be explicit, auditable and enforced on every relevant API operation; a reviewer cannot create or broaden their own assignment.
+- A reviewer may perform these four actions within their assigned scope:
+  1. Add review notes.
+  2. Submit a review, including confirming or dismissing a finding.
+  3. Request further review or clarification.
+  4. Escalate an application for additional assessment.
+- Each review action must be validated against workflow state, recorded with the actor, resource, action and timestamp, and remain subject to any required administrator workflow controls.
+- A reviewer cannot invite users, change grant requirements, assign reviewers, expand their own scope or access unassigned submissions.
 - Removing an assignment or suspending the account must revoke access on subsequent requests and invalidate relevant sessions/capabilities.
 - Bulk endpoints, reports, document-content routes, exports and background jobs must apply the same assignment checks.
 
-**Open product detail:** the founder confirmed reviewer access and ShakaHive-managed assignment, but did not specify whether assignments apply to entire calls or individual applications. Resolve this before implementing reviewer authorization.
+**Founder-confirmed direction:** support both call-level and application-level assignments, and permit the four review actions listed above. These permissions apply only within the reviewer's assigned scope.
 
 ## 7. GitHub access is a separate authorization domain
 
@@ -151,11 +158,9 @@ Fail closed when identity, account status, role, assignment, resource ownership 
 ## 11. Remaining questions for team confirmation
 
 1. Which named ShakaHive team members will have permission to invite users and administer roles?
-2. Should reviewer assignments apply to an entire grant call, individual applications, or both?
-3. Which review actions can reviewers perform (notes, confirm, dismiss, request further review, escalate)?
-4. What should the Programme Manager role be allowed to see and do? Until decided, it remains disabled.
-5. Should Grant Administrator and ShakaHive Team Administrator be separate roles, or can selected team members hold both?
-6. What minimum GitHub permission is needed when a reviewer is separately invited to the repository?
+2. What should the Programme Manager role be allowed to see and do? Until decided, it remains disabled.
+3. Should Grant Administrator and ShakaHive Team Administrator be separate roles, or can selected team members hold both?
+4. What minimum GitHub permission is needed when a reviewer is separately invited to the repository?
 
 ## 12. Implementation boundary
 

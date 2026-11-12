@@ -52,7 +52,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   outline: 3px solid var(--sh-honey-gold);
   outline-offset: 3px;
 }
-.brand-logo { display: block; width: 150px; height: auto; }
+.brand-logo { display: block; width: 150px; height: auto; object-fit: contain; }
 body .navbar { background: var(--sh-night-hive); border: 0; color: #fff; }
 body .nav-brand { gap: 14px; }
 body .nav-brand small { color: #e3f2ed; font-size: 12px; }

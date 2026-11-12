@@ -9,7 +9,7 @@
 .header { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 .brand { display: flex; align-items: center; gap: 16px; }
 .brand small { color: #e1f0eb; font-size: 12px; }
-.logo { width: 190px; height: auto; }
+.logo { width: 190px; height: auto; object-fit: contain; }
 .headerLink, .cta {
   display: inline-flex; align-items: center; gap: 18px;
   padding: 12px 16px; border: 1px solid #a9c5bd; border-radius: 6px;
@@ -34,4 +34,9 @@
   .hero { grid-template-columns: 1fr; gap: 36px; padding: 55px 0; }
   .logo { width: 145px; }
   .brand small { display: none; }
+}
+@media (max-width: 500px) {
+  .screen { padding: 20px 16px; }
+  .logo { width: min(42vw, 145px); }
+  .headerLink { gap: 8px; padding: 10px 12px; }
 }

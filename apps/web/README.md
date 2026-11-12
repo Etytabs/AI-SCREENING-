@@ -20,7 +20,8 @@ Workflow and API documentation: [../../docs/grant-workflow.md](../../docs/grant-
 
 # Brand assets and fonts
 
-The web shell uses unchanged copies of the founder-approved horizontal logo and
+The web shell uses an unchanged copy of the founder-approved
+`assets/brand/source/logo-on-dark.png` in dark headers, plus the supplied
 favicon from `assets/brand/source`. Fredoka and Nunito variable fonts are
 self-hosted in `app/fonts`, sourced from the Google Fonts repository
 (`ofl/fredoka` and `ofl/nunito`) under the SIL Open Font License 1.1; their

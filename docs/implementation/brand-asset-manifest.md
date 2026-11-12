@@ -27,6 +27,7 @@
 | 13-social-banner-1500x500.png | Social banner |
 | 14-logo-horizontal-on-teal.png | Horizontal logo on teal |
 | 15-logo-horizontal-on-cream.png | Horizontal logo on cream |
+| logo-on-dark.png | Founder-approved horizontal logo for Night Hive (`#05343B`) backgrounds |
 | 16-swatch-1-deep-teal.png | Palette reference |
 | 16-swatch-2-hive-teal.png | Palette reference |
 | 16-swatch-3-honey-gold.png | Palette reference |
@@ -45,3 +46,13 @@
 - Before web use, optimize copies without altering proportions or transparency.
 - Record any derivative filename, dimensions and source asset.
 - The supplied archive was inspected for this inventory. Confirm the extracted files are present in the repository before treating the repo asset directory as complete.
+
+## Additional supplied asset and application use
+
+The founder-approved `assets/brand/source/logo-on-dark.png` is present in the
+repository (3333 × 1060 PNG with alpha channel). The Next.js application uses
+an unchanged copy at `apps/web/public/brand/logo-on-dark.png` in the Night Hive
+navigation header and dark landing-page header. The original
+`assets/brand/source/logo-horizontal.png` has a teal background and is not used
+on those Night Hive surfaces. The browser icon remains the unchanged
+`favicon-64.png` at `apps/web/app/icon.png`.

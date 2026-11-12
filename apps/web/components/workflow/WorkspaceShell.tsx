@@ -38,6 +38,7 @@ function Sidebar() {
   return (
     <aside className="sidebar ws-sidebar" aria-label="Workspace navigation">
       <div className="ws-call-picker">
+        <p className="workspace-caption">RESEARCH INTELLIGENCE<br /><strong>Grant screening</strong></p>
         <label htmlFor="call-picker" className="sidebar-label">GRANT CALL</label>
         <select id="call-picker" value={callId ?? ""} onChange={(e) => setCallId(e.target.value || null)} disabled={callsState !== "ready" || !calls.length}>
           {!calls.length && <option value="">{callsState === "loading" ? "Loading…" : "No calls yet"}</option>}
@@ -47,7 +48,7 @@ function Sidebar() {
         </select>
         {call && <SyntheticBadge origin={call.data_origin} />}
       </div>
-      <nav>
+      <nav aria-label="Grant screening">
         {navItems.map((item) => (
           <Link key={item.href} href={item.href} className={isActive(pathname, item.href) ? "side-link active" : "side-link"} aria-current={isActive(pathname, item.href) ? "page" : undefined}>
             <span className="side-link-label">{item.label}</span>
@@ -55,7 +56,7 @@ function Sidebar() {
         ))}
       </nav>
       <div className="sidebar-foot ws-identity">
-        <label htmlFor="role-picker"><b>ACTING AS</b></label>
+        <label htmlFor="role-picker"><b>DEMO ROLE</b></label>
         <select id="role-picker" value={role} onChange={(e) => setRole(e.target.value as Role)}>
           {(Object.keys(ROLE_LABELS) as Role[]).map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
         </select>

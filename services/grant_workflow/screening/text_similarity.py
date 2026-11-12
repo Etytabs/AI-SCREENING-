@@ -39,6 +39,11 @@ MIN_COVERAGE = 0.05
 # Reworded overlap needs a far higher bar than verbatim text: two proposals on the same
 # topic share content terms without either copying the other.
 MIN_PHRASE_COVERAGE = 0.20
+# A published abstract is a fraction of a full proposal, so asking what share of the
+# proposal it covers can never flag. Judge the published source from its own side:
+# how much of that abstract reappears in the proposal. Measured on real documents a
+# true source scores well clear of the topical noise (19% vs 7%, 48% vs 10%).
+MIN_SOURCE_COVERAGE = 0.15
 MAX_EVIDENCE_PASSAGES = 3
 MAX_MATCHES = 10
 
@@ -66,6 +71,7 @@ class _RecordResult:
         self.verbatim_words: set[int] = set()    # positions in the combined narrative
         self.phrase_positions: frozenset[int] = frozenset()
         self.phrase_coverage = 0.0
+        self.source_coverage = 0.0
         self.lexical_score = 0.0
         self.query_passage: str | None = None
         self.source_passage: str | None = None
@@ -161,6 +167,7 @@ def evaluate_text_similarity(ctx: ScreeningContext, run_id: str) -> list[Finding
         phrase = compare_proposals(query_profile, profile_proposal(record.text))
         result.phrase_positions = phrase.query_positions
         result.phrase_coverage = phrase.query_coverage
+        result.source_coverage = phrase.source_coverage
         result.lexical_score = phrase.lexical_score
         result.query_passage, result.source_passage = phrase.query_passage, phrase.source_passage
         results.append(result)
@@ -170,7 +177,16 @@ def evaluate_text_similarity(ctx: ScreeningContext, run_id: str) -> list[Finding
             item.longest_passage >= MIN_PASSAGE_WORDS or item.verbatim_count / total_words >= MIN_COVERAGE
         )
 
-    flagged = [item for item in results if reportable(item) or item.phrase_coverage >= MIN_PHRASE_COVERAGE]
+    def external_match(item: _RecordResult) -> bool:
+        return (
+            item.record.source_type in EXTERNAL_SOURCE_TYPES
+            and item.source_coverage >= MIN_SOURCE_COVERAGE
+        )
+
+    flagged = [
+        item for item in results
+        if reportable(item) or item.phrase_coverage >= MIN_PHRASE_COVERAGE or external_match(item)
+    ]
     flagged.sort(
         key=lambda item: (item.verbatim_count / total_words, item.phrase_coverage),
         reverse=True,

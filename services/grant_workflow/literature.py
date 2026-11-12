@@ -24,17 +24,20 @@ logger = logging.getLogger(__name__)
 
 SOURCE_ID = "openalex"
 SOURCE_NAME = "OpenAlex published literature"
-MAX_QUERIES = 3
-RESULTS_PER_QUERY = 12
+MAX_QUERIES = 6
+RESULTS_PER_QUERY = 30
 MIN_ABSTRACT_WORDS = 25
 
 _KEYWORD_LINE = re.compile(r"^\s*(?:key\s?words?|index terms)\s*[:\-–]\s*(.+)$", re.I | re.M)
 _TITLE_NOISE = re.compile(r"\s*\((?:[^()]{0,60})\)\s*$")
+# Running headers and footers a PDF repeats on every page are not the title.
+_PAGE_FURNITURE = re.compile(r"(\|\s*page\s*\d+|^page\s+\d+|^\d+\s*$)", re.I)
 _TITLE_STOP = re.compile(
     r"^\s*(?:\d+[.)]|abstract|introduction|summary|background|key\s?words?|index terms|"
     r"contents|table of|title\s*:|applicant\s*:|by\s+)",
     re.I,
 )
+_SECTION_BREAK = re.compile(r"(?m)^\s*\d{1,2}\.\s+[A-Z]")
 _QUERY_STOP = frozenset("""
 a an and are as at be because been being by can could did do does for from had has have how if in
 into is it its may might more most must no not of on or our shall should so such than that the
@@ -78,6 +81,30 @@ def _term_query(text: str, limit: int = 8) -> str | None:
     return " ".join(common) or None
 
 
+def body_text(text: str) -> str:
+    """The document minus the furniture a PDF repeats on every page.
+
+    A running header counted once per page outweighs the real subject matter and
+    poisons every frequency-based query, so drop it before any term counting.
+    """
+    lines = [line for line in text.splitlines() if not _PAGE_FURNITURE.search(line.strip())]
+    repeated = Counter(line.strip() for line in lines if line.strip())
+    return "\n".join(line for line in lines if repeated[line.strip()] < 3)
+
+
+def _section_queries(text: str, limit: int = 3) -> list[str]:
+    """One query per substantial section.
+
+    A single bag of words over a whole proposal is dominated by its general topic;
+    the sentences that describe prior work sit in one section, so query sections
+    separately to give that wording its own chance to retrieve a source.
+    """
+    sections = [s for s in _SECTION_BREAK.split(text) if len(s.split()) >= 60]
+    sections.sort(key=lambda s: len(s.split()), reverse=True)
+    queries = [q for q in (_term_query(section) for section in sections[:limit]) if q]
+    return queries
+
+
 def document_title(text: str) -> str | None:
     """The title printed at the top of the document itself.
 
@@ -93,7 +120,14 @@ def document_title(text: str) -> str | None:
             if parts:
                 break  # a blank line closes the title block
             continue
-        if _TITLE_STOP.match(line) or line.isupper():
+        if _PAGE_FURNITURE.search(line):
+            continue  # page header/footer, never the title
+        if line.isupper():
+            # A cover label such as "RESEARCH PROPOSAL" sits above the real title.
+            if parts:
+                break
+            continue
+        if _TITLE_STOP.match(line):
             break
         # Author lines and other short fragments end the wrapped title.
         if parts and len(line.split()) < 4:
@@ -108,11 +142,13 @@ def document_title(text: str) -> str | None:
 
 def build_queries(title: str | None, narrative_text: str) -> list[str]:
     """Derive up to MAX_QUERIES OpenAlex queries from the proposal's own wording."""
+    body = body_text(narrative_text)
     candidates = [
         _clean(_TITLE_NOISE.sub("", title or "")),
         document_title(narrative_text),
-        _keyword_query(narrative_text),
-        _term_query(narrative_text),
+        _keyword_query(body),
+        _term_query(body),
+        *_section_queries(body),
     ]
     queries: list[str] = []
     for candidate in candidates:

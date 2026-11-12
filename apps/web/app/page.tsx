@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
+import logo from "../public/brand/logo-horizontal.png";
 import styles from "./page.module.css";
 
 const icon = { width: 20, height: 20, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
@@ -9,7 +11,7 @@ const ArrowIcon = () => <svg {...icon} width={18} height={18}><path d="M5 12h14M
 
 const steps = [
   { label: "Proposal", detail: "Upload a PDF or DOCX research grant proposal for screening.", Icon: DocumentIcon },
-  { label: "AI Screening", detail: "Check the proposal for eligibility, duplication, and plagiarism.", Icon: SparkIcon, active: true },
+  { label: "AI-assisted screening", detail: "Surface eligibility, completeness and similarity signals with supporting evidence.", Icon: SparkIcon, active: true },
   { label: "Human Review", detail: "Review the evidence and record the final decision and rationale.", Icon: ShieldIcon },
 ];
 
@@ -18,17 +20,17 @@ export default function Home() {
     <main className={styles.screen}>
       <header className={styles.header}>
         <div className={styles.brand}>
-          <span className={styles.brandMark}><ShieldIcon /></span>
-          <div><b>shakaHive</b><small>Research Intelligence</small></div>
+          <Image src={logo} alt="ShakaHive" priority className={styles.logo} />
+          <small>Research Intelligence</small>
         </div>
         <Link href="/dashboard" className={styles.headerLink}>Dashboard <ArrowIcon /></Link>
       </header>
 
       <section className={styles.hero}>
         <div className={styles.pitch}>
-          <div className={styles.kicker}>shakaHive · AI-assisted grant screening</div>
+          <div className={styles.kicker}>Research Intelligence · AI-assisted grant screening</div>
           <h1>Smarter grant screening.<br />Human decisions.</h1>
-          <p>AI-assisted screening of research grant proposals for eligibility, duplication, and plagiarism, with source-backed evidence for human review.</p>
+          <p>Bring requirements, applications and evidence together for a clearer, accountable human review of research grant proposals.</p>
           <Link href="/dashboard" className={styles.cta}><span>Open dashboard</span><ArrowIcon /></Link>
         </div>
         <ol className={styles.steps}>

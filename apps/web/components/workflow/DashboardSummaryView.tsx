@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { formatAmount, formatDate } from "../../lib/labels";
 import type { DashboardSummary, RecordedDecision } from "../../lib/types";
-import { CallStatusBadge, Notice } from "./ui";
+import { CallStatusBadge, Notice, SyntheticBadge } from "./ui";
 
 const DECISION_LABELS: Record<string, string> = { CONFIRMED: "Confirmed", DISMISSED: "Dismissed" };
 
@@ -87,7 +87,7 @@ export function DashboardSummaryView({ summary }: { summary: DashboardSummary })
     <div className="overview">
       <section className="call-summary" aria-label="Grant call">
         <div>
-          <CallStatusBadge status={call.status} />
+          <CallStatusBadge status={call.status} /> <SyntheticBadge origin={call.data_origin} />
           <h2>{call.name}</h2>
           <p>{call.organization}{call.reference ? ` · ${call.reference}` : ""}</p>
         </div>

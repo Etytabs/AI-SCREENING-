@@ -35,9 +35,7 @@ and provide fallback font stacks.
 - `exports/`: optimized copies for application use, derived from approved
   originals.
 
-The four original PNGs are not yet present and must be uploaded by the founder.
-The `.gitkeep` files keep the empty directories in Git and can be removed when
-their directories contain assets.
+The four original PNGs are present in `source/` and `reference/`.
 
 ## Logo and artwork usage
 
@@ -51,10 +49,10 @@ Keep original files unchanged. Never redraw, distort, stretch, skew, crop,
 recolour, or approximate the logo or wordmark; preserve proportions and any
 transparency. Do not overwrite originals with derivatives.
 
-For application use, create optimized copies in `exports/` rather than editing
-the originals. Preserve the artwork's appearance, proportions and
-transparency, and record each derivative's filename, dimensions, and source
-asset. Check the optimized result before use.
+The web application uses unchanged copies of `source/logo-horizontal.png`
+(3493 × 1220) at `apps/web/public/brand/logo-horizontal.png` and
+`source/favicon-64.png` (64 × 64) at `apps/web/app/icon.png`. The originals
+remain unchanged. No optimized derivatives are currently used.
 
 See `../../company/brand/brand-guidelines.md` for broader identity guidance and
 `../../docs/implementation/brand-asset-manifest.md` for the supplied pack

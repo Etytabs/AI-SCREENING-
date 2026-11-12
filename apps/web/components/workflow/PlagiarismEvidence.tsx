@@ -6,12 +6,6 @@ import { isPublishedMatch } from "../../lib/matches";
 import type { Finding, SimilarityMatch } from "../../lib/types";
 import { SyntheticBadge } from "./ui";
 
-const BAND_LABELS: Record<string, string> = {
-  LOW_SIMILARITY: "Low similarity",
-  MODERATE_SIMILARITY: "Moderate similarity",
-  HIGH_SIMILARITY: "High similarity",
-};
-
 const SOURCE_LABELS: Record<string, string> = {
   published_work: "Published work",
   same_call_application: "Another application in this call",
@@ -23,7 +17,7 @@ const SOURCE_LABELS: Record<string, string> = {
 // question, text shared with something already published is a plagiarism question.
 const SOURCE_FLAGS: Record<string, string> = {
   same_call_application: "Duplication",
-  published_work: "Plagiarism",
+  published_work: "Published literature",
 };
 
 function num(value: unknown, fallback = 0): number {
@@ -31,16 +25,15 @@ function num(value: unknown, fallback = 0): number {
 }
 
 function pct(value: number | null | undefined): string {
-  return `${Math.round(num(value) * 1000) / 10}%`;
+  return value == null || !Number.isFinite(value) ? "Not available" : `${Math.round(value * 1000) / 10}%`;
 }
 
 /** Percentage dial: the headline number a reviewer reads first. */
-function SimilarityDial({ index, band }: { index: number; band: string }) {
-  const tone = band === "HIGH_SIMILARITY" ? "high" : band === "MODERATE_SIMILARITY" ? "moderate" : "low";
+function SimilarityDial({ index }: { index: number }) {
   return (
-    <div className={`similarity-dial dial-${tone}`} role="img" aria-label={`Similarity index ${index} percent, ${BAND_LABELS[band] ?? band}`}>
+    <div className="similarity-dial" role="img" aria-label={`Highest published-source similarity score ${index} percent`}>
       <strong>{index}%</strong>
-      <span>{BAND_LABELS[band] ?? "Similarity index"}</span>
+      <span>Highest published-source similarity score</span>
       <div className="similarity-bar"><i style={{ width: `${Math.min(100, Math.max(index, 1))}%` }} /></div>
     </div>
   );
@@ -69,8 +62,6 @@ function SourceMeta({ match }: { match: SimilarityMatch }) {
 
 function MatchRow({ match }: { match: SimilarityMatch }) {
   const [open, setOpen] = useState(false);
-  const verbatim = num(match.query_coverage);
-  const reworded = num(match.source_coverage);
   return (
     <li className="plagiarism-match">
       <div className="evidence-meta">
@@ -80,7 +71,7 @@ function MatchRow({ match }: { match: SimilarityMatch }) {
         {SOURCE_FLAGS[match.source_type] && <span className="dup-flag">[{SOURCE_FLAGS[match.source_type]}]</span>}
       </div>
       <small>
-        {pct(match.similarity_score)} of this proposal · {pct(verbatim)} word-for-word · {pct(reworded)} reworded
+        Similarity score {pct(match.similarity_score)} · {pct(match.query_coverage)} verbatim passage coverage · {pct(match.source_coverage)} content phrase overlap
         {match.published_on ? ` · published ${match.published_on}` : match.year != null ? ` · ${match.year}` : ""}
       </small>
       <div className="similarity-bar small-bar"><i style={{ width: `${Math.min(100, Math.max(num(match.similarity_score) * 100, 1))}%` }} /></div>
@@ -112,8 +103,7 @@ function MatchRow({ match }: { match: SimilarityMatch }) {
 
 export function PlagiarismEvidence({ finding }: { finding: Finding }) {
   const details = finding.details;
-  const band = typeof details.band === "string" ? details.band : "LOW_SIMILARITY";
-  const works = num(details.published_works_compared);
+  const works = typeof details.published_works_compared === "number" ? details.published_works_compared : null;
   const searchedLiterature = details.published_literature_searched === true;
 
   // Published literature only. Overlap with other submissions in this call is a
@@ -123,26 +113,28 @@ export function PlagiarismEvidence({ finding }: { finding: Finding }) {
     (best, match) => (best === null || match.similarity_score > best.similarity_score ? match : best),
     null,
   );
-  const index = top ? top.similarity_score * 100 : 0;
+  const index = top ? top.similarity_score * 100 : null;
 
   return (
     <>
       <section className="drawer-section" aria-label="Similarity index">
         <h3>Published-literature similarity</h3>
-        <SimilarityDial index={Math.round(index * 10) / 10} band={top ? band : "LOW_SIMILARITY"} />
-        <ul className="similarity-split" aria-label="Similarity breakdown">
-          <li><b>{pct(top?.query_coverage)}</b><span>copied word for word</span></li>
-          <li><b>{pct(top?.source_coverage)}</b><span>reworded content phrases</span></li>
+        {index !== null && <SimilarityDial index={Math.round(index * 10) / 10} />}
+        {top && <ul className="similarity-split" aria-label="Similarity breakdown">
+          <li><b>{pct(top.query_coverage)}</b><span>verbatim passage coverage</span></li>
+          <li><b>{pct(top.source_coverage)}</b><span>content phrase overlap</span></li>
           <li><b>{matches.length}</b><span>published source{matches.length === 1 ? "" : "s"}</span></li>
-        </ul>
+        </ul>}
         <p className="small">
           {searchedLiterature
-            ? `${works} published work${works === 1 ? "" : "s"} compared from OpenAlex.`
-            : "Published literature was not searched, so copying from published papers cannot be ruled out."}
+            ? works !== null ? `${works} published work${works === 1 ? "" : "s"} compared from OpenAlex.` : "Published literature was searched; the number of works compared is unavailable."
+            : "Published literature was not searched; no conclusion about published sources can be drawn."}
         </p>
+        {searchedLiterature && !top && <p className="small">No matching published sources were recorded in this run.</p>}
+        <p className="small">Similarity is a signal for human assessment, not proof of plagiarism.</p>
         {!searchedLiterature && (
           <p className="uncertainty">
-            OpenAlex is not configured. Set AI_SCREENING_OPENALEX_API_KEY or AI_SCREENING_OPENALEX_MAILTO in .env and run screening again to compare against published literature.
+            Check source availability and screening coverage before drawing conclusions.
           </p>
         )}
       </section>

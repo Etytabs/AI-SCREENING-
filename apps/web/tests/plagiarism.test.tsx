@@ -31,10 +31,10 @@ describe("plagiarism evidence", () => {
     render(<EvidenceDrawer detail={fx.findingDetail({ type: "plagiarism", matches: [publishedMatch], details: searchedDetails })} {...props} />);
     const panel = screen.getByRole("region", { name: "Similarity index" });
     // the headline is the published-work overlap, taken from the match itself
-    expect(within(panel).getByRole("img", { name: "Similarity index 42 percent, High similarity" })).toBeTruthy();
+    expect(within(panel).getByRole("img", { name: "Highest published-source similarity score 42 percent" })).toBeTruthy();
     const split = within(panel).getByRole("list", { name: "Similarity breakdown" });
-    expect(within(split).getByText("18%").parentElement?.textContent).toContain("copied word for word");
-    expect(within(split).getByText("42%").parentElement?.textContent).toContain("reworded content phrases");
+    expect(within(split).getByText("18%").parentElement?.textContent).toContain("verbatim passage coverage");
+    expect(within(split).getByText("42%").parentElement?.textContent).toContain("content phrase overlap");
     expect(within(split).getByText("1").parentElement?.textContent).toContain("published source");
     expect(within(panel).getByText("24 published works compared from OpenAlex.")).toBeTruthy();
   });
@@ -99,9 +99,17 @@ describe("plagiarism evidence", () => {
     });
     render(<EvidenceDrawer detail={detail} {...props} />);
     const panel = screen.getByRole("region", { name: "Similarity index" });
-    expect(within(panel).getByRole("img", { name: "Similarity index 0 percent, Low similarity" })).toBeTruthy();
+    expect(within(panel).queryByRole("img")).toBeNull();
+    expect(within(panel).queryByRole("list", { name: "Similarity breakdown" })).toBeNull();
     expect(within(panel).getByText(/Published literature was not searched/)).toBeTruthy();
-    expect(within(panel).getByText(/OpenAlex is not configured/)).toBeTruthy();
+    expect(within(panel).getByText(/not proof of plagiarism/)).toBeTruthy();
     expect(screen.queryByText(/Where the text was found/)).toBeNull();
+  });
+
+  it("does not invent coverage values when a match has no coverage measures", () => {
+    const match = { ...publishedMatch, query_coverage: null, source_coverage: null };
+    render(<EvidenceDrawer detail={fx.findingDetail({ type: "plagiarism", matches: [match], details: searchedDetails })} {...props} />);
+    const split = screen.getByRole("list", { name: "Similarity breakdown" });
+    expect(within(split).getAllByText("Not available")).toHaveLength(2);
   });
 });

@@ -1,0 +1,69 @@
+@import "../../../assets/brand/design-tokens.css";
+
+:root {
+  --paper: #f8f8f3;
+  --ink: var(--sh-night-hive);
+  --muted: #496368;
+  --line: #d6e3df;
+  --soft: #edf4f1;
+  --accent: var(--sh-deep-teal);
+  --surface: #fff;
+  --surface-2: #f2f7f5;
+  --surface-3: #e6efec;
+  --line-strong: #a7bfba;
+  --ws-accent: #046975;
+  --ws-accent-soft: #e1f1ed;
+  --ws-pass: #176140;
+  --ws-pass-soft: #e6f4eb;
+  --ws-fail: #a02219;
+  --ws-fail-soft: #faecea;
+  --ws-review: #744900;
+  --ws-review-soft: #fff3d8;
+  --ws-partial: #704b0b;
+  --ws-partial-soft: #fff3d8;
+  --ring: rgba(4, 105, 117, .35);
+}
+
+:root[data-theme="dark"] {
+  --paper: #102c30;
+  --ink: #edf8f4;
+  --muted: #b7cfca;
+  --line: #36585a;
+  --soft: #1b3b3e;
+  --surface: #18383b;
+  --surface-2: #204447;
+  --surface-3: #294d4f;
+  --line-strong: #71928e;
+  --ws-accent: #9ee2d3;
+  --ws-accent-soft: #264f4c;
+  --ws-pass: #a9e3be;
+  --ws-pass-soft: #214638;
+  --ws-fail: #ffc2ba;
+  --ws-fail-soft: #53302d;
+  --ws-review: #ffe0a0;
+  --ws-review-soft: #4a391b;
+  --ws-partial: #ffe0a0;
+  --ws-partial-soft: #4a391b;
+}
+
+body { font-family: var(--font-nunito), var(--sh-font-body); }
+h1, h2, h3 { font-family: var(--font-fredoka), var(--sh-font-heading); font-weight: 600; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 3px solid var(--sh-honey-gold);
+  outline-offset: 3px;
+}
+.brand-logo { display: block; width: 150px; height: auto; }
+body .navbar { background: var(--sh-night-hive); border: 0; color: #fff; }
+body .nav-brand { gap: 14px; }
+body .nav-brand small { color: #e3f2ed; font-size: 12px; }
+body .nav-links a { color: #e3f2ed; }
+body .nav-links a:hover, body .nav-links a.active { color: var(--sh-night-hive); background: var(--sh-wax-cream); }
+body .theme-toggle { color: var(--ink); font-family: inherit; }
+@media (max-width: 700px) {
+  .brand-logo { width: 120px; }
+  body .nav-brand small { display: none; }
+  body .nav-links { gap: 4px; }
+  body .nav-links a { padding: 7px; font-size: 11px; }
+  body .theme-toggle { padding: 5px; }
+  body .theme-toggle-label { display: none; }
+}

@@ -93,7 +93,7 @@ function Workspace({ id, initialFinding }: { id: string; initialFinding: string 
   const { application, row, documents, latest_run: run } = detail;
   const running = run && ["QUEUED", "RUNNING"].includes(run.status);
   const notSearched = run?.coverage.sources?.filter((s) => s.state !== "COMPLETE") ?? [];
-  const canDecide = role === "REVIEWER" || role === "GRANT_ADMINISTRATOR";
+  const canDecide = ["REVIEWER", "GRANT_ADMINISTRATOR", "NCST_GRANT_PERSONNEL", "GRANT_INSTITUTION"].includes(role);
 
   return (
     <div className="review-page">
@@ -123,6 +123,7 @@ function Workspace({ id, initialFinding }: { id: string; initialFinding: string 
         <div><span>Novelty</span><SignalBadge signal={row.novelty} /></div>
         <div><span>Screening run</span>{run ? <StatusBadge status={run.status} /> : <StatusBadge status="NOT_SCREENED" />}</div>
       </section>
+      <p className="review-guidance">Screening findings are signals, not decisions. Open a finding to inspect its evidence and record a human review.</p>
       {running && <Notice kind="processing" title="Screening in progress">Stages update automatically.</Notice>}
       {run?.status === "PARTIAL" && <Notice kind="partial" title="Partial screening">One or more stages failed; the affected checks are marked REVIEW REQUIRED and must be assessed manually.</Notice>}
       {run?.status === "BLOCKED" && <Notice kind="error" title="Screening blocked">No document in this application could be read.</Notice>}

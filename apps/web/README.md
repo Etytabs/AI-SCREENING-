@@ -17,3 +17,12 @@ npm run build
 ```
 
 Workflow and API documentation: [../../docs/grant-workflow.md](../../docs/grant-workflow.md).
+
+# Brand assets and fonts
+
+The web shell uses unchanged copies of the founder-approved horizontal logo and
+favicon from `assets/brand/source`. Fredoka and Nunito variable fonts are
+self-hosted in `app/fonts`, sourced from the Google Fonts repository
+(`ofl/fredoka` and `ofl/nunito`) under the SIL Open Font License 1.1; their
+license texts are included alongside the fonts. System fallbacks are defined
+in the shared brand tokens.

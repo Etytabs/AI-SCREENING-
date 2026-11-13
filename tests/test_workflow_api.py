@@ -1,3 +1,6 @@
+from io import BytesIO
+from zipfile import ZIP_DEFLATED, ZipFile
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -63,6 +66,9 @@ def test_full_workflow_over_http(client):
     assert upload.status_code == 201
     body = upload.json()
     assert len(body["applications_created"]) == 5 and body["duplicates"] == []
+    uploaded_rows = client.get(f"/api/v1/grants/{call_id}/applications").json()
+    assert len(uploaded_rows) == 5
+    assert all(row["data_origin"] == "SYNTHETIC" for row in uploaded_rows)
 
     batch = client.post(f"/api/v1/grants/{call_id}/screen", headers=ADMIN)
     assert batch.status_code == 202
@@ -99,6 +105,59 @@ def test_full_workflow_over_http(client):
 
     report = client.get(f"/api/v1/grants/{call_id}/report").json()
     assert len(report["applications"]) == 5 and "not funding decisions" in report["disclaimer"]
+    assert report["synthetic_notice"]
+    assert all(application["row"]["data_origin"] == "SYNTHETIC" for application in report["applications"])
+    assert any(
+        decision["finding_id"] == failing["finding_id"]
+        and decision["action"] == "CONFIRM"
+        and decision["note"] == "Verified against page 1"
+        for decision in report["summary"]["decisions"]
+    )
+    reported_finding = next(
+        finding
+        for application in report["applications"]
+        for finding in application["findings"]
+        if finding["finding_id"] == failing["finding_id"]
+    )
+    assert reported_finding["review_state"] == "CONFIRMED"
+    assert reported_finding["signal"] == failing["signal"]
+    assert reported_finding["status"] == failing["status"]
+    assert any(
+        decision["action"] == "CONFIRM" and decision["note"] == "Verified against page 1"
+        for decision in reported_finding["decisions"]
+    )
+
+
+@pytest.mark.parametrize(
+    ("omit", "mutate"),
+    [
+        ("DEMO-APP-005/partner_letter.txt", None),
+        (None, "DEMO-APP-001/proposal.txt"),
+    ],
+    ids=("partial-bundle", "altered-bundle"),
+)
+def test_partial_or_altered_demo_bundle_is_not_marked_synthetic(client, omit, mutate):
+    source = BytesIO(demo_applications_zip())
+    altered = BytesIO()
+    with ZipFile(source) as original, ZipFile(altered, "w", ZIP_DEFLATED) as result:
+        for name in original.namelist():
+            if name == omit:
+                continue
+            content = original.read(name)
+            if name == mutate:
+                content += b"\nAltered demonstration content"
+            result.writestr(name, content)
+
+    call_id = create_ready_call(client)
+    upload = client.post(
+        f"/api/v1/grants/{call_id}/applications/batch",
+        files=[("files", ("applications.zip", altered.getvalue(), "application/zip"))],
+        headers=ADMIN,
+    )
+    assert upload.status_code == 201
+    rows = client.get(f"/api/v1/grants/{call_id}/applications").json()
+    assert len(rows) == 5
+    assert all(row["data_origin"] == "UPLOADED" for row in rows)
 
 
 def test_upload_edge_cases_over_http(client):
@@ -109,6 +168,8 @@ def test_upload_edge_cases_over_http(client):
         data={"reference": "REF-1"}, headers=ADMIN,
     )
     assert unsupported.status_code == 201 and unsupported.json()["errors"]
+    uploaded_id = unsupported.json()["applications_created"][0]
+    assert client.get(f"/api/v1/applications/{uploaded_id}").json()["application"]["data_origin"] == "UPLOADED"
     duplicate = client.post(
         f"/api/v1/grants/{call_id}/applications", files=[("files", ("proposal.txt", b"x", "text/plain"))],
         data={"reference": "REF-1"}, headers=ADMIN,

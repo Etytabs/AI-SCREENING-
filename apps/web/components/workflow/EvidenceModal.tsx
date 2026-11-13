@@ -118,11 +118,6 @@ export function EvidenceModal({
                   <div className="drawer-badges">
                     <StatusBadge status={finding.status} />
                     {showSignal && <SignalBadge signal={finding.signal} />}
-                    {finding.type !== "duplication" && (
-                      <span className="muted small">
-                        {finding.confidence !== null ? `confidence ${finding.confidence.toFixed(2)}` : "confidence not computed"}
-                      </span>
-                    )}
                   </div>
                   <p>{finding.explanation}</p>
                   <p className="small"><b>Suggested next step:</b> {finding.recommended_action}</p>

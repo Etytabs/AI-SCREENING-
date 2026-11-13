@@ -17,7 +17,7 @@ const THEME_SCRIPT = `try{var t=localStorage.getItem("ai-screening-theme");if(t=
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${fredoka.variable} ${nunito.variable}`}>
+    <html lang="en" className={`${fredoka.variable} ${nunito.variable}`} suppressHydrationWarning>
       <head><script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} /></head>
       <body><Navbar /><div className="page">{children}</div></body>
     </html>

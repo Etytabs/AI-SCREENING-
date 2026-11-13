@@ -71,7 +71,7 @@ function MatchRow({ match }: { match: SimilarityMatch }) {
         {SOURCE_FLAGS[match.source_type] && <span className="dup-flag">[{SOURCE_FLAGS[match.source_type]}]</span>}
       </div>
       <small>
-        Similarity score {pct(match.similarity_score)} · {pct(match.query_coverage)} verbatim passage coverage · {pct(match.source_coverage)} content phrase overlap
+        Similarity score {pct(match.similarity_score)} · {pct(match.query_coverage)} verbatim passage coverage · {pct(match.source_coverage)} source phrase coverage
         {match.published_on ? ` · published ${match.published_on}` : match.year != null ? ` · ${match.year}` : ""}
       </small>
       <div className="similarity-bar small-bar"><i style={{ width: `${Math.min(100, Math.max(num(match.similarity_score) * 100, 1))}%` }} /></div>
@@ -122,7 +122,7 @@ export function PlagiarismEvidence({ finding }: { finding: Finding }) {
         {index !== null && <SimilarityDial index={Math.round(index * 10) / 10} />}
         {top && <ul className="similarity-split" aria-label="Similarity breakdown">
           <li><b>{pct(top.query_coverage)}</b><span>verbatim passage coverage</span></li>
-          <li><b>{pct(top.source_coverage)}</b><span>content phrase overlap</span></li>
+          <li><b>{pct(top.source_coverage)}</b><span>published-source phrase coverage</span></li>
           <li><b>{matches.length}</b><span>published source{matches.length === 1 ? "" : "s"}</span></li>
         </ul>}
         <p className="small">

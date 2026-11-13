@@ -2,6 +2,8 @@
 import pytest
 
 from ml.evidence.state import RunState
+from ml.semantic_matching.duplication import compare_proposals, profile_proposal
+from services.grant_workflow.demo_data import DEMO_APPLICATION_FILES
 from services.grant_workflow.literature import (
     PublishedLiteratureSource,
     build_queries,
@@ -217,3 +219,32 @@ def test_published_work_is_reported_with_percentage_and_publication_details():
     assert finding.signal == "SHARED_PASSAGES_FOUND"
     assert finding.details["similarity_index"] >= 20.0
     assert finding.details["band"] in {"MODERATE_SIMILARITY", "HIGH_SIMILARITY"}
+
+
+def test_published_source_coverage_uses_the_source_side_of_the_overlap():
+    from dataclasses import replace
+
+    from services.grant_workflow.jobs import InlineJobRunner
+    from services.grant_workflow.models import Application
+    from services.grant_workflow.seed import seed_demo
+    from services.grant_workflow.service import GrantWorkflowService
+
+    long_work = replace(
+        WORK,
+        abstract=WORK.abstract + " " + " ".join(f"uniqueconceptword{i}" for i in range(20)),
+    )
+    service = GrantWorkflowService(
+        jobs=InlineJobRunner(),
+        literature=PublishedLiteratureSource(search=lambda query, rows: [long_work]),
+    )
+    call = seed_demo(service)
+    apps = {a.application_reference: a for a in service.repo.list(Application, grant_call_id=call.id)}
+    finding = _run_plagiarism(service, apps["DEMO-APP-003"].id)
+    [match] = [item for item in finding.matches if item.source_type == "published_work"]
+
+    expected = compare_proposals(
+        profile_proposal(DEMO_APPLICATION_FILES["DEMO-APP-003/proposal.txt"]),
+        profile_proposal(long_work.title + "\n\n" + long_work.abstract),
+    )
+    assert expected.query_coverage != expected.source_coverage
+    assert match.source_coverage == round(expected.source_coverage, 4)

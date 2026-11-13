@@ -21,7 +21,7 @@ interface Props extends RequirementActions {
 
 const STATUS_TEXT: Record<RfpCriterion["status"], string> = {
   EXTRACTED: "Extracted · awaiting verification",
-  NEEDS_REVIEW: "Low confidence · needs review",
+  NEEDS_REVIEW: "Needs administrator review",
   VERIFIED: "Verified",
   EDITED: "Edited by administrator",
   REJECTED: "Rejected",
@@ -85,7 +85,6 @@ function RequirementItem({ c, canEdit, actions }: { c: RfpCriterion; canEdit: bo
           {c.requirement_text}
           <footer>
             {c.source_type === "administrator" ? "Added by administrator" : c.source_type === "administrator_edit" ? "Edited from the call document" : `Call document${c.source_page ? ` p.${c.source_page}` : ""}${c.source_section ? ` · ${c.source_section}` : ""}`}
-            {c.extracted_confidence !== null && ` · extraction confidence ${c.extracted_confidence.toFixed(2)}`}
             {summary && ` · ${summary}`}
             {` · ${c.screening_use === "informational" ? "informational (not screened)" : `used in ${c.screening_use} screening`}`}
           </footer>

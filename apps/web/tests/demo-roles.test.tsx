@@ -98,14 +98,23 @@ describe("demo workspace navigation", () => {
   it("shows the selected role, active navigation, and the unauthenticated demo disclaimer", async () => {
     renderWorkspace();
 
-    const rolePicker = screen.getByLabelText("DEMO ROLE") as HTMLSelectElement;
-    expect(rolePicker.value).toBe("GRANT_ADMINISTRATOR");
-    expect(rolePicker.disabled).toBe(true);
+    const roleDisplay = screen.getByRole("group", { name: "ACTIVE DEMO ROLE · READ-ONLY" });
+    expect(roleDisplay.textContent).toContain("Grant Administrator (demo workflow)");
+    expect(roleDisplay.textContent).toContain("Only implemented demo workflow.");
     expect(screen.getByText(/Demo identity only.*not authenticated/)).toBeTruthy();
     expect(screen.getByLabelText("Current demo role: Grant Administrator (demo workflow)")).toBeTruthy();
-    expect(screen.getByRole("navigation", { name: "Grant screening" }).querySelectorAll("a")).toHaveLength(7);
+    const navigationLinks = [...screen.getByRole("navigation", { name: "Grant screening" }).querySelectorAll("a")];
+    expect(navigationLinks.map((link) => link.textContent?.trim())).toEqual([
+      "Overview",
+      "Research Check",
+      "Grant Calls",
+      "Applications",
+      "Duplication",
+      "Screening",
+      "Report",
+    ]);
     expect(screen.getByRole("link", { name: "Overview" }).getAttribute("aria-current")).toBe("page");
-    expect(screen.getByRole("link", { name: "Report" })).toBeTruthy();
+    expect(screen.queryByLabelText("DEMO ROLE")).toBeNull();
     expect(screen.queryByRole("link", { name: /Publications/ })).toBeNull();
   });
 
@@ -122,7 +131,7 @@ describe("demo workspace navigation", () => {
     renderWorkspace("/dashboard/report");
 
     await waitFor(() => expect(window.localStorage.getItem("ai-screening.role")).toBe("GRANT_ADMINISTRATOR"));
-    expect((screen.getByLabelText("DEMO ROLE") as HTMLSelectElement).value).toBe("GRANT_ADMINISTRATOR");
+    expect(screen.getByRole("group", { name: "ACTIVE DEMO ROLE · READ-ONLY" }).textContent).toContain("Grant Administrator (demo workflow)");
     expect(screen.getByRole("link", { name: "Report" }).getAttribute("aria-current")).toBe("page");
     expect(screen.queryByRole("option", { name: /Reviewer/ })).toBeNull();
   });

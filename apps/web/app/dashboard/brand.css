@@ -26,8 +26,9 @@ body .ws-sidebar select { background: #fff; color: #05343b; border-color: #a7bfb
 body .ws-sidebar .synthetic-badge { background: #fff8e6; color: #05343b; }
 .workspace-caption { margin: 0 0 14px; color: #d8ede7; font-size: 10px; letter-spacing: .12em; }
 .workspace-caption strong { display: block; color: #fff; font-family: var(--font-fredoka), var(--sh-font-heading); font-size: 18px; letter-spacing: 0; }
+.ws-identity-role { color: #fff; font-size: 14px; line-height: 1.35; }
 .ws-main { padding: 34px 42px 56px; }
-.ws-role-current { display: flex; align-items: baseline; gap: 8px; margin: 0 0 16px; color: var(--muted); font-size: 12px; }
+.ws-role-current { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin: 0 0 16px; color: var(--muted); font-size: 12px; }
 .ws-role-current span { font-size: 10px; font-weight: 800; letter-spacing: .12em; }
 .ws-role-current strong { color: var(--ink); font-size: 13px; }
 .ws-main .page-head h1, .ws-main .panel h2, .ws-main .call-summary h2,
@@ -73,9 +74,36 @@ body .ws-sidebar .synthetic-badge { background: #fff8e6; color: #05343b; }
 @media (max-width: 900px) {
   .shell.dashboard-shell-flow { margin-top: 0; }
   body .sidebar.ws-sidebar { padding: 0; }
-  body .ws-sidebar nav { display: flex; margin: 0; padding: 8px; gap: 4px; }
+  body .ws-sidebar nav {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin: 0;
+    padding: 8px;
+    gap: 4px;
+    overflow: visible;
+  }
+  body .ws-sidebar .side-link {
+    display: flex;
+    min-width: 0;
+    min-height: 44px;
+    padding: 8px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+  body .ws-sidebar .side-link:focus-visible {
+    position: relative;
+    z-index: 1;
+    outline: 3px solid var(--sh-honey-gold);
+    outline-offset: 2px;
+  }
+  body .ws-sidebar .side-link .side-link-label { text-align: center; overflow-wrap: anywhere; }
   body .ws-sidebar .ws-identity small { display: block; }
   .workspace-caption { margin-bottom: 5px; }
+}
+@media (max-width: 500px) {
+  body .ws-sidebar nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 700px) {
   .ws-main { padding: 24px 18px 40px; }

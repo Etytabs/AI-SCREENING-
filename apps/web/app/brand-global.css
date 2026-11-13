@@ -67,3 +67,11 @@ body .theme-toggle { color: var(--ink); font-family: inherit; }
   body .theme-toggle { padding: 5px; }
   body .theme-toggle-label { display: none; }
 }
+@media (max-width: 360px) {
+  body .navbar { gap: 8px; padding: 0 8px; }
+  body .nav-brand { flex: 0 0 auto; }
+  body .nav-links { min-width: 0; gap: 2px; }
+  body .nav-links a:first-child { display: none; }
+  body .nav-links a { padding: 6px; font-size: 10px; }
+  body .theme-toggle { padding: 4px; }
+}

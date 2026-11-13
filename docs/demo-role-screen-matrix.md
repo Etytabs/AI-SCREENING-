@@ -23,4 +23,6 @@ The active selector therefore exposes only the existing Grant Administrator work
 
 The active Grant Administrator navigation is derived from `DEMO_ROLE_CONFIG`; route availability and page action capabilities use the same configuration. `/dashboard/report` is explicitly available and has a sidebar entry. Application detail is available below `/dashboard/applications/view`; query-string call/application identifiers remain within their existing pages. Direct navigation to a route not available to the selected role replaces the page content with an unavailable message and redirects to that role's landing page. Persisted inactive role values normalize to the active demo role on refresh.
 
+The active role is shown as a read-only display rather than a disabled selector. At tablet widths the seven destinations wrap into a four-column grid; at narrow mobile widths they wrap into two columns. Navigation links remain at least 44 pixels high, stay within the viewport, and retain a visible keyboard focus outline.
+
 The public `/` landing page is outside the dashboard role workspace. Hiding navigation, restricting demo routes, and sending `X-User-Role` are not security controls. The API and application remain unauthenticated as described in ADR-001 and ADR-002.

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { ACTIVE_DEMO_ROLES, DEMO_ROLE_CONFIG, isActiveDemoRole, isDemoRouteAvailable } from "../../lib/demo-roles";
+import { DEMO_ROLE_CONFIG, isDemoRouteAvailable } from "../../lib/demo-roles";
 import { Notice, SyntheticBadge } from "./ui";
 import { useWorkspace, WorkspaceProvider } from "./WorkspaceContext";
 
@@ -14,7 +14,7 @@ function isActive(rawPathname: string, href: string) {
 
 function Sidebar() {
   const pathname = usePathname() ?? "/dashboard";
-  const { calls, callId, setCallId, call, role, setRole, callsState } = useWorkspace();
+  const { calls, callId, setCallId, call, role, callsState } = useWorkspace();
   const roleDefinition = DEMO_ROLE_CONFIG[role];
   return (
     <aside className="sidebar ws-sidebar" aria-label="Workspace navigation">
@@ -36,20 +36,11 @@ function Sidebar() {
           </Link>
         ))}
       </nav>
-      <div className="sidebar-foot ws-identity">
-        <label htmlFor="role-picker"><b>DEMO ROLE</b></label>
-        <select
-          id="role-picker"
-          value={role}
-          disabled={ACTIVE_DEMO_ROLES.length === 1}
-          onChange={(event) => {
-            const nextRole = event.currentTarget.value;
-            if (isActiveDemoRole(nextRole)) setRole(nextRole);
-          }}
-        >
-          {ACTIVE_DEMO_ROLES.map((demoRole) => <option key={demoRole} value={demoRole}>{DEMO_ROLE_CONFIG[demoRole].label}</option>)}
-        </select>
-        <small>Demo identity only. This role is sent as a header and is not authenticated. Only the implemented Grant Administrator workflow is available in this demo.</small>
+      <div className="sidebar-foot ws-identity" role="group" aria-labelledby="demo-role-heading">
+        <span id="demo-role-heading" className="sidebar-label">ACTIVE DEMO ROLE · READ-ONLY</span>
+        <strong className="ws-identity-role">{roleDefinition.label}</strong>
+        <small>Only implemented demo workflow.</small>
+        <small>Demo identity only. The role is sent as a header and is not authenticated.</small>
       </div>
     </aside>
   );

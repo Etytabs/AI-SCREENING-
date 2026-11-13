@@ -3,6 +3,7 @@ import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -39,12 +40,12 @@ async def lifespan(app: FastAPI):
         if _demo_seed_enabled():
             try:
                 seed_demo(service, applications=_demo_applications_enabled())
-            except Exception:
-                logger.exception("Synthetic demo seed failed")
+            except Exception as exc:
+                logger.error("Synthetic demo seed failed (%s)", type(exc).__name__)
         try:
             seed_sgci_call(service)
-        except Exception:
-            logger.exception("SGCI call seed failed")
+        except Exception as exc:
+            logger.error("SGCI call seed failed (%s)", type(exc).__name__)
     yield
 
 
@@ -72,6 +73,28 @@ app.add_middleware(
 @app.exception_handler(WorkflowError)
 async def workflow_error(_: Request, exc: WorkflowError) -> JSONResponse:
     return JSONResponse(status_code=exc.status_code, content={"detail": str(exc)})
+
+
+@app.exception_handler(RequestValidationError)
+async def request_validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:
+    errors = [
+        {
+            "loc": [part for part in error["loc"] if isinstance(part, (str, int))],
+            "msg": error["msg"],
+            "type": error["type"],
+        }
+        for error in exc.errors()
+    ]
+    return JSONResponse(status_code=422, content={"detail": errors})
+
+
+@app.middleware("http")
+async def redact_unhandled_error(request: Request, call_next):
+    try:
+        return await call_next(request)
+    except Exception as exc:
+        logger.error("Unhandled API error %s at %s", type(exc).__name__, request.url.path)
+        return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 
 app.include_router(health.router)

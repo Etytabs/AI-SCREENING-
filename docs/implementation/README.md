@@ -3,6 +3,9 @@
 **Status:** Team implementation baseline for review  
 **Company:** ShakaHive | **Category:** Research Intelligence | **First product:** AI-Assisted Grant Screening
 
+Phase implementation reviews: [Phase 2 workflow audit](phase-2-workflow-audit.md) ·
+[Phase 3 evidence quality audit](phase-3-evidence-quality-audit.md).
+
 ## Purpose and quality bar
 
 This programme translates the agreed five-role team structure and the current MVP definition into an executable plan: workstreams, accountable owners, dependencies, deliverables, acceptance criteria and release gates.

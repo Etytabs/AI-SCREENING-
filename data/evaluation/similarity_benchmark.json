@@ -1,0 +1,79 @@
+{
+  "schema_version": "0.1",
+  "dataset_id": "synthetic-proposal-similarity-v0.1",
+  "status": "SYNTHETIC_DIAGNOSTIC_ONLY",
+  "description": "Synthetic proposal-text pairs for diagnostic evaluation of review-worthy textual overlap. Labels are not plagiarism determinations or institutional decisions.",
+  "label_definition": "A positive label means the pair should be surfaced for human comparison because it contains copied or plausibly reworded proposal-specific content. Standard wording, shared topic, and shared references alone are negative labels.",
+  "cases": [
+    {
+      "case_id": "S001",
+      "category": "exact_overlap",
+      "expected_signal": true,
+      "application_text": "The project will deploy solar powered drip irrigation on hillside farms facing recurrent drought. Soil moisture sensors will guide irrigation schedules, while weather forecasts support daily water allocation. The team will compare sensor guided plots with farmer managed plots and measure water use, bean yields, and farmer experience.",
+      "source_text": "The project will deploy solar powered drip irrigation on hillside farms facing recurrent drought. Soil moisture sensors will guide irrigation schedules, while weather forecasts support daily water allocation. The team will compare sensor guided plots with farmer managed plots and measure water use, bean yields, and farmer experience."
+    },
+    {
+      "case_id": "S002",
+      "category": "partial_overlap",
+      "expected_signal": true,
+      "application_text": "The study will evaluate affordable diagnostic support for district clinics. The team will recruit participants from four facilities and obtain consent before collecting records. Soil moisture sensors will guide irrigation schedules, while weather forecasts support daily water allocation. The team will compare sensor guided plots with farmer managed plots and measure water use, bean yields, and farmer experience. Results will be discussed with local health and agriculture partners.",
+      "source_text": "Soil moisture sensors will guide irrigation schedules, while weather forecasts support daily water allocation. The team will compare sensor guided plots with farmer managed plots and measure water use, bean yields, and farmer experience. The study also reports seasonal rainfall and maintenance costs."
+    },
+    {
+      "case_id": "S003",
+      "category": "paraphrased_passage",
+      "expected_signal": true,
+      "application_text": "We will use photographs taken by smallholder farmers to identify fungal disease in maize leaves before visible damage spreads. A computer vision model will classify field images and return an early warning to extension staff. Validation will compare model alerts with laboratory diagnosis across multiple growing seasons.",
+      "source_text": "Images of corn foliage captured in farming communities will help recognize plant infections before symptoms become widespread. The visual recognition system will notify agricultural advisers and its predictions will be checked against laboratory findings during repeated seasons."
+    },
+    {
+      "case_id": "S004",
+      "category": "shared_research_terminology",
+      "expected_signal": false,
+      "application_text": "This project applies machine learning to analyze agricultural data and improve crop production. Researchers will collect maize images, train classification models, and report evaluation metrics. Field partners will review the findings and recommend suitable extension activities for farmers.",
+      "source_text": "This project applies machine learning to analyze clinical data and improve maternal health services. Researchers will collect patient records, train risk models, and report evaluation metrics. Hospital partners will review the findings and recommend suitable referral activities for nurses."
+    },
+    {
+      "case_id": "S005",
+      "category": "shared_bibliographic_references",
+      "expected_signal": false,
+      "application_text": "Our project measures household access to clean water through seasonal surveys. The analysis will compare access across districts and identify service gaps for local planning. References: Kamau, A. Water services in rural districts. Journal of Community Planning, 2021. Niyonzima, J. Household water access and public infrastructure. Regional Development Review, 2023.",
+      "source_text": "Our project measures access to community health facilities through seasonal surveys. The analysis will compare service use across districts and identify care gaps for local planning. References: Kamau, A. Water services in rural districts. Journal of Community Planning, 2021. Niyonzima, J. Household water access and public infrastructure. Regional Development Review, 2023."
+    },
+    {
+      "case_id": "S006",
+      "category": "standard_methodology_boilerplate",
+      "expected_signal": false,
+      "application_text": "Ethical approval will be obtained from the institutional research ethics committee before recruitment begins. All participants will receive information about the study and may withdraw without penalty. Personal records will be stored securely, access will be limited to authorized staff, and findings will be reported in aggregate form.",
+      "source_text": "Ethical approval will be obtained from the institutional research ethics committee before recruitment begins. All participants will receive information about the study and may withdraw without penalty. Personal records will be stored securely, access will be limited to authorized staff, and findings will be reported in aggregate form."
+    },
+    {
+      "case_id": "S007",
+      "category": "institutional_template",
+      "expected_signal": false,
+      "application_text": "The host institution will provide office space and access to standard administrative services. Project staff will follow institutional procurement procedures and submit quarterly financial reports. The principal investigator will coordinate routine communication with the grants office and retain project records according to the host institution schedule.",
+      "source_text": "The host institution will provide office space and access to standard administrative services. Project staff will follow institutional procurement procedures and submit quarterly financial reports. The principal investigator will coordinate routine communication with the grants office and retain project records according to the host institution schedule."
+    },
+    {
+      "case_id": "S008",
+      "category": "same_topic_independent_work",
+      "expected_signal": false,
+      "application_text": "Our team will install low cost water sensors near village boreholes and publish a public dashboard of monthly measurements. Community technicians will collect samples, calibrate equipment, and discuss maintenance plans with district water officers. The project focuses on practical access to monitoring tools.",
+      "source_text": "The proposed laboratory study will examine chemical contaminants in treated drinking water using controlled bench experiments. Researchers will compare laboratory assays with international quality standards and analyze the stability of selected compounds under different storage conditions."
+    },
+    {
+      "case_id": "S009",
+      "category": "asymmetric_source_application_overlap",
+      "expected_signal": true,
+      "application_text": "We will enroll rural clinics and evaluate a referral dashboard for maternal care. The system will record antenatal visits and missed appointments. A clinical risk engine identifies women requiring escalation and supports referral from community providers to facilities. Evaluation will compare referral completion before and after deployment.",
+      "source_text": "A clinical risk engine identifies women requiring escalation and supports referral from community providers to facilities. The earlier project also examined transport barriers, facility staffing, and follow up after referral. It included interviews with nurses, patients, district managers, and community health workers across several regions."
+    },
+    {
+      "case_id": "S010",
+      "category": "unrelated_documents",
+      "expected_signal": false,
+      "application_text": "The research team will map seasonal migration routes for pollinating insects in restored woodland. Field observations will be combined with satellite imagery to estimate habitat continuity and identify priority locations for conservation activities.",
+      "source_text": "The project will test a mobile appointment reminder service in community clinics. Researchers will interview patients about access barriers and measure attendance at follow up visits over a twelve month implementation period."
+    }
+  ]
+}

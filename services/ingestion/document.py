@@ -83,8 +83,8 @@ def extract_document(path: str, source_id: str) -> ExtractedDocument:
             source_id, file.name, "application/octet-stream", "", None,
             "unsupported_type", file_sha256, (), f"Unsupported file type: {suffix or 'none'}",
         )
-    except (OSError, RuntimeError, ValueError, zipfile.BadZipFile) as exc:
+    except (OSError, RuntimeError, ValueError, zipfile.BadZipFile):
         return ExtractedDocument(
             source_id, file.name, "application/octet-stream", "", None,
-            "extraction_failed", None, (), str(exc),
+            "extraction_failed", None, (), "Document extraction failed",
         )

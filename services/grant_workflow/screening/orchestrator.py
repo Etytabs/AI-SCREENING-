@@ -153,12 +153,12 @@ class ScreeningOrchestrator:
         for provider in self.providers:
             try:
                 historical = provider.historical_records()
-            except ProviderUnavailable as exc:
-                coverage.append(SourceCoverage(provider.provider_id, RunState.BLOCKED, f"{source_failure_message(provider.provider_id)} {exc}"))
+            except ProviderUnavailable:
+                coverage.append(SourceCoverage(provider.provider_id, RunState.BLOCKED, source_failure_message(provider.provider_id)))
                 continue
             except Exception as exc:
-                logger.exception("Provider %s failed", provider.provider_id)
-                coverage.append(SourceCoverage(provider.provider_id, RunState.FAILED, f"{source_failure_message(provider.provider_id)} {exc}"))
+                logger.error("Provider %s failed (%s)", provider.provider_id, type(exc).__name__)
+                coverage.append(SourceCoverage(provider.provider_id, RunState.FAILED, source_failure_message(provider.provider_id)))
                 continue
             records.extend(
                 ComparisonRecord(
@@ -243,7 +243,7 @@ class ScreeningOrchestrator:
                     + ("; some submitted proposals could not be persisted" if incomplete else ""),
                 ))
             except Exception:
-                logger.exception("Duplication comparison library unavailable")
+                logger.error("Duplication comparison library unavailable")
                 coverage.append(SourceCoverage(source_id, RunState.FAILED, source_failure_message(source_id)))
         return replace(ctx, documents=narrative_documents(ctx.documents), universe=records, coverage=coverage)
 
@@ -267,7 +267,15 @@ class ScreeningOrchestrator:
             )
             for work in result.records
         ]
-        coverage = [*ctx.coverage, SourceCoverage(self.literature.provider_id, result.state, result.message)]
+        coverage = [*ctx.coverage, SourceCoverage(
+            self.literature.provider_id,
+            result.state,
+            result.message,
+            result.retrieved_at,
+            result.retrieved_records,
+            len(result.records),
+            result.unusable_records,
+        )]
         return replace(ctx, universe=records, coverage=coverage)
 
     def _stage_failure(self, ctx: ScreeningContext, run_id: str, stage: StageName, exc: Exception) -> Finding:
@@ -366,17 +374,25 @@ class ScreeningOrchestrator:
                 elif stage == StageName.TEXT_SIMILARITY:
                     stage_ctx = self._plagiarism_context(ctx)
                     run.coverage["plagiarism_sources"] = [
-                        {"source_id": c.source_id, "state": c.state.value, "message": c.message}
+                        {
+                            "source_id": c.source_id,
+                            "state": c.state.value,
+                            "message": c.message,
+                            "retrieved_at": c.retrieved_at.isoformat() if c.retrieved_at else None,
+                            "records_returned": c.records_returned,
+                            "records_compared": c.records_compared,
+                            "records_unusable": c.records_unusable,
+                        }
                         for c in stage_ctx.coverage
                     ]
                 produced = function(stage_ctx, run.id)
                 findings.extend(produced)
                 self._set_stage(run, stage, StageStatus.COMPLETE, f"{len(produced)} finding(s)")
             except Exception as exc:
-                logger.exception("Stage %s failed for run %s", stage, run.id)
+                logger.error("Stage %s failed for run %s (%s)", stage, run.id, type(exc).__name__)
                 failed_stages += 1
                 findings.append(self._stage_failure(ctx, run.id, stage, exc))
-                self._set_stage(run, stage, StageStatus.FAILED, f"{type(exc).__name__}: {exc}")
+                self._set_stage(run, stage, StageStatus.FAILED, f"{type(exc).__name__}: stage failed")
 
         self._set_stage(run, StageName.EVIDENCE, StageStatus.RUNNING)
         findings, stats = self._validate_evidence(findings)

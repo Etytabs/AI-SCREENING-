@@ -13,15 +13,12 @@ in the call's own RFP are excluded, because applicants legitimately quote the ca
 A percentage is a text measure, never a verdict: a reviewer confirms whether overlap is
 plagiarism, correct quotation, or the applicant's own earlier work.
 """
-import os
-
-from ml.evidence.state import EvidenceRelationship
+from ml.evidence.state import EvidenceRelationship, RunState
 from ml.plagiarism.overlap import shared_passages
 from ml.scoring.confidence import calibrate_confidence
 from ml.semantic_matching.duplication import compare_proposals, profile_proposal
 from services.grant_workflow.models import (
     Finding,
-    FindingEvidence,
     FindingStatus,
     FindingType,
     SimilarityMatch,
@@ -114,7 +111,11 @@ def evaluate_text_similarity(ctx: ScreeningContext, run_id: str) -> list[Finding
         "grant_call_id": ctx.grant_call.id, "type": FindingType.PLAGIARISM, "title": "Plagiarism check",
     }
     narrative = ctx.narrative
-    external_available = any(r.source_type in EXTERNAL_SOURCE_TYPES for r in ctx.universe)
+    literature_coverage = next(
+        (item for item in ctx.coverage if item.source_id == "openalex"), None
+    )
+    literature_state = literature_coverage.state if literature_coverage else RunState.BLOCKED
+    literature_searched = literature_state in {RunState.COMPLETE, RunState.PARTIAL}
     details: dict = {
         "compared_records": len(ctx.universe),
         "published_works_compared": sum(1 for r in ctx.universe if r.source_type in EXTERNAL_SOURCE_TYPES),
@@ -123,9 +124,24 @@ def evaluate_text_similarity(ctx: ScreeningContext, run_id: str) -> list[Finding
         "min_phrase_coverage": MIN_PHRASE_COVERAGE,
         "moderate_index": MODERATE_INDEX,
         "high_index": HIGH_INDEX,
-        "published_literature_searched": external_available,
+        "published_literature_searched": literature_searched,
+        "published_literature_attempted": literature_state != RunState.BLOCKED,
+        "published_literature_state": literature_state.value,
+        "published_literature_message": literature_coverage.message if literature_coverage else "",
+        "published_literature_retrieved_at": (
+            literature_coverage.retrieved_at.isoformat()
+            if literature_coverage and literature_coverage.retrieved_at else None
+        ),
         "source_coverage": [
-            {"source_id": item.source_id, "state": item.state.value, "message": item.message}
+            {
+                "source_id": item.source_id,
+                "state": item.state.value,
+                "message": item.message,
+                "retrieved_at": item.retrieved_at.isoformat() if item.retrieved_at else None,
+                "records_returned": item.records_returned,
+                "records_compared": item.records_compared,
+                "records_unusable": item.records_unusable,
+            }
             for item in ctx.coverage
         ],
         "coverage_complete": not ctx.unavailable_sources,
@@ -232,6 +248,7 @@ def evaluate_text_similarity(ctx: ScreeningContext, run_id: str) -> list[Finding
             lexical_score=round(item.lexical_score, 4),
             query_coverage=round(verbatim_share, 4),
             source_coverage=round(item.source_coverage, 4),
+            phrase_coverage=round(item.phrase_coverage, 4),
             query_passage=query_passage,
             matched_passage=matched_passage,
             matching_concepts=shared_concepts(query_passage or "", matched_passage or ""),
@@ -255,13 +272,18 @@ def evaluate_text_similarity(ctx: ScreeningContext, run_id: str) -> list[Finding
                 f"Similarity index 0.0%. No shared passage of {MIN_PASSAGE_WORDS}+ words and no "
                 f"reworded content-phrase overlap above {MIN_PHRASE_COVERAGE:.0%} was found across "
                 f"{len(ctx.universe)} compared record(s)"
-                + (", including published literature from OpenAlex." if external_available
-                   else "; published literature was not searched.")
+                + (
+                    f", including {details['published_works_compared']} published work(s) with usable abstracts from OpenAlex."
+                    if literature_searched else
+                    "; published literature search failed or returned incomplete results."
+                    if literature_state == RunState.FAILED else
+                    "; published literature was not searched."
+                )
                 + " This applies only to the records searched and is not evidence of originality."
                 + coverage_note(ctx)
             ),
             recommended_action=(
-                "No action required." if external_available
+                "No action required." if literature_searched
                 else "Configure OpenAlex to also compare this proposal against published literature."
             ),
             method=METHOD, details=details,

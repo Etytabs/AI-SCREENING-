@@ -10,6 +10,7 @@ import os
 import re
 from collections import Counter
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 
 from ml.evidence.state import RunState
 from services.research_sources.connectors import (
@@ -31,7 +32,7 @@ MIN_ABSTRACT_WORDS = 25
 _KEYWORD_LINE = re.compile(r"^\s*(?:key\s?words?|index terms)\s*[:\-–]\s*(.+)$", re.I | re.M)
 _TITLE_NOISE = re.compile(r"\s*\((?:[^()]{0,60})\)\s*$")
 # Running headers and footers a PDF repeats on every page are not the title.
-_PAGE_FURNITURE = re.compile(r"(\|\s*page\s*\d+|^page\s+\d+|^\d+\s*$)", re.I)
+_PAGE_FURNITURE = re.compile(r"(\|\s*page\s*\d+\b|^page\s+\d+\b|^\d+\s*$)", re.I)
 _TITLE_STOP = re.compile(
     r"^\s*(?:\d+[.)]|abstract|introduction|summary|background|key\s?words?|index terms|"
     r"contents|table of|title\s*:|applicant\s*:|by\s+)",
@@ -59,6 +60,9 @@ class LiteratureSearch:
     message: str = ""
     queries: tuple[str, ...] = ()
     errors: tuple[str, ...] = field(default=())
+    retrieved_records: int = 0
+    unusable_records: int = 0
+    retrieved_at: datetime | None = None
 
 
 def _clean(text: str) -> str:
@@ -168,6 +172,14 @@ def openalex_enabled() -> bool:
     return bool(openalex_api_key() or openalex_contact())
 
 
+def _record_key(record: ResearchRecord) -> str:
+    doi = (record.doi or "").strip().casefold()
+    doi = re.sub(r"^(?:https?://(?:dx\.)?doi\.org/|doi:\s*)", "", doi)
+    if doi:
+        return f"doi:{doi.rstrip(' .')}"
+    return f"record:{record.record_id.strip().casefold()}"
+
+
 class PublishedLiteratureSource:
     """OpenAlex-backed comparison source for the plagiarism check."""
 
@@ -198,27 +210,45 @@ class PublishedLiteratureSource:
             )
         found: dict[str, ResearchRecord] = {}
         errors: list[str] = []
-        for query in queries:
+        retrieved_records = 0
+        unusable_records = 0
+        for query_index, query in enumerate(queries, start=1):
             try:
                 results = self._search(query, self.results_per_query)
             except Exception as exc:
-                logger.warning("OpenAlex search failed for %r: %s", query, exc)
-                errors.append(f"{type(exc).__name__}: {exc}")
+                status_code = getattr(exc, "code", None)
+                error = (
+                    f"{type(exc).__name__} (HTTP {status_code})"
+                    if isinstance(status_code, int) else type(exc).__name__
+                )
+                logger.warning("OpenAlex query %d failed (%s)", query_index, error)
+                errors.append(error)
                 continue
+            retrieved_records += len(results)
             for record in results:
-                # Only works with a substantive abstract can be text-compared.
-                if record.record_id and len(record.abstract.split()) >= MIN_ABSTRACT_WORDS:
-                    found.setdefault(record.record_id, record)
+                if not record.record_id or len(record.abstract.split()) < MIN_ABSTRACT_WORDS:
+                    unusable_records += 1
+                    continue
+                found.setdefault(_record_key(record), record)
         records = tuple(found.values())
+        retrieved_at = datetime.now(UTC)
         if errors and not records:
             return LiteratureSearch(
                 state=RunState.FAILED, queries=tuple(queries), errors=tuple(errors),
+                retrieved_records=retrieved_records, unusable_records=unusable_records,
+                retrieved_at=retrieved_at,
                 message=f"OpenAlex could not be searched ({errors[0]}); published literature was not compared.",
             )
-        state = RunState.PARTIAL if errors else RunState.COMPLETE
+        state = RunState.PARTIAL if errors or unusable_records else RunState.COMPLETE
+        duplicate_records = retrieved_records - unusable_records - len(records)
         message = (
-            f"{len(records)} published work(s) with abstracts compared from "
-            f"{len(queries)} query(ies)"
+            f"{len(records)} published work(s) with usable abstracts compared from "
+            f"{len(queries)} query(ies); {retrieved_records} record(s) returned"
+            + (f"; {unusable_records} record(s) lacked an identifier or usable abstract" if unusable_records else "")
+            + (f"; {duplicate_records} duplicate work record(s) removed" if duplicate_records else "")
             + (f"; {len(errors)} query(ies) failed" if errors else "")
         )
-        return LiteratureSearch(records, state, message, tuple(queries), tuple(errors))
+        return LiteratureSearch(
+            records, state, message, tuple(queries), tuple(errors),
+            retrieved_records, unusable_records, retrieved_at,
+        )

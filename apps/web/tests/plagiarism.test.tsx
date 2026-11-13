@@ -15,7 +15,7 @@ const publishedMatch: SimilarityMatch = {
   explanation: "2 verbatim passage(s), longest 21 words, covering 18.0% of this proposal.",
   method: "word_shingle_8+content_phrase_overlap", data_origin: "PROVIDER",
   query_passage: "The project designs solar-powered drip irrigation schedules for hillside farms facing recurrent drought.",
-  query_coverage: 0.18, source_coverage: 0.42, year: 2019, outcome: "Published",
+  query_coverage: 0.18, phrase_coverage: 0.31, source_coverage: 0.42, year: 2019, outcome: "Published",
 };
 
 const searchedDetails = {
@@ -31,19 +31,26 @@ describe("plagiarism evidence", () => {
     render(<EvidenceDrawer detail={fx.findingDetail({ type: "plagiarism", matches: [publishedMatch], details: searchedDetails })} {...props} />);
     const panel = screen.getByRole("region", { name: "Similarity index" });
     // the headline is the published-work overlap, taken from the match itself
-    expect(within(panel).getByRole("img", { name: "Highest published-source similarity score 42 percent" })).toBeTruthy();
+    expect(within(panel).getByRole("img", { name: "Highest per-source text-overlap score 42 percent" })).toBeTruthy();
     const split = within(panel).getByRole("list", { name: "Similarity breakdown" });
     expect(within(split).getByText("18%").parentElement?.textContent).toContain("verbatim passage coverage");
+    expect(within(split).getByText("31%").parentElement?.textContent).toContain("shared proposal phrase coverage");
     expect(within(split).getByText("42%").parentElement?.textContent).toContain("published-source phrase coverage");
     expect(within(split).getByText("1").parentElement?.textContent).toContain("published source");
-    expect(within(panel).getByText("24 published works compared from OpenAlex.")).toBeTruthy();
+    expect(within(panel).getByText("24 published works with usable abstracts compared from OpenAlex.")).toBeTruthy();
   });
 
   it("shows only the index, the matched sources and the decision, so reviewers read three sections", () => {
-    render(<EvidenceDrawer detail={fx.findingDetail({ type: "plagiarism", matches: [publishedMatch], details: searchedDetails })} {...props} />);
+    render(<EvidenceDrawer detail={fx.findingDetail({
+      type: "plagiarism",
+      matches: [publishedMatch],
+      details: searchedDetails,
+      method: "plagiarism_similarity_index_v1",
+      explanation: "Shared wording was found for reviewer assessment; similarity is not proof of plagiarism.",
+    })} {...props} />);
     expect(screen.queryByText("AI signal")).toBeNull();
     expect(screen.queryByText(/^Evidence \(/)).toBeNull();
-    expect(screen.queryByText(/^Method:/)).toBeNull();
+    expect(screen.getByText(/^Method:/)).toBeTruthy();
     expect(screen.queryByText(/Suggested next step/)).toBeNull();
     expect(screen.getByText("Published-literature similarity")).toBeTruthy();
     expect(screen.getByText("Where the text was found (1)")).toBeTruthy();
@@ -71,7 +78,12 @@ describe("plagiarism evidence", () => {
   });
 
   it("reveals the source, its publication date and the copied text only after More details", () => {
-    render(<EvidenceDrawer detail={fx.findingDetail({ type: "plagiarism", matches: [publishedMatch], details: searchedDetails })} {...props} />);
+    render(<EvidenceDrawer detail={fx.findingDetail({
+      type: "plagiarism",
+      matches: [publishedMatch],
+      details: searchedDetails,
+      method: "plagiarism_similarity_index_v1",
+    })} {...props} />);
     expect(screen.getByText("Where the text was found (1)")).toBeTruthy();
     expect(screen.getByText(publishedMatch.title!)).toBeTruthy();
     expect(screen.queryByText("2019-04-15")).toBeNull();
@@ -106,10 +118,39 @@ describe("plagiarism evidence", () => {
     expect(screen.queryByText(/Where the text was found/)).toBeNull();
   });
 
+  it("distinguishes a completed search with no text-comparable works from a no-match result", () => {
+    const detail = fx.findingDetail({
+      type: "plagiarism", matches: [], details: {
+        published_works_compared: 0,
+        published_literature_searched: true,
+        published_literature_state: "PARTIAL",
+        published_literature_message: "0 works with usable abstracts compared; 1 record lacked an abstract.",
+      },
+    });
+    render(<EvidenceDrawer detail={detail} {...props} />);
+    const panel = screen.getByRole("region", { name: "Similarity index" });
+    expect(within(panel).getByText(/OpenAlex search was incomplete/)).toBeTruthy();
+    expect(within(panel).getByText(/not a zero-match result/)).toBeTruthy();
+    expect(within(panel).getByText(/Check source availability and screening coverage/)).toBeTruthy();
+  });
+
+  it("shows failed source state instead of reporting that literature was not searched", () => {
+    const detail = fx.findingDetail({
+      type: "plagiarism", matches: [], details: {
+        published_literature_searched: false,
+        published_literature_state: "FAILED",
+        published_literature_message: "ConnectionError: unavailable",
+      },
+    });
+    render(<EvidenceDrawer detail={detail} {...props} />);
+    expect(screen.getByText(/OpenAlex search failed/)).toBeTruthy();
+    expect(screen.queryByText(/Published literature was not searched/)).toBeNull();
+  });
+
   it("does not invent coverage values when a match has no coverage measures", () => {
-    const match = { ...publishedMatch, query_coverage: null, source_coverage: null };
+    const match = { ...publishedMatch, query_coverage: null, phrase_coverage: null, source_coverage: null };
     render(<EvidenceDrawer detail={fx.findingDetail({ type: "plagiarism", matches: [match], details: searchedDetails })} {...props} />);
     const split = screen.getByRole("list", { name: "Similarity breakdown" });
-    expect(within(split).getAllByText("Not available")).toHaveLength(2);
+    expect(within(split).getAllByText("Not available")).toHaveLength(3);
   });
 });

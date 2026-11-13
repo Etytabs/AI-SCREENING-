@@ -198,7 +198,9 @@ def test_import_api_authorization_validation_and_conflict(archive_client):
     assert "text" not in body
     assert archive_client.get("/api/v1/duplication/projects").json() == [body]
     duplicate = archive_client.post("/api/v1/duplication/projects", files=files, data=data, headers=ADMIN)
-    assert duplicate.status_code == 409 and body["id"] in duplicate.json()["detail"]
+    assert duplicate.status_code == 409
+    assert duplicate.json()["detail"] == "This project is already in the comparison library"
+    assert body["id"] not in duplicate.json()["detail"]
     invalid = archive_client.post("/api/v1/duplication/projects", files=files, data={**data, "source_type": "invented"}, headers=ADMIN)
     assert invalid.status_code == 422
     empty_title = archive_client.post("/api/v1/duplication/projects", files=files, data={**data, "title": "  "}, headers=ADMIN)

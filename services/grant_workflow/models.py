@@ -406,6 +406,7 @@ class SimilarityMatch(BaseModel):
     query_page: int | None = None
     query_document_id: str | None = None
     query_coverage: float | None = None
+    phrase_coverage: float | None = None
     source_coverage: float | None = None
     year: int | None = None
     outcome: str | None = None

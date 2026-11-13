@@ -1,4 +1,5 @@
 import io
+import logging
 import zipfile
 
 import pytest
@@ -12,7 +13,7 @@ from services.grant_workflow.demo_data import (
     DEMO_RFP_TEXT,
 )
 from services.grant_workflow.documents import UploadedFile
-from services.grant_workflow.jobs import InlineJobRunner
+from services.grant_workflow.jobs import InlineJobRunner, _guarded
 from services.grant_workflow.models import (
     Application,
     CriterionCategory,
@@ -96,6 +97,19 @@ def files(**named: str | bytes) -> list[UploadedFile]:
 
 def findings_by_code(service, application_id):
     return {f.details.get("criterion_code", f.type.value): f for f in service.list_findings(application_id)}
+
+
+def test_background_job_error_log_omits_exception_message(caplog):
+    secret = "SYNTHETIC_JOB_SECRET_251c"
+
+    def fail():
+        raise RuntimeError(secret)
+
+    with caplog.at_level(logging.ERROR):
+        _guarded(fail)
+
+    assert secret not in caplog.text
+    assert "RuntimeError" in caplog.text
 
 
 @pytest.fixture(scope="module")

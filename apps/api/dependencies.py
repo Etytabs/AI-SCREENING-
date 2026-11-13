@@ -48,7 +48,7 @@ def optional_actor(x_user_role: RoleHeader = None, x_user_id: UserHeader = None)
     try:
         role = Role(x_user_role.strip().upper())
     except ValueError as exc:
-        raise HTTPException(status_code=400, detail=f"Unknown role {x_user_role!r}") from exc
+        raise HTTPException(status_code=400, detail="Unknown user role") from exc
     return Actor(user_id=(x_user_id or f"demo-{role.value.lower()}").strip(), role=role)
 
 

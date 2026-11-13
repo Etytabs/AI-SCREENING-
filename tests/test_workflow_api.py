@@ -1,9 +1,11 @@
+import logging
 from io import BytesIO
 from zipfile import ZIP_DEFLATED, ZipFile
 
 import pytest
 from fastapi.testclient import TestClient
 
+import apps.api.routes.publications as publication_routes
 from apps.api.dependencies import get_service
 from apps.api.main import app
 from services.grant_workflow.demo_data import DEMO_RFP_TEXT
@@ -44,7 +46,10 @@ def create_ready_call(client) -> str:
 def test_identity_headers_and_roles(client):
     assert client.post("/api/v1/grants", json={"name": "x", "organization": "y"}).status_code == 401
     assert client.post("/api/v1/grants", json={"name": "x", "organization": "y"}, headers=REVIEWER).status_code == 403
-    assert client.post("/api/v1/grants", json={"name": "x", "organization": "y"}, headers={"X-User-Role": "ROOT"}).status_code == 400
+    secret_role = "SYNTHETIC_ROLE_SECRET_0cf2"
+    unknown_role = client.post("/api/v1/grants", json={"name": "x", "organization": "y"}, headers={"X-User-Role": secret_role})
+    assert unknown_role.status_code == 400
+    assert secret_role not in unknown_role.text
     session = client.get("/api/v1/session", headers=REVIEWER).json()
     assert session["role"] == "REVIEWER" and "not authenticated" in session["notice"]
 
@@ -52,6 +57,85 @@ def test_identity_headers_and_roles(client):
 def test_not_found_and_validation(client):
     assert client.get("/api/v1/grants/missing").status_code == 404
     assert client.post("/api/v1/grants", json={"name": "", "organization": "y"}, headers=ADMIN).status_code == 422
+
+
+def test_validation_and_unhandled_errors_redact_sensitive_values(client, monkeypatch, caplog):
+    secret = "SYNTHETIC_ERROR_SECRET_9f38"
+    invalid = client.post(
+        "/api/v1/grants",
+        json={"name": {"private": secret}, "organization": "Fund"},
+        headers=ADMIN,
+    )
+    assert invalid.status_code == 422
+    assert secret not in invalid.text
+
+    service = app.dependency_overrides[get_service]()
+
+    def fail_create(*_args, **_kwargs):
+        raise RuntimeError(secret)
+
+    monkeypatch.setattr(service, "create_call", fail_create)
+    with caplog.at_level(logging.ERROR):
+        failed = client.post("/api/v1/grants", json={"name": "Test", "organization": "Fund"}, headers=ADMIN)
+    assert failed.status_code == 500
+    assert failed.json() == {"detail": "Internal server error"}
+    assert secret not in failed.text
+    assert secret not in caplog.text
+    assert "RuntimeError" in caplog.text
+
+
+def test_publication_source_errors_do_not_expose_exception_text(client, monkeypatch, caplog):
+    secret = "SYNTHETIC_SOURCE_SECRET_3b17"
+
+    def fail_search(*_args, **_kwargs):
+        raise RuntimeError(secret)
+
+    monkeypatch.setattr(publication_routes, "search_source", fail_search)
+    with caplog.at_level(logging.WARNING):
+        failed_search = client.get("/api/v1/publications/search", params={"q": "grant research"})
+        compared = client.get(
+            "/api/v1/publications/compare",
+            params={"q": "grant research", "sources": "crossref"},
+        )
+    assert failed_search.status_code == 502
+    assert secret not in failed_search.text
+    assert compared.status_code == 200
+    assert compared.json()["sources_with_errors"] == [{"source": "crossref", "error": "Search failed"}]
+    assert secret not in compared.text
+    assert secret not in caplog.text
+    assert "RuntimeError" in caplog.text
+
+
+def test_document_extraction_error_is_redacted_from_upload_response(client, monkeypatch):
+    import services.ingestion.document as document_module
+
+    secret = "SYNTHETIC_DOCUMENT_SECRET_a82d"
+    filename_secret = "SYNTHETIC_FILENAME_SECRET.zip"
+    call_id = create_ready_call(client)
+    invalid_archive = client.post(
+        f"/api/v1/grants/{call_id}/applications/batch",
+        files=[("files", (filename_secret, b"not a zip archive", "application/zip"))],
+        headers=ADMIN,
+    )
+    assert invalid_archive.status_code == 422
+    assert filename_secret not in invalid_archive.text
+
+    def fail_hash(_path):
+        raise OSError(secret)
+
+    monkeypatch.setattr(document_module, "_file_sha256", fail_hash)
+    response = client.post(
+        f"/api/v1/grants/{call_id}/applications",
+        files=[("files", ("proposal.txt", b"proposal content", "text/plain"))],
+        headers=ADMIN,
+    )
+    assert response.status_code == 201
+    assert secret not in response.text
+    assert response.json()["errors"] == ["An uploaded document could not be processed: Document extraction failed"]
+    application_id = response.json()["applications_created"][0]
+    detail = client.get(f"/api/v1/applications/{application_id}")
+    assert detail.status_code == 200
+    assert secret not in detail.text
 
 
 def test_full_workflow_over_http(client):

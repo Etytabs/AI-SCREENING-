@@ -227,7 +227,15 @@ export interface ScreeningRun {
   stages: StageState[];
   finding_ids: string[];
   coverage: {
-    sources?: { source_id: string; state: RunState; message: string }[];
+    sources?: {
+      source_id: string;
+      state: RunState;
+      message: string;
+      retrieved_at?: string | null;
+      records_returned?: number | null;
+      records_compared?: number | null;
+      records_unusable?: number | null;
+    }[];
     criteria_applied?: number;
     evidence?: { evidence_items: number; valid_citations: number; downgraded_findings: number };
   };
@@ -302,6 +310,7 @@ export interface SimilarityMatch {
   query_document_id?: string | null;
   matched_page?: number | null;
   query_coverage?: number | null;
+  phrase_coverage?: number | null;
   source_coverage?: number | null;
   year?: number | null;
   outcome?: string | null;

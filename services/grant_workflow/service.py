@@ -518,7 +518,7 @@ class GrantWorkflowService:
         except Exception:
             # Archiving is independent of submission and eligibility; expose a
             # coverage failure to duplication instead of rejecting the upload.
-            logger.exception("Could not archive application %s for duplication", application.id)
+            logger.error("Could not archive application %s for duplication", application.id)
             self.duplication_archive_errors[application.id] = "A submitted proposal could not be saved to the comparison library."
 
     def _open_call(self, call_id: str) -> GrantCall:
@@ -556,7 +556,7 @@ class GrantWorkflowService:
                 continue
             meta, _ = self._stage_document(actor, application.id, upload)
             if meta.error:
-                result.errors.append(f"{upload.path}: {meta.error}")
+                result.errors.append(f"An uploaded document could not be processed: {meta.error}")
             if digest:
                 hashes[digest] = f"{application.application_reference}/{upload.filename}"
             result.documents_associated += 1
@@ -621,7 +621,7 @@ class GrantWorkflowService:
                     result.applications_created.append(application.id)
                 else:
                     self.repo.delete(Application, application.id)
-                    result.errors.append(f"{upload.path}: no document could be associated")
+                    result.errors.append("An uploaded document could not be associated")
         self.audit.record(
             "applications.batch_uploaded", actor.user_id, call_id, call_id,
             files_received=result.files_received, created=len(result.applications_created),

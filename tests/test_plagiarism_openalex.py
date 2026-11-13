@@ -1,4 +1,7 @@
 """Plagiarism check against published literature (OpenAlex), without live network calls."""
+from dataclasses import replace
+from urllib.error import HTTPError
+
 import pytest
 
 from ml.evidence.state import RunState
@@ -95,6 +98,27 @@ def test_search_openalex_maps_fields_and_sends_credentials(monkeypatch):
     assert record.full_text_url == "https://acm.org/1.pdf"
 
 
+def test_search_openalex_caps_result_page_and_keeps_sparse_records(monkeypatch):
+    seen = {}
+
+    def fake_get(url, headers=None):
+        seen["url"] = url
+        return b'{"results":[{"id":"https://openalex.org/W321"}]}'
+
+    monkeypatch.setattr("services.research_sources.connectors._get", fake_get)
+    [record] = search_openalex("topic query", rows=500)
+
+    from urllib.parse import parse_qs, urlparse
+
+    params = parse_qs(urlparse(seen["url"]).query)
+    assert params["per-page"] == ["50"]
+    assert "cursor" not in params
+    assert record.record_id == "W321"
+    assert record.title == ""
+    assert record.abstract == ""
+    assert record.source_url == "https://openalex.org/W321"
+
+
 PDF_LIKE = """Exploring Factors Associated with Research Involvement of
 Undergraduate Students at the College of Medicine and
 Health Sciences, University of Rwanda
@@ -129,11 +153,36 @@ def test_document_title_stops_before_authors_headings_and_notices():
     )
 
 
+def test_document_title_ignores_page_number_furniture():
+    assert document_title("Page 1\nA Study of Maize Disease Detection\nAbstract\nText") == (
+        "A Study of Maize Disease Detection"
+    )
+    assert "Page 1" not in build_queries(
+        None, "Page 1\nA Study of Maize Disease Detection\n" + PROPOSAL
+    )
+
+
 def test_build_queries_uses_title_keywords_and_terms():
     queries = build_queries("Unraveling the Physics of Light at Scale (UNRAVEL)", PROPOSAL)
     assert queries[0] == "Unraveling the Physics of Light at Scale"
     assert "differentiable rendering" in queries[1]
     assert len(queries) <= 3 and len(set(queries)) == len(queries)
+
+
+def test_build_queries_include_distinct_substantial_sections():
+    first = " ".join(
+        ["maize pathogen image classification"] * 15
+    )
+    second = " ".join(
+        ["maternal referral clinical risk"] * 15
+    )
+    queries = build_queries(
+        None,
+        "1. Crop imaging\n" + first + "\n"
+        "2. Maternal referral\n" + second,
+    )
+    assert any(all(term in query for term in ("maize", "pathogen", "image", "classification")) for query in queries)
+    assert any(all(term in query for term in ("maternal", "referral", "clinical", "risk")) for query in queries)
 
 
 def test_literature_source_reports_blocked_when_not_configured(monkeypatch):
@@ -158,7 +207,33 @@ def test_literature_source_drops_abstract_less_works_and_deduplicates():
     result = source.search(["one", "two"])
     assert calls == ["one", "two"]
     assert [r.record_id for r in result.records] == ["W2000000001"]
+    assert result.state == RunState.PARTIAL
+    assert result.retrieved_records == 4
+    assert result.unusable_records == 2
+    assert result.retrieved_at is not None
+    assert "1 duplicate work record(s) removed" in result.message
+
+
+def test_literature_source_deduplicates_distinct_openalex_ids_by_doi():
+    duplicate = replace(
+        WORK,
+        record_id="W2000000002",
+        doi="https://doi.org/" + WORK.doi.upper(),
+    )
+    result = PublishedLiteratureSource(search=lambda query, rows: [WORK, duplicate]).search(["query"])
+    assert [record.record_id for record in result.records] == ["W2000000001"]
     assert result.state == RunState.COMPLETE
+    assert "1 duplicate work record(s) removed" in result.message
+
+
+def test_literature_source_does_not_report_unusable_results_as_zero_matches():
+    no_abstract = replace(WORK, record_id="W-no-abstract", abstract="")
+    result = PublishedLiteratureSource(search=lambda query, rows: [no_abstract]).search(["query"])
+    assert result.state == RunState.PARTIAL
+    assert result.records == ()
+    assert result.retrieved_records == 1
+    assert result.unusable_records == 1
+    assert "lacked an identifier or usable abstract" in result.message
 
 
 def test_literature_source_reports_partial_when_a_query_fails():
@@ -179,6 +254,28 @@ def test_literature_source_failure_is_not_a_clean_result():
     result = PublishedLiteratureSource(search=broken).search(["anything"])
     assert result.state == RunState.FAILED and not result.records
     assert "could not be searched" in result.message
+
+
+def test_openalex_rate_limit_is_reported_without_echoing_query_or_credentials(caplog):
+    private_query = "confidential unpublished proposal query"
+
+    def rate_limited(query, rows):
+        raise HTTPError(
+            "https://api.openalex.org/works?api_key=private-key",
+            429,
+            "rate limited",
+            {},
+            None,
+        )
+
+    result = PublishedLiteratureSource(search=rate_limited).search([private_query])
+
+    assert result.state == RunState.FAILED
+    assert "HTTP 429" in result.message
+    assert private_query not in result.message
+    assert "private-key" not in result.message
+    assert private_query not in caplog.text
+    assert "private-key" not in caplog.text
 
 
 def _run_plagiarism(service, application_id):
@@ -205,6 +302,10 @@ def test_published_work_is_reported_with_percentage_and_publication_details():
     finding = _run_plagiarism(service, apps["DEMO-APP-003"].id)
 
     assert finding.details["published_literature_searched"] is True
+    assert finding.details["published_literature_state"] == RunState.COMPLETE.value
+    assert finding.details["published_literature_retrieved_at"]
+    assert finding.details["source_coverage"][-1]["records_returned"] == 2
+    assert finding.details["source_coverage"][-1]["records_compared"] == 1
     assert finding.details["published_works_compared"] == 1
     published = [m for m in finding.matches if m.source_type == "published_work"]
     assert published, finding.explanation
@@ -248,3 +349,5 @@ def test_published_source_coverage_uses_the_source_side_of_the_overlap():
     )
     assert expected.query_coverage != expected.source_coverage
     assert match.source_coverage == round(expected.source_coverage, 4)
+    assert 0 < match.phrase_coverage <= 1
+    assert match.similarity_score == max(match.query_coverage, match.phrase_coverage)

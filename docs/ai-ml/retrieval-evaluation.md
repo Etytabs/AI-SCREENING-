@@ -44,6 +44,39 @@ results need human filtering. These metrics describe retrieval labels, not plagi
 probability or scientific validity. Embedding and reranker strategies were not run in
 this execution; these results are not scientific or institutional validation.
 
+## Phase 3 comparison and similarity diagnostic
+
+The Phase 3 audit preserved both Phase 2 retrieval datasets and reran the deterministic
+lexical method. No ranking change was accepted: a weighted lexical and BM25 experiment
+reduced adversarial MRR and nDCG@5, so the existing ranking behavior remains the baseline.
+The Phase 3 query cleanup and OpenAlex provenance fixes do not alter these synthetic
+ranked candidate lists.
+
+| Dataset | Queries | Recall@5 | Precision@5 | MRR | nDCG@5 |
+|---|---:|---:|---:|---:|---:|
+| Synthetic baseline (`v0.1`) | 4 | 1.00 | 0.20 | 1.00 | 1.00 |
+| Synthetic adversarial (`v0.1`) | 10 | 1.00 | 0.24 | 0.562 | 0.667 |
+
+`data/evaluation/similarity_benchmark.json` is a separate, ten-pair synthetic dataset
+covering exact and partial overlap, paraphrase, common terminology, references, boilerplate,
+institutional templates, same-topic independent work, asymmetric source/application
+coverage and unrelated documents. Run it with:
+
+`python -m scripts.evaluate_similarity`
+
+The current diagnostic result is precision **0.429** (3 true positives, 4 false positives)
+and recall **0.750** (3 true positives, 1 false negative), with 2 true negatives. False
+positives are shared research terminology, references, standard methodology and a repeated
+institutional template; the paraphrased case is a false negative. These hand-authored
+labels are test fixtures for error analysis, not plagiarism judgements or production
+performance estimates. Do not tune thresholds to this small corpus.
+
+The text-overlap measure keeps application-side and source-side coverage distinct. Retrieval
+precision/recall and reviewer decisions remain separate: a retrieved match is not a
+plagiarism finding, and a reviewer decision is not a retrieval label. OpenAlex source
+availability and unusable-result counts are recorded independently from matched-source
+counts.
+
 ## Cross-encoder reranking
 
 The retrieval stack now supports a true second-stage cross-encoder:

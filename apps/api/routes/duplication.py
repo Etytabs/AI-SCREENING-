@@ -56,9 +56,9 @@ async def import_project(
             reference=reference, year=year, organization=organization, uploaded_by=actor.user_id,
         )
     except DuplicateProjectError as exc:
-        raise HTTPException(status_code=409, detail=str(exc)) from exc
+        raise HTTPException(status_code=409, detail="This project is already in the comparison library") from exc
     except ArchiveValidationError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+        raise HTTPException(status_code=422, detail="Could not import the document; verify its type and contents") from exc
     except (sqlite3.Error, OSError) as exc:
         raise HTTPException(status_code=503, detail="The project comparison library is unavailable") from exc
     service.audit.record(

@@ -28,12 +28,12 @@ function pct(value: number | null | undefined): string {
   return value == null || !Number.isFinite(value) ? "Not available" : `${Math.round(value * 1000) / 10}%`;
 }
 
-/** Percentage dial: the headline number a reviewer reads first. */
+/** Per-source overlap score; it is not a probability or a finding-wide score. */
 function SimilarityDial({ index }: { index: number }) {
   return (
-    <div className="similarity-dial" role="img" aria-label={`Highest published-source similarity score ${index} percent`}>
+    <div className="similarity-dial" role="img" aria-label={`Highest per-source text-overlap score ${index} percent`}>
       <strong>{index}%</strong>
-      <span>Highest published-source similarity score</span>
+      <span>Highest per-source text-overlap score</span>
       <div className="similarity-bar"><i style={{ width: `${Math.min(100, Math.max(index, 1))}%` }} /></div>
     </div>
   );
@@ -104,7 +104,15 @@ function MatchRow({ match }: { match: SimilarityMatch }) {
 export function PlagiarismEvidence({ finding }: { finding: Finding }) {
   const details = finding.details;
   const works = typeof details.published_works_compared === "number" ? details.published_works_compared : null;
-  const searchedLiterature = details.published_literature_searched === true;
+  const searchState = typeof details.published_literature_state === "string"
+    ? details.published_literature_state
+    : null;
+  const searchedLiterature = details.published_literature_searched === true
+    || searchState === "COMPLETE"
+    || searchState === "PARTIAL";
+  const searchMessage = typeof details.published_literature_message === "string"
+    ? details.published_literature_message
+    : "";
 
   // Published literature only. Overlap with other submissions in this call is a
   // duplication question and is reported by the duplication check instead.
@@ -122,17 +130,36 @@ export function PlagiarismEvidence({ finding }: { finding: Finding }) {
         {index !== null && <SimilarityDial index={Math.round(index * 10) / 10} />}
         {top && <ul className="similarity-split" aria-label="Similarity breakdown">
           <li><b>{pct(top.query_coverage)}</b><span>verbatim passage coverage</span></li>
+          <li><b>{pct(top.phrase_coverage)}</b><span>shared proposal phrase coverage</span></li>
           <li><b>{pct(top.source_coverage)}</b><span>published-source phrase coverage</span></li>
           <li><b>{matches.length}</b><span>published source{matches.length === 1 ? "" : "s"}</span></li>
         </ul>}
         <p className="small">
-          {searchedLiterature
-            ? works !== null ? `${works} published work${works === 1 ? "" : "s"} compared from OpenAlex.` : "Published literature was searched; the number of works compared is unavailable."
-            : "Published literature was not searched; no conclusion about published sources can be drawn."}
+          {searchState === "FAILED"
+            ? `OpenAlex search failed; no clean-result conclusion is available. ${searchMessage}`
+            : searchState === "BLOCKED"
+              ? `Published literature was not searched; no conclusion about published sources can be drawn. ${searchMessage}`
+              : searchState === "PARTIAL"
+                ? `OpenAlex search was incomplete; ${works ?? "an unavailable number of"} work${works === 1 ? "" : "s"} with usable abstracts were compared. ${searchMessage}`
+                : searchedLiterature
+                  ? works !== null
+                    ? works === 0
+                      ? `OpenAlex search completed without any text-comparable works. ${searchMessage}`
+                      : `${works} published work${works === 1 ? "" : "s"} with usable abstracts compared from OpenAlex.`
+                    : "Published literature was searched; the number of works compared is unavailable."
+                  : "Published literature was not searched; no conclusion about published sources can be drawn."}
         </p>
-        {searchedLiterature && !top && <p className="small">No matching published sources were recorded in this run.</p>}
+        {searchedLiterature && !top && works === 0 && (
+          <p className="small">No published works with usable abstracts were available to compare; this is not a zero-match result.</p>
+        )}
+        {searchedLiterature && !top && works !== 0 && (
+          <p className="small">No matching published sources were recorded among the works compared in this run.</p>
+        )}
+        <p className="small">Per-source overlap is the greater of verbatim passage coverage and shared proposal phrase coverage; it is not a plagiarism probability.</p>
+        <p className="small">{finding.explanation}</p>
+        <p className="muted small">Method: {finding.method}</p>
         <p className="small">Similarity is a signal for human assessment, not proof of plagiarism.</p>
-        {!searchedLiterature && (
+        {(!searchedLiterature || searchState === "PARTIAL" || searchState === "FAILED") && (
           <p className="uncertainty">
             Check source availability and screening coverage before drawing conclusions.
           </p>

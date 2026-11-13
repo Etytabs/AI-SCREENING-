@@ -19,8 +19,8 @@ class JobRunner(Protocol):
 def _guarded(job: Callable[[], None]) -> None:
     try:
         job()
-    except Exception:
-        logger.exception("Background screening job failed")
+    except Exception as exc:
+        logger.error("Background screening job failed (%s)", type(exc).__name__)
 
 
 class ThreadPoolJobRunner:

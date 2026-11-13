@@ -196,9 +196,9 @@ def screen_document(path: str, proposal_id: str) -> dict:
             try:
                 public_source_findings = [asdict(item) for item in check_public_sources(doc.text, limit=5)]
                 public_source_status = "completed"
-            except (RuntimeError, ValueError, OSError) as exc:
+            except (RuntimeError, ValueError, OSError):
                 public_source_status = "failed"
-                public_source_findings = [{"status": "SOURCE_CHECK_FAILED", "error": str(exc)}]
+                public_source_findings = [{"status": "SOURCE_CHECK_FAILED", "error": "Public-source search failed"}]
         else:
             public_source_status = "not_configured"
 

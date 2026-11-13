@@ -1,3 +1,4 @@
+import logging
 from dataclasses import asdict
 
 from fastapi import APIRouter, HTTPException, Query
@@ -11,6 +12,7 @@ from services.research_sources.connectors import search_source
 from services.research_sources.registry import list_sources
 
 router = APIRouter(prefix="/api/v1/publications", tags=["publications"])
+logger = logging.getLogger(__name__)
 
 
 @router.post("/reconcile")
@@ -33,8 +35,11 @@ def research_sources() -> list[dict]:
 def search_research_sources(q: str = Query(min_length=2), source: str = Query(default="crossref"), limit: int = Query(default=10, ge=1, le=50)) -> dict:
     try:
         records = search_source(source, q, limit)
-    except (RuntimeError, ValueError) as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="Invalid source request") from exc
+    except RuntimeError as exc:
+        logger.warning("Publication search failed (%s)", type(exc).__name__)
+        raise HTTPException(status_code=502, detail="Research source search failed") from exc
     return {"query": q, "source": source, "count": len(records), "records": [asdict(record) for record in records], "human_review_required": True}
 
 
@@ -47,7 +52,8 @@ def compare_research_sources(q: str = Query(min_length=2), sources: str = Query(
         try:
             records.extend(search_source(source, q, limit))
         except (RuntimeError, ValueError, OSError) as exc:
-            errors.append({"source": source, "error": str(exc)})
+            logger.warning("Publication comparison source failed (%s)", type(exc).__name__)
+            errors.append({"source": source, "error": "Search failed"})
     unique = {}
     for record in records:
         key = (record.doi or "").lower() or record.title.strip().lower()
@@ -65,8 +71,11 @@ def screen_public_text_for_similarity(
 ) -> dict:
     try:
         findings = check_public_sources(text, limit=limit)
-    except (RuntimeError, ValueError, OSError) as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="Invalid source comparison request") from exc
+    except (RuntimeError, OSError) as exc:
+        logger.warning("Public-text source check failed (%s)", type(exc).__name__)
+        raise HTTPException(status_code=502, detail="Public-source search failed") from exc
     return {
         "status": "REVIEW_REQUIRED" if findings else "NO_PUBLIC_MATCH_FOUND",
         "count": len(findings),

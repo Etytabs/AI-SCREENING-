@@ -40,9 +40,9 @@ class UploadedFile:
 def extract_bytes(filename: str, data: bytes, source_id: str) -> ExtractedDocument:
     suffix = Path(filename).suffix.lower()
     if not data:
-        raise UploadError(f"{filename}: file is empty")
+        raise UploadError("File is empty")
     if suffix not in SUPPORTED_SUFFIXES:
-        raise UploadError(f"{filename}: unsupported file type {suffix or '(none)'}; use PDF, DOCX or TXT")
+        raise UploadError("Unsupported file type; upload PDF, DOCX or TXT")
     # Windows cannot reopen a NamedTemporaryFile while it is still open.
     with NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
         tmp.write(data)
@@ -69,16 +69,18 @@ def expand_uploads(files: list[UploadedFile]) -> tuple[list[UploadedFile], list[
             with zipfile.ZipFile(io.BytesIO(upload.data)) as archive:
                 members = [m for m in archive.infolist() if not m.is_dir()]
                 if len(members) > MAX_ZIP_FILES:
-                    raise UploadError(f"{upload.filename}: more than {MAX_ZIP_FILES} files")
+                    raise UploadError(f"ZIP archive exceeds the {MAX_ZIP_FILES}-file limit")
                 if sum(m.file_size for m in members) > MAX_ZIP_BYTES:
-                    raise UploadError(f"{upload.filename}: uncompressed size exceeds limit")
+                    raise UploadError("ZIP archive exceeds the uncompressed size limit")
                 for member in members:
                     parts = PurePosixPath(member.filename).parts
                     if not parts or parts[0] == "__MACOSX" or parts[-1].startswith("."):
                         continue
                     expanded.append(UploadedFile(member.filename, archive.read(member)))
-        except (zipfile.BadZipFile, UploadError) as exc:
-            errors.append(f"{upload.filename}: {exc}" if isinstance(exc, zipfile.BadZipFile) else str(exc))
+        except zipfile.BadZipFile:
+            errors.append("ZIP archive could not be read")
+        except UploadError as exc:
+            errors.append(str(exc))
     return expanded, errors
 
 

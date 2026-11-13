@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 
 from ml.evidence.state import RunState
 
@@ -8,6 +9,10 @@ class SourceCoverage:
     source_id: str
     state: RunState
     message: str
+    retrieved_at: datetime | None = None
+    records_returned: int | None = None
+    records_compared: int | None = None
+    records_unusable: int | None = None
 
 
 def summarize_coverage(items: list[SourceCoverage]) -> RunState:

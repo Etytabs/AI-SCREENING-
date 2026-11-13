@@ -19,3 +19,9 @@ International databases are optional connectors. The pilot remains useful with l
 - Missing data is preserved as missing.
 - Synthetic fixtures are explicitly labeled.
 - Provenance, uncertainty, evidence, and human decisions are retained.
+
+## Application Assessment Engine
+
+- [FPDR-001: Application Assessment Engine](../../company/product/FPDR-001-application-assessment-engine.md) is authoritative for approved product behaviour.
+- [TAIS-001: Application Assessment Engine](TAIS-001-application-assessment-engine.md) specifies the audited target architecture, contracts, validation and staged implementation. It is subordinate to FPDR-001 and the existing ADRs.
+- These documents do not claim the assessment engine, durable persistence, production authorization, or institutional integrations are implemented.

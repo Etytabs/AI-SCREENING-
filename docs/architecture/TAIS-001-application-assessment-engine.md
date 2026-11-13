@@ -221,7 +221,7 @@ Example response shape:
   "supporting_findings": [{"criterion_id": "criterion_...", "finding_id": "finding_..."}],
   "evidence_refs": ["evidence_..."],
   "missing_evidence": [{"criterion_id": "criterion_...", "reason": "Not supplied"}],
-  "uncertainty": {"level": "MATERIAL", "reasons": ["Eligibility pending verification"]},
+  "uncertainty": {"level": "ELEVATED", "reasons": ["Eligibility pending verification"]},
   "limitations": ["Only the listed sources and document versions were assessed."],
   "reviewer_attention": ["Verify the stated lead-institution country."],
   "eligibility": {"outcome": "PENDING_VERIFICATION", "condition_refs": ["eligibility_..."]},
@@ -231,6 +231,8 @@ Example response shape:
   "funding_decision": null
 }
 ```
+
+The recommendation contract uses the same closed uncertainty vocabulary defined in §4.4: `LOW`, `ELEVATED`, `HIGH`, or `NOT_ASSESSED`. `level` and one or more explanatory `reasons` are required; the illustrative pending-verification case uses `ELEVATED`. These qualitative values are not probabilities.
 
 The example is illustrative, not a claim that the evaluator or source has been implemented. Runtime schema must validate category enum, required explanation/evidence/limitations/attention fields, version presence, valid evidence references, and human-review status. `advisory_only` is always true and no recommendation API field may be interpreted as an award decision. Eligibility failure and incomplete/insufficient assessment constraints are enforced by deterministic service validation after generation, not merely by prompt instructions. Store model/provider/prompt/config version where used; redact sensitive provider errors.
 

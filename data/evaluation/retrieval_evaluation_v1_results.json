@@ -1,0 +1,1784 @@
+{
+  "schema_version": "1.0",
+  "dataset_id": "synthetic-research-retrieval-v1.0",
+  "dataset_sha256": "e79358fb35bb37f2e12adc7e435b38d0a056a67d3c5222ab3f5e1b6a6dc59a6a",
+  "status": "SYNTHETIC_BASELINE_ONLY",
+  "configuration": {
+    "ranker": "ml.semantic_matching.hybrid.rank_candidates",
+    "method": "token_jaccard_baseline",
+    "candidate_text": "title and abstract concatenated; absent fields omitted",
+    "candidate_depth": 20,
+    "ranking_metrics_depth": [
+      5,
+      10
+    ],
+    "relevance_positive_threshold": 1,
+    "ndcg_gain": "2^grade - 1",
+    "tie_breaking": "stable input order from existing rank_candidates implementation",
+    "deduplication": "shared research-record DOI/record-ID key; duplicate labels must agree"
+  },
+  "dataset_summary": {
+    "query_count": 12,
+    "query_group_count": 6,
+    "catalog_record_count": 27,
+    "unique_candidate_count": 25,
+    "unique_candidates_returned_at_20_across_queries": 24,
+    "unique_works_per_query": 25,
+    "candidates_per_query_min": 25,
+    "candidates_per_query_max": 25,
+    "relevance_label_counts": {
+      "0": 264,
+      "1": 12,
+      "2": 12,
+      "3": 12
+    }
+  },
+  "candidate_generation_metrics": {
+    "recall_at_5": 0.833333,
+    "recall_at_10": 0.916667,
+    "recall_at_20": 0.944445,
+    "candidate_coverage_at_20": 0.8,
+    "relevant_candidate_retrieval_rate_at_20": 0.944445
+  },
+  "ranking_metrics": {
+    "precision_at_5": 0.5,
+    "mrr": 1.0,
+    "ndcg_at_5": 0.831415,
+    "ndcg_at_10": 0.864974
+  },
+  "ranking_consistency": {
+    "all_repeated_runs_identical": true,
+    "mean_pairwise_order_agreement_vs_reversed_input": 0.886667,
+    "input_order_sensitive_tie_query_count": 12,
+    "tie_group_count": 49
+  },
+  "false_positives_at_5": [
+    {
+      "query_id": "AGR-Q1",
+      "candidate_id": "PUB-EDU-01",
+      "grade": 0,
+      "rationale": "The record is from a different research domain and does not address the proposal's crop-disease image-detection objective.",
+      "rank": 2
+    },
+    {
+      "query_id": "AGR-Q1",
+      "candidate_id": "PUB-AGR-04",
+      "grade": 0,
+      "rationale": "High lexical overlap and near-duplicate imagery, but classifies nutrient stress and explicitly excludes infection diagnosis.",
+      "rank": 4
+    },
+    {
+      "query_id": "AGR-Q2",
+      "candidate_id": "PUB-BIO-01",
+      "grade": 0,
+      "rationale": "The record is from a different research domain and does not address the proposal's crop-disease image-detection objective.",
+      "rank": 3
+    },
+    {
+      "query_id": "AGR-Q2",
+      "candidate_id": "PUB-WAT-02",
+      "grade": 0,
+      "rationale": "The record is from a different research domain and does not address the proposal's crop-disease image-detection objective.",
+      "rank": 4
+    },
+    {
+      "query_id": "MAT-Q1",
+      "candidate_id": "PUB-AGR-05",
+      "grade": 0,
+      "rationale": "The record is from a different research domain and does not address clinical pregnancy-risk prediction and referral.",
+      "rank": 2
+    },
+    {
+      "query_id": "MAT-Q1",
+      "candidate_id": "PUB-ENE-04",
+      "grade": 0,
+      "rationale": "The record is from a different research domain and does not address clinical pregnancy-risk prediction and referral.",
+      "rank": 3
+    },
+    {
+      "query_id": "MAT-Q1",
+      "candidate_id": "PUB-ENE-01",
+      "grade": 0,
+      "rationale": "The record is from a different research domain and does not address clinical pregnancy-risk prediction and referral.",
+      "rank": 4
+    },
+    {
+      "query_id": "MAT-Q1",
+      "candidate_id": "PUB-ENE-03",
+      "grade": 0,
+      "rationale": "The record is from a different research domain and does not address clinical pregnancy-risk prediction and referral.",
+      "rank": 5
+    },
+    {
+      "query_id": "MAT-Q2",
+      "candidate_id": "PUB-WAT-03",
+      "grade": 0,
+      "rationale": "The record is from a different research domain and does not address clinical pregnancy-risk prediction and referral.",
+      "rank": 3
+    },
+    {
+      "query_id": "MAT-Q2",
+      "candidate_id": "PUB-AGR-04",
+      "grade": 0,
+      "rationale": "The record is from a different research domain and does not address clinical pregnancy-risk prediction and referral.",
+      "rank": 4
+    },
+    {
+      "query_id": "WAT-Q1",
+      "candidate_id": "PUB-WAT-04",
+      "grade": 0,
+      "rationale": "High lexical overlap on water sensors and monitoring, but targets irrigation allocation rather than contamination or drinking-water safety.",
+      "rank": 2
+    },
+    {
+      "query_id": "WAT-Q1",
+      "candidate_id": "PUB-EDU-01",
+      "grade": 0,
+      "rationale": "The record is from a different research domain and does not address detection of drinking-water contamination.",
+      "rank": 4
+    },
+    {
+      "query_id": "WAT-Q1",
+      "candidate_id": "PUB-MAT-03",
+      "grade": 0,
+      "rationale": "The record is from a different research domain and does not address detection of drinking-water contamination.",
+      "rank": 5
+    },
+    {
+      "query_id": "WAT-Q2",
+      "candidate_id": "PUB-WAT-04",
+      "grade": 0,
+      "rationale": "High lexical overlap on water sensors and monitoring, but targets irrigation allocation rather than contamination or drinking-water safety.",
+      "rank": 3
+    },
+    {
+      "query_id": "WAT-Q2",
+      "candidate_id": "PUB-AGR-02",
+      "grade": 0,
+      "rationale": "The record is from a different research domain and does not address detection of drinking-water contamination.",
+      "rank": 5
+    },
+    {
+      "query_id": "ENE-Q1",
+      "candidate_id": "PUB-ENE-04",
+      "grade": 0,
+      "rationale": "High lexical overlap on weather-driven electricity forecasts, but predicts demand rather than photovoltaic supply.",
+      "rank": 2
+    },
+    {
+      "query_id": "ENE-Q1",
+      "candidate_id": "PUB-BIO-03",
+      "grade": 0,
+      "rationale": "The record is from a different research domain and does not address weather-based photovoltaic generation forecasts.",
+      "rank": 5
+    },
+    {
+      "query_id": "ENE-Q2",
+      "candidate_id": "PUB-AGR-05",
+      "grade": 0,
+      "rationale": "The record is from a different research domain and does not address weather-based photovoltaic generation forecasts.",
+      "rank": 3
+    },
+    {
+      "query_id": "ENE-Q2",
+      "candidate_id": "PUB-MAT-03",
+      "grade": 0,
+      "rationale": "The record is from a different research domain and does not address weather-based photovoltaic generation forecasts.",
+      "rank": 4
+    },
+    {
+      "query_id": "ENE-Q2",
+      "candidate_id": "PUB-WAT-01",
+      "grade": 0,
+      "rationale": "The record is from a different research domain and does not address weather-based photovoltaic generation forecasts.",
+      "rank": 5
+    },
+    {
+      "query_id": "EDU-Q1",
+      "candidate_id": "PUB-AGR-02",
+      "grade": 0,
+      "rationale": "The record is from a different research domain and does not address early-grade reading instruction.",
+      "rank": 4
+    },
+    {
+      "query_id": "EDU-Q1",
+      "candidate_id": "PUB-AGR-05",
+      "grade": 0,
+      "rationale": "The record is from a different research domain and does not address early-grade reading instruction.",
+      "rank": 5
+    },
+    {
+      "query_id": "EDU-Q2",
+      "candidate_id": "PUB-BIO-03",
+      "grade": 0,
+      "rationale": "The record is from a different research domain and does not address early-grade reading instruction.",
+      "rank": 3
+    },
+    {
+      "query_id": "EDU-Q2",
+      "candidate_id": "PUB-WAT-02",
+      "grade": 0,
+      "rationale": "The record is from a different research domain and does not address early-grade reading instruction.",
+      "rank": 4
+    },
+    {
+      "query_id": "EDU-Q2",
+      "candidate_id": "PUB-AGR-02",
+      "grade": 0,
+      "rationale": "The record is from a different research domain and does not address early-grade reading instruction.",
+      "rank": 5
+    },
+    {
+      "query_id": "BIO-Q1",
+      "candidate_id": "PUB-EDU-01",
+      "grade": 0,
+      "rationale": "The record is from a different research domain and does not address habitat connectivity and pollinator biodiversity.",
+      "rank": 3
+    },
+    {
+      "query_id": "BIO-Q1",
+      "candidate_id": "PUB-AGR-05",
+      "grade": 0,
+      "rationale": "The record is from a different research domain and does not address habitat connectivity and pollinator biodiversity.",
+      "rank": 4
+    },
+    {
+      "query_id": "BIO-Q1",
+      "candidate_id": "PUB-BIO-04",
+      "grade": 0,
+      "rationale": "Shares restoration terminology, but measures carbon storage rather than habitat connectivity or pollinator outcomes.",
+      "rank": 5
+    },
+    {
+      "query_id": "BIO-Q2",
+      "candidate_id": "PUB-WAT-03",
+      "grade": 0,
+      "rationale": "The record is from a different research domain and does not address habitat connectivity and pollinator biodiversity.",
+      "rank": 4
+    },
+    {
+      "query_id": "BIO-Q2",
+      "candidate_id": "PUB-AGR-02",
+      "grade": 0,
+      "rationale": "The record is from a different research domain and does not address habitat connectivity and pollinator biodiversity.",
+      "rank": 5
+    }
+  ],
+  "false_negatives_at_20": [
+    {
+      "query_id": "ENE-Q2",
+      "candidate_id": "PUB-ENE-02",
+      "grade": 2,
+      "rationale": "Same photovoltaic output forecasting objective with different phrasing and additional sky imagery."
+    },
+    {
+      "query_id": "BIO-Q1",
+      "candidate_id": "PUB-BIO-03",
+      "grade": 1,
+      "rationale": "Related conservation context, but studies community attitudes rather than habitat restoration or biodiversity."
+    }
+  ],
+  "queries": [
+    {
+      "query_id": "AGR-Q1",
+      "query_type": "research_question",
+      "candidate_count": 25,
+      "positive_candidate_count": 3,
+      "metrics": {
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "recall_at_20": 1.0,
+        "candidate_coverage_at_20": 0.8,
+        "relevant_candidate_retrieval_rate_at_20": 1.0,
+        "precision_at_5": 0.6,
+        "mrr": 1.0,
+        "ndcg_at_5": 0.946136,
+        "ndcg_at_10": 0.946136
+      },
+      "ranking_consistency": {
+        "repeat_is_identical": true,
+        "pairwise_order_agreement_vs_reversed_input": 0.69,
+        "tie_group_count": 3,
+        "input_order_sensitive_tie_group_count": 3
+      },
+      "top_20": [
+        {
+          "candidate_id": "PUB-AGR-01",
+          "grade": 3,
+          "score": 0.139535
+        },
+        {
+          "candidate_id": "PUB-EDU-01",
+          "grade": 0,
+          "score": 0.075
+        },
+        {
+          "candidate_id": "PUB-AGR-02",
+          "grade": 2,
+          "score": 0.06
+        },
+        {
+          "candidate_id": "PUB-AGR-04",
+          "grade": 0,
+          "score": 0.06
+        },
+        {
+          "candidate_id": "PUB-AGR-03",
+          "grade": 1,
+          "score": 0.040816
+        },
+        {
+          "candidate_id": "PUB-BIO-04",
+          "grade": 0,
+          "score": 0.022222
+        },
+        {
+          "candidate_id": "PUB-MAT-01",
+          "grade": 0,
+          "score": 0.021739
+        },
+        {
+          "candidate_id": "PUB-EDU-03",
+          "grade": 0,
+          "score": 0.021739
+        },
+        {
+          "candidate_id": "PUB-BIO-02",
+          "grade": 0,
+          "score": 0.021277
+        },
+        {
+          "candidate_id": "PUB-WAT-02",
+          "grade": 0,
+          "score": 0.020833
+        },
+        {
+          "candidate_id": "PUB-EDU-02",
+          "grade": 0,
+          "score": 0.019231
+        },
+        {
+          "candidate_id": "PUB-AGR-05",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-MAT-02",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-MAT-03",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-MAT-04",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-WAT-01",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-WAT-03",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-WAT-04",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-ENE-01",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-ENE-02",
+          "grade": 0,
+          "score": 0.0
+        }
+      ]
+    },
+    {
+      "query_id": "AGR-Q2",
+      "query_type": "proposal_statement",
+      "candidate_count": 25,
+      "positive_candidate_count": 3,
+      "metrics": {
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "recall_at_20": 1.0,
+        "candidate_coverage_at_20": 0.8,
+        "relevant_candidate_retrieval_rate_at_20": 1.0,
+        "precision_at_5": 0.6,
+        "mrr": 1.0,
+        "ndcg_at_5": 0.830782,
+        "ndcg_at_10": 0.830782
+      },
+      "ranking_consistency": {
+        "repeat_is_identical": true,
+        "pairwise_order_agreement_vs_reversed_input": 0.98,
+        "tie_group_count": 4,
+        "input_order_sensitive_tie_group_count": 4
+      },
+      "top_20": [
+        {
+          "candidate_id": "PUB-AGR-02",
+          "grade": 2,
+          "score": 0.208333
+        },
+        {
+          "candidate_id": "PUB-AGR-01",
+          "grade": 3,
+          "score": 0.102041
+        },
+        {
+          "candidate_id": "PUB-BIO-01",
+          "grade": 0,
+          "score": 0.081633
+        },
+        {
+          "candidate_id": "PUB-WAT-02",
+          "grade": 0,
+          "score": 0.08
+        },
+        {
+          "candidate_id": "PUB-AGR-03",
+          "grade": 1,
+          "score": 0.076923
+        },
+        {
+          "candidate_id": "PUB-AGR-05",
+          "grade": 0,
+          "score": 0.06383
+        },
+        {
+          "candidate_id": "PUB-WAT-04",
+          "grade": 0,
+          "score": 0.061224
+        },
+        {
+          "candidate_id": "PUB-BIO-02",
+          "grade": 0,
+          "score": 0.06
+        },
+        {
+          "candidate_id": "PUB-AGR-04",
+          "grade": 0,
+          "score": 0.054545
+        },
+        {
+          "candidate_id": "PUB-ENE-04",
+          "grade": 0,
+          "score": 0.041667
+        },
+        {
+          "candidate_id": "PUB-BIO-04",
+          "grade": 0,
+          "score": 0.040816
+        },
+        {
+          "candidate_id": "PUB-ENE-02",
+          "grade": 0,
+          "score": 0.037736
+        },
+        {
+          "candidate_id": "PUB-WAT-03",
+          "grade": 0,
+          "score": 0.037037
+        },
+        {
+          "candidate_id": "PUB-EDU-02",
+          "grade": 0,
+          "score": 0.035714
+        },
+        {
+          "candidate_id": "PUB-EDU-01",
+          "grade": 0,
+          "score": 0.021277
+        },
+        {
+          "candidate_id": "PUB-MAT-03",
+          "grade": 0,
+          "score": 0.020408
+        },
+        {
+          "candidate_id": "PUB-WAT-01",
+          "grade": 0,
+          "score": 0.020408
+        },
+        {
+          "candidate_id": "PUB-ENE-01",
+          "grade": 0,
+          "score": 0.02
+        },
+        {
+          "candidate_id": "PUB-BIO-03",
+          "grade": 0,
+          "score": 0.02
+        },
+        {
+          "candidate_id": "PUB-MAT-01",
+          "grade": 0,
+          "score": 0.019608
+        }
+      ]
+    },
+    {
+      "query_id": "MAT-Q1",
+      "query_type": "research_question",
+      "candidate_count": 25,
+      "positive_candidate_count": 3,
+      "metrics": {
+        "recall_at_5": 0.333333,
+        "recall_at_10": 1.0,
+        "recall_at_20": 1.0,
+        "candidate_coverage_at_20": 0.8,
+        "relevant_candidate_retrieval_rate_at_20": 1.0,
+        "precision_at_5": 0.2,
+        "mrr": 1.0,
+        "ndcg_at_5": 0.745253,
+        "ndcg_at_10": 0.882492
+      },
+      "ranking_consistency": {
+        "repeat_is_identical": true,
+        "pairwise_order_agreement_vs_reversed_input": 0.99,
+        "tie_group_count": 3,
+        "input_order_sensitive_tie_group_count": 3
+      },
+      "top_20": [
+        {
+          "candidate_id": "PUB-MAT-01",
+          "grade": 3,
+          "score": 0.111111
+        },
+        {
+          "candidate_id": "PUB-AGR-05",
+          "grade": 0,
+          "score": 0.066667
+        },
+        {
+          "candidate_id": "PUB-ENE-04",
+          "grade": 0,
+          "score": 0.066667
+        },
+        {
+          "candidate_id": "PUB-ENE-01",
+          "grade": 0,
+          "score": 0.065217
+        },
+        {
+          "candidate_id": "PUB-ENE-03",
+          "grade": 0,
+          "score": 0.06383
+        },
+        {
+          "candidate_id": "PUB-BIO-01",
+          "grade": 0,
+          "score": 0.0625
+        },
+        {
+          "candidate_id": "PUB-MAT-02",
+          "grade": 2,
+          "score": 0.061224
+        },
+        {
+          "candidate_id": "PUB-AGR-02",
+          "grade": 0,
+          "score": 0.056604
+        },
+        {
+          "candidate_id": "PUB-EDU-01",
+          "grade": 0,
+          "score": 0.045455
+        },
+        {
+          "candidate_id": "PUB-MAT-03",
+          "grade": 1,
+          "score": 0.043478
+        },
+        {
+          "candidate_id": "PUB-BIO-04",
+          "grade": 0,
+          "score": 0.042553
+        },
+        {
+          "candidate_id": "PUB-WAT-04",
+          "grade": 0,
+          "score": 0.041667
+        },
+        {
+          "candidate_id": "PUB-AGR-01",
+          "grade": 0,
+          "score": 0.04
+        },
+        {
+          "candidate_id": "PUB-AGR-03",
+          "grade": 0,
+          "score": 0.038462
+        },
+        {
+          "candidate_id": "PUB-WAT-03",
+          "grade": 0,
+          "score": 0.038462
+        },
+        {
+          "candidate_id": "PUB-EDU-02",
+          "grade": 0,
+          "score": 0.037037
+        },
+        {
+          "candidate_id": "PUB-WAT-01",
+          "grade": 0,
+          "score": 0.021277
+        },
+        {
+          "candidate_id": "PUB-BIO-03",
+          "grade": 0,
+          "score": 0.020833
+        },
+        {
+          "candidate_id": "PUB-EDU-03",
+          "grade": 0,
+          "score": 0.020408
+        },
+        {
+          "candidate_id": "PUB-BIO-02",
+          "grade": 0,
+          "score": 0.02
+        }
+      ]
+    },
+    {
+      "query_id": "MAT-Q2",
+      "query_type": "proposal_statement",
+      "candidate_count": 25,
+      "positive_candidate_count": 3,
+      "metrics": {
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "recall_at_20": 1.0,
+        "candidate_coverage_at_20": 0.8,
+        "relevant_candidate_retrieval_rate_at_20": 1.0,
+        "precision_at_5": 0.6,
+        "mrr": 1.0,
+        "ndcg_at_5": 0.987954,
+        "ndcg_at_10": 0.987954
+      },
+      "ranking_consistency": {
+        "repeat_is_identical": true,
+        "pairwise_order_agreement_vs_reversed_input": 0.983333,
+        "tie_group_count": 3,
+        "input_order_sensitive_tie_group_count": 3
+      },
+      "top_20": [
+        {
+          "candidate_id": "PUB-MAT-01",
+          "grade": 3,
+          "score": 0.243902
+        },
+        {
+          "candidate_id": "PUB-MAT-02",
+          "grade": 2,
+          "score": 0.104167
+        },
+        {
+          "candidate_id": "PUB-WAT-03",
+          "grade": 0,
+          "score": 0.1
+        },
+        {
+          "candidate_id": "PUB-AGR-04",
+          "grade": 0,
+          "score": 0.096154
+        },
+        {
+          "candidate_id": "PUB-MAT-03",
+          "grade": 1,
+          "score": 0.088889
+        },
+        {
+          "candidate_id": "PUB-ENE-03",
+          "grade": 0,
+          "score": 0.085106
+        },
+        {
+          "candidate_id": "PUB-WAT-02",
+          "grade": 0,
+          "score": 0.081633
+        },
+        {
+          "candidate_id": "PUB-BIO-03",
+          "grade": 0,
+          "score": 0.06383
+        },
+        {
+          "candidate_id": "PUB-BIO-04",
+          "grade": 0,
+          "score": 0.06383
+        },
+        {
+          "candidate_id": "PUB-WAT-04",
+          "grade": 0,
+          "score": 0.0625
+        },
+        {
+          "candidate_id": "PUB-BIO-02",
+          "grade": 0,
+          "score": 0.061224
+        },
+        {
+          "candidate_id": "PUB-ENE-02",
+          "grade": 0,
+          "score": 0.058824
+        },
+        {
+          "candidate_id": "PUB-AGR-03",
+          "grade": 0,
+          "score": 0.057692
+        },
+        {
+          "candidate_id": "PUB-MAT-04",
+          "grade": 0,
+          "score": 0.045455
+        },
+        {
+          "candidate_id": "PUB-AGR-05",
+          "grade": 0,
+          "score": 0.042553
+        },
+        {
+          "candidate_id": "PUB-WAT-01",
+          "grade": 0,
+          "score": 0.042553
+        },
+        {
+          "candidate_id": "PUB-ENE-04",
+          "grade": 0,
+          "score": 0.042553
+        },
+        {
+          "candidate_id": "PUB-ENE-01",
+          "grade": 0,
+          "score": 0.041667
+        },
+        {
+          "candidate_id": "PUB-EDU-03",
+          "grade": 0,
+          "score": 0.040816
+        },
+        {
+          "candidate_id": "PUB-AGR-01",
+          "grade": 0,
+          "score": 0.039216
+        }
+      ]
+    },
+    {
+      "query_id": "WAT-Q1",
+      "query_type": "research_question",
+      "candidate_count": 25,
+      "positive_candidate_count": 3,
+      "metrics": {
+        "recall_at_5": 0.666667,
+        "recall_at_10": 0.666667,
+        "recall_at_20": 1.0,
+        "candidate_coverage_at_20": 0.8,
+        "relevant_candidate_retrieval_rate_at_20": 1.0,
+        "precision_at_5": 0.4,
+        "mrr": 1.0,
+        "ndcg_at_5": 0.90495,
+        "ndcg_at_10": 0.90495
+      },
+      "ranking_consistency": {
+        "repeat_is_identical": true,
+        "pairwise_order_agreement_vs_reversed_input": 0.773333,
+        "tie_group_count": 3,
+        "input_order_sensitive_tie_group_count": 3
+      },
+      "top_20": [
+        {
+          "candidate_id": "PUB-WAT-01",
+          "grade": 3,
+          "score": 0.162162
+        },
+        {
+          "candidate_id": "PUB-WAT-04",
+          "grade": 0,
+          "score": 0.097561
+        },
+        {
+          "candidate_id": "PUB-WAT-02",
+          "grade": 2,
+          "score": 0.068182
+        },
+        {
+          "candidate_id": "PUB-EDU-01",
+          "grade": 0,
+          "score": 0.025
+        },
+        {
+          "candidate_id": "PUB-MAT-03",
+          "grade": 0,
+          "score": 0.02381
+        },
+        {
+          "candidate_id": "PUB-ENE-01",
+          "grade": 0,
+          "score": 0.023256
+        },
+        {
+          "candidate_id": "PUB-MAT-01",
+          "grade": 0,
+          "score": 0.022727
+        },
+        {
+          "candidate_id": "PUB-ENE-03",
+          "grade": 0,
+          "score": 0.022727
+        },
+        {
+          "candidate_id": "PUB-BIO-02",
+          "grade": 0,
+          "score": 0.022222
+        },
+        {
+          "candidate_id": "PUB-AGR-01",
+          "grade": 0,
+          "score": 0.021739
+        },
+        {
+          "candidate_id": "PUB-WAT-03",
+          "grade": 1,
+          "score": 0.020833
+        },
+        {
+          "candidate_id": "PUB-AGR-02",
+          "grade": 0,
+          "score": 0.02
+        },
+        {
+          "candidate_id": "PUB-AGR-04",
+          "grade": 0,
+          "score": 0.02
+        },
+        {
+          "candidate_id": "PUB-AGR-03",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-AGR-05",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-MAT-02",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-MAT-04",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-ENE-02",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-ENE-04",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-EDU-02",
+          "grade": 0,
+          "score": 0.0
+        }
+      ]
+    },
+    {
+      "query_id": "WAT-Q2",
+      "query_type": "proposal_statement",
+      "candidate_count": 25,
+      "positive_candidate_count": 3,
+      "metrics": {
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "recall_at_20": 1.0,
+        "candidate_coverage_at_20": 0.8,
+        "relevant_candidate_retrieval_rate_at_20": 1.0,
+        "precision_at_5": 0.6,
+        "mrr": 1.0,
+        "ndcg_at_5": 0.835448,
+        "ndcg_at_10": 0.835448
+      },
+      "ranking_consistency": {
+        "repeat_is_identical": true,
+        "pairwise_order_agreement_vs_reversed_input": 0.99,
+        "tie_group_count": 3,
+        "input_order_sensitive_tie_group_count": 3
+      },
+      "top_20": [
+        {
+          "candidate_id": "PUB-WAT-02",
+          "grade": 2,
+          "score": 0.125
+        },
+        {
+          "candidate_id": "PUB-WAT-01",
+          "grade": 3,
+          "score": 0.111111
+        },
+        {
+          "candidate_id": "PUB-WAT-04",
+          "grade": 0,
+          "score": 0.083333
+        },
+        {
+          "candidate_id": "PUB-WAT-03",
+          "grade": 1,
+          "score": 0.076923
+        },
+        {
+          "candidate_id": "PUB-AGR-02",
+          "grade": 0,
+          "score": 0.074074
+        },
+        {
+          "candidate_id": "PUB-ENE-04",
+          "grade": 0,
+          "score": 0.06383
+        },
+        {
+          "candidate_id": "PUB-AGR-01",
+          "grade": 0,
+          "score": 0.058824
+        },
+        {
+          "candidate_id": "PUB-EDU-02",
+          "grade": 0,
+          "score": 0.054545
+        },
+        {
+          "candidate_id": "PUB-EDU-01",
+          "grade": 0,
+          "score": 0.043478
+        },
+        {
+          "candidate_id": "PUB-AGR-05",
+          "grade": 0,
+          "score": 0.041667
+        },
+        {
+          "candidate_id": "PUB-BIO-04",
+          "grade": 0,
+          "score": 0.040816
+        },
+        {
+          "candidate_id": "PUB-ENE-03",
+          "grade": 0,
+          "score": 0.04
+        },
+        {
+          "candidate_id": "PUB-EDU-03",
+          "grade": 0,
+          "score": 0.04
+        },
+        {
+          "candidate_id": "PUB-BIO-02",
+          "grade": 0,
+          "score": 0.039216
+        },
+        {
+          "candidate_id": "PUB-ENE-02",
+          "grade": 0,
+          "score": 0.037736
+        },
+        {
+          "candidate_id": "PUB-AGR-03",
+          "grade": 0,
+          "score": 0.037037
+        },
+        {
+          "candidate_id": "PUB-AGR-04",
+          "grade": 0,
+          "score": 0.035714
+        },
+        {
+          "candidate_id": "PUB-MAT-03",
+          "grade": 0,
+          "score": 0.020408
+        },
+        {
+          "candidate_id": "PUB-ENE-01",
+          "grade": 0,
+          "score": 0.02
+        },
+        {
+          "candidate_id": "PUB-BIO-03",
+          "grade": 0,
+          "score": 0.02
+        }
+      ]
+    },
+    {
+      "query_id": "ENE-Q1",
+      "query_type": "research_question",
+      "candidate_count": 25,
+      "positive_candidate_count": 3,
+      "metrics": {
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "recall_at_20": 1.0,
+        "candidate_coverage_at_20": 0.8,
+        "relevant_candidate_retrieval_rate_at_20": 1.0,
+        "precision_at_5": 0.6,
+        "mrr": 1.0,
+        "ndcg_at_5": 0.737872,
+        "ndcg_at_10": 0.737872
+      },
+      "ranking_consistency": {
+        "repeat_is_identical": true,
+        "pairwise_order_agreement_vs_reversed_input": 0.916667,
+        "tie_group_count": 5,
+        "input_order_sensitive_tie_group_count": 5
+      },
+      "top_20": [
+        {
+          "candidate_id": "PUB-ENE-02",
+          "grade": 2,
+          "score": 0.113636
+        },
+        {
+          "candidate_id": "PUB-ENE-04",
+          "grade": 0,
+          "score": 0.1
+        },
+        {
+          "candidate_id": "PUB-ENE-01",
+          "grade": 3,
+          "score": 0.071429
+        },
+        {
+          "candidate_id": "PUB-ENE-03",
+          "grade": 1,
+          "score": 0.069767
+        },
+        {
+          "candidate_id": "PUB-BIO-03",
+          "grade": 0,
+          "score": 0.046512
+        },
+        {
+          "candidate_id": "PUB-WAT-04",
+          "grade": 0,
+          "score": 0.045455
+        },
+        {
+          "candidate_id": "PUB-AGR-03",
+          "grade": 0,
+          "score": 0.041667
+        },
+        {
+          "candidate_id": "PUB-WAT-03",
+          "grade": 0,
+          "score": 0.041667
+        },
+        {
+          "candidate_id": "PUB-AGR-02",
+          "grade": 0,
+          "score": 0.04
+        },
+        {
+          "candidate_id": "PUB-AGR-05",
+          "grade": 0,
+          "score": 0.023256
+        },
+        {
+          "candidate_id": "PUB-MAT-03",
+          "grade": 0,
+          "score": 0.023256
+        },
+        {
+          "candidate_id": "PUB-BIO-04",
+          "grade": 0,
+          "score": 0.022727
+        },
+        {
+          "candidate_id": "PUB-EDU-03",
+          "grade": 0,
+          "score": 0.022222
+        },
+        {
+          "candidate_id": "PUB-BIO-02",
+          "grade": 0,
+          "score": 0.021739
+        },
+        {
+          "candidate_id": "PUB-MAT-02",
+          "grade": 0,
+          "score": 0.021277
+        },
+        {
+          "candidate_id": "PUB-WAT-02",
+          "grade": 0,
+          "score": 0.021277
+        },
+        {
+          "candidate_id": "PUB-AGR-04",
+          "grade": 0,
+          "score": 0.019608
+        },
+        {
+          "candidate_id": "PUB-EDU-02",
+          "grade": 0,
+          "score": 0.019608
+        },
+        {
+          "candidate_id": "PUB-AGR-01",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-MAT-01",
+          "grade": 0,
+          "score": 0.0
+        }
+      ]
+    },
+    {
+      "query_id": "ENE-Q2",
+      "query_type": "proposal_statement",
+      "candidate_count": 25,
+      "positive_candidate_count": 3,
+      "metrics": {
+        "recall_at_5": 0.666667,
+        "recall_at_10": 0.666667,
+        "recall_at_20": 0.666667,
+        "candidate_coverage_at_20": 0.8,
+        "relevant_candidate_retrieval_rate_at_20": 0.666667,
+        "precision_at_5": 0.4,
+        "mrr": 1.0,
+        "ndcg_at_5": 0.812424,
+        "ndcg_at_10": 0.812424
+      },
+      "ranking_consistency": {
+        "repeat_is_identical": true,
+        "pairwise_order_agreement_vs_reversed_input": 0.953333,
+        "tie_group_count": 8,
+        "input_order_sensitive_tie_group_count": 8
+      },
+      "top_20": [
+        {
+          "candidate_id": "PUB-ENE-01",
+          "grade": 3,
+          "score": 0.277778
+        },
+        {
+          "candidate_id": "PUB-ENE-03",
+          "grade": 1,
+          "score": 0.093023
+        },
+        {
+          "candidate_id": "PUB-AGR-05",
+          "grade": 0,
+          "score": 0.071429
+        },
+        {
+          "candidate_id": "PUB-MAT-03",
+          "grade": 0,
+          "score": 0.071429
+        },
+        {
+          "candidate_id": "PUB-WAT-01",
+          "grade": 0,
+          "score": 0.071429
+        },
+        {
+          "candidate_id": "PUB-BIO-03",
+          "grade": 0,
+          "score": 0.069767
+        },
+        {
+          "candidate_id": "PUB-BIO-04",
+          "grade": 0,
+          "score": 0.069767
+        },
+        {
+          "candidate_id": "PUB-MAT-01",
+          "grade": 0,
+          "score": 0.068182
+        },
+        {
+          "candidate_id": "PUB-WAT-04",
+          "grade": 0,
+          "score": 0.068182
+        },
+        {
+          "candidate_id": "PUB-EDU-03",
+          "grade": 0,
+          "score": 0.068182
+        },
+        {
+          "candidate_id": "PUB-AGR-01",
+          "grade": 0,
+          "score": 0.065217
+        },
+        {
+          "candidate_id": "PUB-WAT-02",
+          "grade": 0,
+          "score": 0.065217
+        },
+        {
+          "candidate_id": "PUB-AGR-02",
+          "grade": 0,
+          "score": 0.06
+        },
+        {
+          "candidate_id": "PUB-AGR-04",
+          "grade": 0,
+          "score": 0.06
+        },
+        {
+          "candidate_id": "PUB-EDU-02",
+          "grade": 0,
+          "score": 0.06
+        },
+        {
+          "candidate_id": "PUB-EDU-01",
+          "grade": 0,
+          "score": 0.04878
+        },
+        {
+          "candidate_id": "PUB-ENE-04",
+          "grade": 0,
+          "score": 0.046512
+        },
+        {
+          "candidate_id": "PUB-BIO-01",
+          "grade": 0,
+          "score": 0.043478
+        },
+        {
+          "candidate_id": "PUB-BIO-02",
+          "grade": 0,
+          "score": 0.043478
+        },
+        {
+          "candidate_id": "PUB-MAT-02",
+          "grade": 0,
+          "score": 0.042553
+        }
+      ]
+    },
+    {
+      "query_id": "EDU-Q1",
+      "query_type": "research_question",
+      "candidate_count": 25,
+      "positive_candidate_count": 3,
+      "metrics": {
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "recall_at_20": 1.0,
+        "candidate_coverage_at_20": 0.8,
+        "relevant_candidate_retrieval_rate_at_20": 1.0,
+        "precision_at_5": 0.6,
+        "mrr": 1.0,
+        "ndcg_at_5": 0.842828,
+        "ndcg_at_10": 0.842828
+      },
+      "ranking_consistency": {
+        "repeat_is_identical": true,
+        "pairwise_order_agreement_vs_reversed_input": 0.95,
+        "tie_group_count": 4,
+        "input_order_sensitive_tie_group_count": 4
+      },
+      "top_20": [
+        {
+          "candidate_id": "PUB-EDU-02",
+          "grade": 2,
+          "score": 0.2
+        },
+        {
+          "candidate_id": "PUB-EDU-01",
+          "grade": 3,
+          "score": 0.128205
+        },
+        {
+          "candidate_id": "PUB-EDU-03",
+          "grade": 1,
+          "score": 0.066667
+        },
+        {
+          "candidate_id": "PUB-AGR-02",
+          "grade": 0,
+          "score": 0.058824
+        },
+        {
+          "candidate_id": "PUB-AGR-05",
+          "grade": 0,
+          "score": 0.045455
+        },
+        {
+          "candidate_id": "PUB-ENE-04",
+          "grade": 0,
+          "score": 0.045455
+        },
+        {
+          "candidate_id": "PUB-BIO-04",
+          "grade": 0,
+          "score": 0.044444
+        },
+        {
+          "candidate_id": "PUB-WAT-04",
+          "grade": 0,
+          "score": 0.043478
+        },
+        {
+          "candidate_id": "PUB-BIO-02",
+          "grade": 0,
+          "score": 0.042553
+        },
+        {
+          "candidate_id": "PUB-AGR-01",
+          "grade": 0,
+          "score": 0.041667
+        },
+        {
+          "candidate_id": "PUB-MAT-02",
+          "grade": 0,
+          "score": 0.041667
+        },
+        {
+          "candidate_id": "PUB-WAT-02",
+          "grade": 0,
+          "score": 0.041667
+        },
+        {
+          "candidate_id": "PUB-AGR-03",
+          "grade": 0,
+          "score": 0.04
+        },
+        {
+          "candidate_id": "PUB-WAT-03",
+          "grade": 0,
+          "score": 0.04
+        },
+        {
+          "candidate_id": "PUB-AGR-04",
+          "grade": 0,
+          "score": 0.038462
+        },
+        {
+          "candidate_id": "PUB-MAT-03",
+          "grade": 0,
+          "score": 0.022222
+        },
+        {
+          "candidate_id": "PUB-BIO-03",
+          "grade": 0,
+          "score": 0.021739
+        },
+        {
+          "candidate_id": "PUB-ENE-03",
+          "grade": 0,
+          "score": 0.021277
+        },
+        {
+          "candidate_id": "PUB-BIO-01",
+          "grade": 0,
+          "score": 0.020833
+        },
+        {
+          "candidate_id": "PUB-ENE-02",
+          "grade": 0,
+          "score": 0.02
+        }
+      ]
+    },
+    {
+      "query_id": "EDU-Q2",
+      "query_type": "proposal_statement",
+      "candidate_count": 25,
+      "positive_candidate_count": 3,
+      "metrics": {
+        "recall_at_5": 0.666667,
+        "recall_at_10": 1.0,
+        "recall_at_20": 1.0,
+        "candidate_coverage_at_20": 0.8,
+        "relevant_candidate_retrieval_rate_at_20": 1.0,
+        "precision_at_5": 0.4,
+        "mrr": 1.0,
+        "ndcg_at_5": 0.386566,
+        "ndcg_at_10": 0.65203
+      },
+      "ranking_consistency": {
+        "repeat_is_identical": true,
+        "pairwise_order_agreement_vs_reversed_input": 0.953333,
+        "tie_group_count": 7,
+        "input_order_sensitive_tie_group_count": 7
+      },
+      "top_20": [
+        {
+          "candidate_id": "PUB-EDU-02",
+          "grade": 2,
+          "score": 0.12
+        },
+        {
+          "candidate_id": "PUB-EDU-03",
+          "grade": 1,
+          "score": 0.06383
+        },
+        {
+          "candidate_id": "PUB-BIO-03",
+          "grade": 0,
+          "score": 0.042553
+        },
+        {
+          "candidate_id": "PUB-WAT-02",
+          "grade": 0,
+          "score": 0.04
+        },
+        {
+          "candidate_id": "PUB-AGR-02",
+          "grade": 0,
+          "score": 0.037037
+        },
+        {
+          "candidate_id": "PUB-EDU-01",
+          "grade": 3,
+          "score": 0.022222
+        },
+        {
+          "candidate_id": "PUB-AGR-05",
+          "grade": 0,
+          "score": 0.021277
+        },
+        {
+          "candidate_id": "PUB-MAT-03",
+          "grade": 0,
+          "score": 0.021277
+        },
+        {
+          "candidate_id": "PUB-WAT-01",
+          "grade": 0,
+          "score": 0.021277
+        },
+        {
+          "candidate_id": "PUB-ENE-04",
+          "grade": 0,
+          "score": 0.021277
+        },
+        {
+          "candidate_id": "PUB-ENE-01",
+          "grade": 0,
+          "score": 0.020833
+        },
+        {
+          "candidate_id": "PUB-BIO-04",
+          "grade": 0,
+          "score": 0.020833
+        },
+        {
+          "candidate_id": "PUB-MAT-01",
+          "grade": 0,
+          "score": 0.020408
+        },
+        {
+          "candidate_id": "PUB-WAT-04",
+          "grade": 0,
+          "score": 0.020408
+        },
+        {
+          "candidate_id": "PUB-ENE-03",
+          "grade": 0,
+          "score": 0.020408
+        },
+        {
+          "candidate_id": "PUB-BIO-01",
+          "grade": 0,
+          "score": 0.02
+        },
+        {
+          "candidate_id": "PUB-BIO-02",
+          "grade": 0,
+          "score": 0.02
+        },
+        {
+          "candidate_id": "PUB-AGR-01",
+          "grade": 0,
+          "score": 0.019608
+        },
+        {
+          "candidate_id": "PUB-MAT-02",
+          "grade": 0,
+          "score": 0.019608
+        },
+        {
+          "candidate_id": "PUB-ENE-02",
+          "grade": 0,
+          "score": 0.019231
+        }
+      ]
+    },
+    {
+      "query_id": "BIO-Q1",
+      "query_type": "research_question",
+      "candidate_count": 25,
+      "positive_candidate_count": 3,
+      "metrics": {
+        "recall_at_5": 0.666667,
+        "recall_at_10": 0.666667,
+        "recall_at_20": 0.666667,
+        "candidate_coverage_at_20": 0.8,
+        "relevant_candidate_retrieval_rate_at_20": 0.666667,
+        "precision_at_5": 0.4,
+        "mrr": 1.0,
+        "ndcg_at_5": 0.946768,
+        "ndcg_at_10": 0.946768
+      },
+      "ranking_consistency": {
+        "repeat_is_identical": true,
+        "pairwise_order_agreement_vs_reversed_input": 0.49,
+        "tie_group_count": 1,
+        "input_order_sensitive_tie_group_count": 1
+      },
+      "top_20": [
+        {
+          "candidate_id": "PUB-BIO-01",
+          "grade": 3,
+          "score": 0.179487
+        },
+        {
+          "candidate_id": "PUB-BIO-02",
+          "grade": 2,
+          "score": 0.045455
+        },
+        {
+          "candidate_id": "PUB-EDU-01",
+          "grade": 0,
+          "score": 0.025
+        },
+        {
+          "candidate_id": "PUB-AGR-05",
+          "grade": 0,
+          "score": 0.02381
+        },
+        {
+          "candidate_id": "PUB-BIO-04",
+          "grade": 0,
+          "score": 0.023256
+        },
+        {
+          "candidate_id": "PUB-AGR-01",
+          "grade": 0,
+          "score": 0.021739
+        },
+        {
+          "candidate_id": "PUB-AGR-02",
+          "grade": 0,
+          "score": 0.02
+        },
+        {
+          "candidate_id": "PUB-AGR-03",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-AGR-04",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-MAT-01",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-MAT-02",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-MAT-03",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-MAT-04",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-WAT-01",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-WAT-02",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-WAT-03",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-WAT-04",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-ENE-01",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-ENE-02",
+          "grade": 0,
+          "score": 0.0
+        },
+        {
+          "candidate_id": "PUB-ENE-03",
+          "grade": 0,
+          "score": 0.0
+        }
+      ]
+    },
+    {
+      "query_id": "BIO-Q2",
+      "query_type": "proposal_statement",
+      "candidate_count": 25,
+      "positive_candidate_count": 3,
+      "metrics": {
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0,
+        "recall_at_20": 1.0,
+        "candidate_coverage_at_20": 0.8,
+        "relevant_candidate_retrieval_rate_at_20": 1.0,
+        "precision_at_5": 0.6,
+        "mrr": 1.0,
+        "ndcg_at_5": 1.0,
+        "ndcg_at_10": 1.0
+      },
+      "ranking_consistency": {
+        "repeat_is_identical": true,
+        "pairwise_order_agreement_vs_reversed_input": 0.97,
+        "tie_group_count": 5,
+        "input_order_sensitive_tie_group_count": 5
+      },
+      "top_20": [
+        {
+          "candidate_id": "PUB-BIO-01",
+          "grade": 3,
+          "score": 0.195122
+        },
+        {
+          "candidate_id": "PUB-BIO-02",
+          "grade": 2,
+          "score": 0.139535
+        },
+        {
+          "candidate_id": "PUB-BIO-03",
+          "grade": 1,
+          "score": 0.093023
+        },
+        {
+          "candidate_id": "PUB-WAT-03",
+          "grade": 0,
+          "score": 0.083333
+        },
+        {
+          "candidate_id": "PUB-AGR-02",
+          "grade": 0,
+          "score": 0.058824
+        },
+        {
+          "candidate_id": "PUB-AGR-05",
+          "grade": 0,
+          "score": 0.045455
+        },
+        {
+          "candidate_id": "PUB-MAT-03",
+          "grade": 0,
+          "score": 0.045455
+        },
+        {
+          "candidate_id": "PUB-ENE-04",
+          "grade": 0,
+          "score": 0.045455
+        },
+        {
+          "candidate_id": "PUB-BIO-04",
+          "grade": 0,
+          "score": 0.044444
+        },
+        {
+          "candidate_id": "PUB-WAT-04",
+          "grade": 0,
+          "score": 0.043478
+        },
+        {
+          "candidate_id": "PUB-ENE-03",
+          "grade": 0,
+          "score": 0.043478
+        },
+        {
+          "candidate_id": "PUB-EDU-03",
+          "grade": 0,
+          "score": 0.043478
+        },
+        {
+          "candidate_id": "PUB-MAT-02",
+          "grade": 0,
+          "score": 0.041667
+        },
+        {
+          "candidate_id": "PUB-WAT-02",
+          "grade": 0,
+          "score": 0.041667
+        },
+        {
+          "candidate_id": "PUB-ENE-02",
+          "grade": 0,
+          "score": 0.040816
+        },
+        {
+          "candidate_id": "PUB-AGR-03",
+          "grade": 0,
+          "score": 0.04
+        },
+        {
+          "candidate_id": "PUB-AGR-04",
+          "grade": 0,
+          "score": 0.038462
+        },
+        {
+          "candidate_id": "PUB-EDU-02",
+          "grade": 0,
+          "score": 0.038462
+        },
+        {
+          "candidate_id": "PUB-EDU-01",
+          "grade": 0,
+          "score": 0.023256
+        },
+        {
+          "candidate_id": "PUB-WAT-01",
+          "grade": 0,
+          "score": 0.022222
+        }
+      ]
+    }
+  ],
+  "interpretation": "These deterministic metrics evaluate a fixed synthetic candidate pool and the existing lexical ranker only. They do not measure live OpenAlex query recall, scientific relevance, institutional performance, plagiarism, or funding decisions."
+}

@@ -143,3 +143,105 @@ The full after-results continue to show no ranking-score gain over Phase 2, and 
 Remaining limitations: no authorized representative corpus; no live OpenAlex validation; OpenAlex pagination and retry/backoff remain absent; ranking has no measured gain over Phase 2; duplicate-signal errors remain visible in the synthetic diagnostic and thresholds were intentionally left unchanged; OCR, institutional integrations and production-readiness validation remain out of scope.
 
 AI findings are screening signals only. Similarity does not establish plagiarism, shared subject matter does not establish duplication, and a missing or unavailable source is not proof of absence. Consequential findings require human review against the cited source text.
+
+## Expanded retrieval evaluation report — 2026-11-13
+
+### Baseline assessment
+
+The merged PR #19 implementation added query cleanup, OpenAlex source-state accounting,
+DOI/record-ID deduplication, and synthetic evaluation scripts. The production literature
+path generates up to six proposal-derived queries, requests up to 30 OpenAlex works per
+query, removes duplicate and unusable-abstract records, and retains provider result
+ordering. It does not use `ml.semantic_matching.hybrid.rank_candidates` to reorder
+published literature before text comparison. That generic ranker is a deterministic
+token-set Jaccard implementation with stable sorting; equal scores inherit input order.
+The historical Phase 2 retrieval fixtures contain 4 and 10 queries with five candidates
+each, so K=5 evaluates the entire candidate pool and does not measure candidate filtering.
+Their binary labels also cannot distinguish weak from strong relevance. Those historical
+fixtures and reference outputs remain unchanged.
+
+### Dataset and method
+
+The new versioned fixture is `data/evaluation/retrieval_evaluation_v1.json`
+(`synthetic-research-retrieval-v1.0`); its deterministic output is
+`data/evaluation/retrieval_evaluation_v1_results.json`. It has 27 synthetic publication
+records, 25 unique works after DOI/record-ID deduplication, 6 domain groups, 12 query
+variants, and 25 unique candidates per query. It covers agriculture, maternal health,
+water quality, renewable energy, education, and biodiversity. The 300 query-work labels
+are 264 grade 0, 12 grade 1, 12 grade 2, and 12 grade 3. Every grade has a rationale:
+case-level rationales explicitly label the default cross-domain negatives, with
+candidate-specific rationales for matches and difficult negatives.
+
+The fixture uses synthetic texts and identifiers only. It deliberately includes
+paraphrases, lexical distractors, near-topic negatives, one same-DOI duplicate pair,
+incomplete metadata and missing abstracts. The evaluator deduplicates with the same
+normalization helper as the literature source and uses the existing ranker on the
+concatenated title and abstract. No ranking formula, query-generation rule, threshold, or
+external-model dependency changed.
+
+Candidate-selection metrics are Recall@5/10/20, coverage@20 (returned unique candidates
+over the fixed 25-work pool), and relevant-candidate retrieval rate@20. Ranking metrics
+are Precision@5 and MRR over grades 1–3, plus graded nDCG@5/10 with gain `2^grade - 1`.
+These metrics are separately reported but share the same ranked output; they measure
+top-K selection and order within this fixed synthetic pool. They do not measure recall
+of live OpenAlex queries or establish production ranking quality.
+
+### Baseline results and error analysis
+
+| Candidate selection | Result | Ranking | Result |
+|---|---:|---|---:|
+| Recall@5 | 0.8333 | Precision@5 | 0.5000 |
+| Recall@10 | 0.9167 | MRR | 1.0000 |
+| Recall@20 | 0.9444 | Graded nDCG@5 | 0.8314 |
+| Candidate coverage@20 | 0.8000 | Graded nDCG@10 | 0.8650 |
+| Relevant-candidate retrieval rate@20 | 0.9444 | | |
+
+Across 12 queries, there were 30 grade-0 top-five results (2.5 per query on average)
+and two positive judgments below depth 20: `PUB-ENE-02` (grade 2, `ENE-Q2`) and
+`PUB-BIO-03` (grade 1, `BIO-Q1`). The first positive was ranked first on all queries,
+which explains MRR=1.0; it does not mean all positive candidates were ranked near the
+top. Difficult negatives remained competitive when sharing terms but differing in
+meaning, including crop nutrient stress vs. crop infection, irrigation vs. water
+contamination, and electricity demand vs. solar generation. Some cross-domain records
+also ranked highly due to common-token overlap.
+
+Repeated evaluation with unchanged candidate order produced identical rankings. Reversing
+candidate input order changed the order of tied candidates in all 12 queries; there were
+49 tied score groups and mean pairwise ordering agreement was 0.8867. Thus ranking is
+repeatable for fixed input, but tie order is input-dependent.
+
+No alternative ranker was tested or adopted. The observed lexical and tie weaknesses
+justify a future controlled comparison, but do not justify a production scoring change
+from this small, hand-authored dataset. No retrieval improvement is claimed.
+
+### Regression results, limitations, and next activity
+
+- Backend: **185 passed**, including Phase 2 workflow, OpenAlex state/deduplication,
+  evidence provenance, API error redaction, and the new dataset/metric tests.
+- Frontend: **72 passed** across six files; ESLint, TypeScript checking, and production
+  build passed. The build emitted existing optional-`sharp`, Autoprefixer, and webpack
+  cache warnings.
+- Changed Python files: Ruff passed. Repository-wide Ruff reports the pre-existing
+  import-order finding in `services/plagiarism/attribution.py`.
+- The baseline output is byte-for-byte repeatable and records the dataset SHA-256.
+
+Limitations remain substantial: judgments are hand-authored rather than independently
+adjudicated; there are only six domains and twelve English query variants; all queries
+share the same small catalog; and 264/300 judgments are easy cross-domain negatives.
+The pool is supplied rather than discovered by a live source, and synthetic performance
+does not validate scientific relevance, institutional screening, plagiarism, or
+funding decisions. Missing-abstract behavior is represented in the fixture, but the
+offline ranker uses available title text and does not reproduce all OpenAlex response,
+pagination, or network failure modes. Live OpenAlex validation remains blocked as
+documented above. The dataset, metric, test, and result artifacts preserve existing
+Phase 2 reference metrics rather than overwriting them. `npm ci` also reported
+18 existing lockfile dependency advisories (9 moderate, 6 high, 3 critical); this task
+did not change dependencies or investigate/remediate those advisories.
+
+**Recommendation:** before proposing a ranking change, obtain authorization for a
+privacy-reviewed, representative publication/query set; have domain reviewers label
+candidate relevance with rationales; and compare the baseline and any alternative on
+identical query/candidate pools while separately validating live-source retrieval,
+coverage, provenance, and source-state behavior. Until then, retain the current behavior
+and keep all consequential screening decisions under human authority. Phase 3 is not
+complete.

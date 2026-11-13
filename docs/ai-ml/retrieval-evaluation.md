@@ -77,6 +77,90 @@ plagiarism finding, and a reviewer decision is not a retrieval label. OpenAlex s
 availability and unusable-result counts are recorded independently from matched-source
 counts.
 
+## Expanded graded retrieval diagnostic — v1.0
+
+`data/evaluation/retrieval_evaluation_v1.json` is a new, frozen synthetic benchmark.
+It supplements rather than replaces the Phase 2 corpora above. It contains 27 catalog
+records, which collapse by the same normalized DOI/record-ID key used by the literature
+source to 25 unique works per query; 12 query variants (research questions and proposal
+statements) span six domains. Each query has 25 unique candidates, including relevant,
+weakly relevant, and irrelevant records. Graded labels use 0 (not relevant), 1 (weak),
+2 (relevant), and 3 (highly relevant), with a rationale for every label: case-level
+default rationales cover the cross-domain negatives, and explicit judgments cover
+same-domain matches and difficult negatives.
+
+The fixture intentionally includes paraphrases with limited shared vocabulary, highly
+lexical but meaningfully different candidates, a same-DOI duplicate, a distinct-DOI
+near-duplicate, title-only metadata, an absent abstract, and one record with no searchable
+metadata. All records and judgments are synthetic and hand-authored; labels have not
+been adjudicated by domain experts. The dataset is a diagnostic fixture, not evidence of
+institutional or scientific validity.
+
+Known sampling biases include a shared catalog for all query groups, only two phrasings
+per domain, English-only terminology, and many easy cross-domain grade-0 examples
+(264/300 judgments are grade 0). The few same-domain hard negatives and positive
+paraphrases cannot represent the diversity or ambiguity of real scholarly queries.
+Dataset labels reflect one synthetic construction, not inter-rater agreement.
+
+Run the model-free baseline and write the deterministic result artifact with:
+
+```sh
+python -m scripts.evaluate_retrieval_dataset \
+  --dataset data/evaluation/retrieval_evaluation_v1.json \
+  --output data/evaluation/retrieval_evaluation_v1_results.json
+```
+
+The evaluator deduplicates by DOI/record ID, concatenates available title and abstract
+text, and calls the existing `rank_candidates` token-Jaccard implementation without
+changing its scoring formula. Candidate-generation metrics describe the relevant
+candidates present in the ranker's top-K selections from this fixed pool: Recall@K is
+the fraction of all judged relevant candidates recovered, coverage@20 is the fraction
+of the 25-work pool returned at depth 20, and relevant-candidate retrieval rate@20 is
+the share of judged relevant candidates returned at that depth. Ranking metrics describe
+the order: Precision@5 and MRR treat grades 1–3 as relevant; nDCG uses graded gain
+`2^grade - 1`. Candidate and ranking metrics are separate reports over the same ranked
+output, not independent retrieval components. None of these offline metrics measures
+live OpenAlex query recall: in the current literature workflow OpenAlex supplies result
+order, records are deduplicated and abstract-filtered, and the generic ranker does not
+reorder those works before text comparison.
+
+The 13 November 2026 lexical-only baseline is:
+
+| Evaluation stage | Metric | Result |
+|---|---|---:|
+| Candidate selection | Recall@5 | 0.8333 |
+| Candidate selection | Recall@10 | 0.9167 |
+| Candidate selection | Recall@20 | 0.9444 |
+| Candidate selection | Candidate coverage@20 | 0.8000 |
+| Candidate selection | Relevant-candidate retrieval rate@20 | 0.9444 |
+| Ranking | Precision@5 | 0.5000 |
+| Ranking | MRR | 1.0000 |
+| Ranking | Graded nDCG@5 | 0.8314 |
+| Ranking | Graded nDCG@10 | 0.8650 |
+
+The 12 query variants have 300 deduplicated query-work judgments: 264 grade 0, 12
+grade 1, 12 grade 2, and 12 grade 3. There were 30 grade-0 results in top-five lists
+(2.5 per query on average) and two positive judgments below depth 20: a grade-2,
+lexically weaker photovoltaic paraphrase for `ENE-Q2`, and a grade-1 conservation
+context candidate for `BIO-Q1`. The first positive candidate was ranked first for every
+query, so MRR=1.0 does not imply that all relevant candidates were ranked well; the
+graded nDCG exposes weaker ordering among the remaining positives.
+
+Repeated runs with identical input were identical. Reversing candidate input order
+changed tied ordering for all 12 queries; there were 49 non-singleton tie groups and
+mean pairwise ordering agreement was 0.8867. The stable sort is deterministic for a
+fixed input but inherits input order for equal Jaccard scores. Frequent top-five errors
+include high-overlap distractors (for example crop nutrient stress vs. crop infection,
+irrigation vs. water contamination, and weather-driven electricity demand vs. solar
+generation) and unrelated records that share common words.
+
+This run does not compare an alternative ranker. It confirms limitations in lexical
+matching and tie behavior, but the labels are hand-authored, the corpus is small, and
+the candidate pool is supplied rather than discovered from OpenAlex. No ranker change is
+accepted from this diagnostic. The output JSON includes per-query results, rationales
+for false positives/negatives, a dataset SHA-256, and tie-consistency diagnostics so a
+future experiment can use the identical candidate pool and labels.
+
 ## Cross-encoder reranking
 
 The retrieval stack now supports a true second-stage cross-encoder:

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { DemoAuthContext, type DemoAuthValue } from "../components/auth/DemoAuthContext";
 import WorkspaceShell from "../components/workflow/WorkspaceShell";
 import {
   ACTIVE_DEMO_ROLES,
@@ -26,10 +27,28 @@ afterEach(() => {
   navigation.replace.mockReset();
 });
 
-function renderWorkspace(pathname = "/dashboard") {
+const grantAdminAuth: DemoAuthValue = {
+  accessToken: "server-issued-admin-token",
+  identity: {
+    user_id: "demo-grant-administrator",
+    email: "admin@shakahive.demo",
+    workspace: "GRANT_ADMINISTRATOR",
+  },
+  login: vi.fn(),
+  logout: vi.fn(),
+};
+
+function renderWorkspace(
+  pathname = "/dashboard",
+  auth: DemoAuthValue = grantAdminAuth,
+) {
   navigation.pathname = pathname;
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("[]", { status: 200 })));
-  return render(<WorkspaceShell><div data-testid="page-content">Current page</div></WorkspaceShell>);
+  return render(
+    <DemoAuthContext.Provider value={auth}>
+      <WorkspaceShell><div data-testid="page-content">Current page</div></WorkspaceShell>
+    </DemoAuthContext.Provider>,
+  );
 }
 
 describe("demo role configuration", () => {
@@ -95,13 +114,13 @@ describe("demo role configuration", () => {
 });
 
 describe("demo workspace navigation", () => {
-  it("shows the selected role, active navigation, and the unauthenticated demo disclaimer", async () => {
+  it("shows the authenticated workspace and its active navigation", async () => {
     renderWorkspace();
 
-    const roleDisplay = screen.getByRole("group", { name: "ACTIVE DEMO ROLE · READ-ONLY" });
+    const roleDisplay = screen.getByRole("group", { name: "AUTHENTICATED DEMO WORKSPACE" });
     expect(roleDisplay.textContent).toContain("Grant Administrator (demo workflow)");
-    expect(roleDisplay.textContent).toContain("Only implemented demo workflow.");
-    expect(screen.getByText(/Demo identity only.*not authenticated/)).toBeTruthy();
+    expect(roleDisplay.textContent).toContain("admin@shakahive.demo");
+    expect(screen.queryByText(/role is sent as a header/i)).toBeNull();
     expect(screen.getByLabelText("Current demo role: Grant Administrator (demo workflow)")).toBeTruthy();
     const navigationLinks = [...screen.getByRole("navigation", { name: "Grant screening" }).querySelectorAll("a")];
     expect(navigationLinks.map((link) => link.textContent?.trim())).toEqual([
@@ -126,21 +145,24 @@ describe("demo workspace navigation", () => {
     await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith("/dashboard"));
   });
 
-  it("replaces a persisted legacy role on refresh without exposing its navigation", async () => {
-    window.localStorage.setItem("ai-screening.role", "REVIEWER");
-    renderWorkspace("/dashboard/report");
-
-    await waitFor(() => expect(window.localStorage.getItem("ai-screening.role")).toBe("GRANT_ADMINISTRATOR"));
-    expect(screen.getByRole("group", { name: "ACTIVE DEMO ROLE · READ-ONLY" }).textContent).toContain("Grant Administrator (demo workflow)");
-    expect(screen.getByRole("link", { name: "Report" }).getAttribute("aria-current")).toBe("page");
-    expect(screen.queryByRole("option", { name: /Reviewer/ })).toBeNull();
-  });
-
-  it("does not leave the old page content visible during an unavailable-route redirect", async () => {
-    renderWorkspace("/dashboard/team-admin");
+  it("redirects an Applicant away from the Grant Administrator workspace", async () => {
+    renderWorkspace("/dashboard/report", {
+      ...grantAdminAuth,
+      identity: {
+        user_id: "demo-applicant",
+        email: "applicant@shakahive.demo",
+        workspace: "APPLICANT",
+      },
+    });
 
     expect(screen.queryByTestId("page-content")).toBeNull();
-    expect(screen.getByText(/Returning to the Grant Administrator/)).toBeTruthy();
-    await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith("/dashboard"));
+    await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith("/applicant/dashboard"));
+  });
+
+  it("redirects unauthenticated navigation to login without mounting protected content", async () => {
+    renderWorkspace("/dashboard/team-admin", { ...grantAdminAuth, accessToken: null, identity: null });
+
+    expect(screen.queryByTestId("page-content")).toBeNull();
+    await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith("/login"));
   });
 });

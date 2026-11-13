@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from apps.api.dependencies import get_service
 from apps.api.main import app
+from services.auth.demo_auth import DemoAuthentication
 from services.grant_workflow.documents import extract_bytes
 from services.grant_workflow.duplication_archive import (
     ArchiveValidationError,
@@ -17,8 +18,6 @@ from services.grant_workflow.models import Application, ApplicationDocument, Dat
 from services.grant_workflow.service import GrantWorkflowService
 from services.sources.registry import SourceAccessStatus
 
-ADMIN = {"X-User-Role": "GRANT_ADMINISTRATOR", "X-User-Id": "admin-library"}
-REVIEWER = {"X-User-Role": "REVIEWER", "X-User-Id": "reviewer-library"}
 PROPOSAL = b"We will compare precision irrigation sensors across sixty farms.\n\fMethods: randomized field trial with soil moisture monitoring."
 
 
@@ -181,29 +180,57 @@ def test_valid_docx_and_pdf_imports(archive):
 def archive_client(archive):
     service = GrantWorkflowService(jobs=InlineJobRunner(), providers=[], duplication_archive=archive)
     app.dependency_overrides[get_service] = lambda: service
-    yield TestClient(app)
+    previous_auth = app.state.demo_auth
+    app.state.demo_auth = DemoAuthentication(enabled=True)
+    test_client = TestClient(app)
+    login = test_client.post("/api/v1/auth/login", json={
+        "workspace": "GRANT_ADMINISTRATOR",
+        "email": "admin@shakahive.demo",
+        "password": "Admin123!",
+    })
+    assert login.status_code == 200
+    test_client.headers["Authorization"] = f"Bearer {login.json()['access_token']}"
+    yield test_client
     app.dependency_overrides.pop(get_service, None)
+    app.state.demo_auth = previous_auth
 
 
 def test_import_api_authorization_validation_and_conflict(archive_client):
     files = {"file": ("proposal.txt", PROPOSAL, "text/plain")}
     data = {"title": "Irrigation trial", "source_type": "funded_project", "year": "2025"}
-    assert archive_client.post("/api/v1/duplication/projects", files=files, data=data).status_code == 401
-    assert archive_client.post("/api/v1/duplication/projects", files=files, data=data, headers=REVIEWER).status_code == 403
-    imported = archive_client.post("/api/v1/duplication/projects", files=files, data=data, headers=ADMIN)
+    anonymous = TestClient(app)
+    assert anonymous.post(
+        "/api/v1/duplication/projects",
+        files=files,
+        data=data,
+        headers={"X-User-Role": "GRANT_ADMINISTRATOR", "X-User-Id": "forged"},
+    ).status_code == 401
+    applicant_login = archive_client.post("/api/v1/auth/login", json={
+        "workspace": "APPLICANT",
+        "email": "applicant@shakahive.demo",
+        "password": "Applicant123!",
+    })
+    applicant_headers = {"Authorization": f"Bearer {applicant_login.json()['access_token']}"}
+    assert anonymous.post(
+        "/api/v1/duplication/projects",
+        files=files,
+        data=data,
+        headers=applicant_headers,
+    ).status_code == 403
+    imported = archive_client.post("/api/v1/duplication/projects", files=files, data=data)
     assert imported.status_code == 201
     body = imported.json()
     assert body["data_origin"] == "UPLOADED" and body["text_length"] > 0
     assert body["source_type"] == "funded_project" and body["year"] == 2025
     assert "text" not in body
     assert archive_client.get("/api/v1/duplication/projects").json() == [body]
-    duplicate = archive_client.post("/api/v1/duplication/projects", files=files, data=data, headers=ADMIN)
+    duplicate = archive_client.post("/api/v1/duplication/projects", files=files, data=data)
     assert duplicate.status_code == 409
     assert duplicate.json()["detail"] == "This project is already in the comparison library"
     assert body["id"] not in duplicate.json()["detail"]
-    invalid = archive_client.post("/api/v1/duplication/projects", files=files, data={**data, "source_type": "invented"}, headers=ADMIN)
+    invalid = archive_client.post("/api/v1/duplication/projects", files=files, data={**data, "source_type": "invented"})
     assert invalid.status_code == 422
-    empty_title = archive_client.post("/api/v1/duplication/projects", files=files, data={**data, "title": "  "}, headers=ADMIN)
+    empty_title = archive_client.post("/api/v1/duplication/projects", files=files, data={**data, "title": "  "})
     assert empty_title.status_code == 422
     assert len(archive_client.get("/api/v1/duplication/projects").json()) == 1
 

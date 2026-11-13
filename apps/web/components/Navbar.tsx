@@ -9,6 +9,7 @@ import logo from "../public/brand/logo-on-dark.png";
 const links = [
   { href: "/", label: "Home" },
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/login", label: "Sign in" },
 ];
 
 export default function Navbar() {

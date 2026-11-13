@@ -8,15 +8,12 @@ from fastapi.testclient import TestClient
 import apps.api.routes.publications as publication_routes
 from apps.api.dependencies import get_service
 from apps.api.main import app
+from services.auth.demo_auth import DemoAuthentication
 from services.grant_workflow.demo_data import DEMO_RFP_TEXT
 from services.grant_workflow.jobs import InlineJobRunner
 from services.grant_workflow.providers import MockGrantDataProvider, RIGMSGrantDataProvider
 from services.grant_workflow.seed import demo_applications_zip
 from services.grant_workflow.service import GrantWorkflowService
-
-ADMIN = {"X-User-Role": "GRANT_ADMINISTRATOR", "X-User-Id": "admin-1"}
-REVIEWER = {"X-User-Role": "REVIEWER", "X-User-Id": "reviewer-1"}
-SYSADMIN = {"X-User-Role": "SYSTEM_ADMINISTRATOR", "X-User-Id": "sys-1"}
 
 
 @pytest.fixture
@@ -25,38 +22,178 @@ def client():
         jobs=InlineJobRunner(), providers=[MockGrantDataProvider(), RIGMSGrantDataProvider(base_url="")],
     )
     app.dependency_overrides[get_service] = lambda: service
-    yield TestClient(app)
+    previous_auth = app.state.demo_auth
+    app.state.demo_auth = DemoAuthentication(enabled=True)
+    test_client = TestClient(app)
+    login = test_client.post("/api/v1/auth/login", json={
+        "workspace": "GRANT_ADMINISTRATOR",
+        "email": "admin@shakahive.demo",
+        "password": "Admin123!",
+    })
+    assert login.status_code == 200
+    test_client.headers["Authorization"] = f"Bearer {login.json()['access_token']}"
+    yield test_client
     app.dependency_overrides.clear()
+    app.state.demo_auth = previous_auth
 
 
 def create_ready_call(client) -> str:
-    call = client.post("/api/v1/grants", json={"name": "API call", "organization": "Fund"}, headers=ADMIN)
+    call = client.post("/api/v1/grants", json={"name": "API call", "organization": "Fund"})
     assert call.status_code == 201
     call_id = call.json()["id"]
-    upload = client.post(f"/api/v1/grants/{call_id}/rfp", files={"file": ("call.txt", DEMO_RFP_TEXT.encode(), "text/plain")}, headers=ADMIN)
+    upload = client.post(f"/api/v1/grants/{call_id}/rfp", files={"file": ("call.txt", DEMO_RFP_TEXT.encode(), "text/plain")})
     assert upload.status_code == 201
     for requirement in upload.json()["requirements"]:
-        response = client.post(f"/api/v1/requirements/{requirement['id']}/verify", json={"decision": "VERIFY"}, headers=ADMIN)
+        response = client.post(f"/api/v1/requirements/{requirement['id']}/verify", json={"decision": "VERIFY"})
         assert response.status_code == 200 and response.json()["is_confirmed"]
-    confirmed = client.post(f"/api/v1/grants/{call_id}/requirements/confirm", headers=ADMIN)
+    confirmed = client.post(f"/api/v1/grants/{call_id}/requirements/confirm")
     assert confirmed.json()["status"] == "READY_FOR_SUBMISSIONS"
     return call_id
 
 
-def test_identity_headers_and_roles(client):
-    assert client.post("/api/v1/grants", json={"name": "x", "organization": "y"}).status_code == 401
-    assert client.post("/api/v1/grants", json={"name": "x", "organization": "y"}, headers=REVIEWER).status_code == 403
-    secret_role = "SYNTHETIC_ROLE_SECRET_0cf2"
-    unknown_role = client.post("/api/v1/grants", json={"name": "x", "organization": "y"}, headers={"X-User-Role": secret_role})
-    assert unknown_role.status_code == 400
-    assert secret_role not in unknown_role.text
-    session = client.get("/api/v1/session", headers=REVIEWER).json()
-    assert session["role"] == "REVIEWER" and "not authenticated" in session["notice"]
+def test_demo_sessions_reject_forged_headers_and_separate_workspaces(client, monkeypatch):
+    anonymous = TestClient(app)
+    denied = anonymous.post(
+        "/api/v1/grants",
+        json={"name": "x", "organization": "y"},
+        headers={"X-User-Role": "GRANT_ADMINISTRATOR", "X-User-Id": "attacker"},
+    )
+    assert denied.status_code == 401
+    assert denied.headers["cache-control"] == "no-store"
+
+    invalid = anonymous.post("/api/v1/auth/login", json={
+        "workspace": "GRANT_ADMINISTRATOR",
+        "email": "applicant@shakahive.demo",
+        "password": "Applicant123!",
+    })
+    assert invalid.status_code == 401
+    assert invalid.headers["cache-control"] == "no-store"
+
+    applicant_login = anonymous.post("/api/v1/auth/login", json={
+        "workspace": "APPLICANT",
+        "email": "applicant@shakahive.demo",
+        "password": "Applicant123!",
+    })
+    assert applicant_login.status_code == 200
+    applicant_token = applicant_login.json()["access_token"]
+    applicant = anonymous.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": f"Bearer {applicant_token}"},
+    )
+    assert applicant.json()["workspace"] == "APPLICANT"
+    blocked = anonymous.get(
+        "/api/v1/grants",
+        headers={
+            "Authorization": f"Bearer {applicant_token}",
+            "X-User-Role": "GRANT_ADMINISTRATOR",
+            "X-User-Id": "admin",
+        },
+    )
+    assert blocked.status_code == 403
+    assert blocked.headers["cache-control"] == "no-store"
+    revoked = anonymous.post(
+        "/api/v1/auth/logout",
+        headers={"Authorization": f"Bearer {applicant_token}"},
+    )
+    assert revoked.status_code == 204
+    assert anonymous.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": f"Bearer {applicant_token}"},
+    ).status_code == 401
+
+    session = client.get("/api/v1/session").json()
+    assert session["role"] == "GRANT_ADMINISTRATOR"
+    assert session["identity_mode"] == "demo_bearer_session"
+
+    monkeypatch.setattr("services.auth.demo_auth.time.monotonic", lambda: 10**12)
+    expired = client.get("/api/v1/grants")
+    assert expired.status_code == 401
+    assert expired.headers["cache-control"] == "no-store"
+
+
+def test_auth_responses_are_not_cached_and_secrets_are_not_logged(client, monkeypatch, caplog):
+    anonymous = TestClient(app)
+    admin_password = "Admin123!"
+    invalid_password = "never-log-this-password"
+
+    with caplog.at_level(logging.DEBUG):
+        admin_login = anonymous.post("/api/v1/auth/login", json={
+            "workspace": "GRANT_ADMINISTRATOR",
+            "email": "admin@shakahive.demo",
+            "password": admin_password,
+        })
+        admin_token = admin_login.json()["access_token"]
+        invalid_login = anonymous.post("/api/v1/auth/login", json={
+            "workspace": "GRANT_ADMINISTRATOR",
+            "email": "admin@shakahive.demo",
+            "password": invalid_password,
+        })
+        applicant_login = anonymous.post("/api/v1/auth/login", json={
+            "workspace": "APPLICANT",
+            "email": "applicant@shakahive.demo",
+            "password": "Applicant123!",
+        })
+        applicant_token = applicant_login.json()["access_token"]
+        identity = anonymous.get(
+            "/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        unauthorized = anonymous.get("/api/v1/grants")
+        forbidden = anonymous.get(
+            "/api/v1/grants",
+            headers={"Authorization": f"Bearer {applicant_token}"},
+        )
+        logout = anonymous.post(
+            "/api/v1/auth/logout",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        logged_out = anonymous.get(
+            "/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        expired_login = anonymous.post("/api/v1/auth/login", json={
+            "workspace": "GRANT_ADMINISTRATOR",
+            "email": "admin@shakahive.demo",
+            "password": admin_password,
+        })
+        expired_token = expired_login.json()["access_token"]
+        monkeypatch.setattr("services.auth.demo_auth.time.monotonic", lambda: 10**12)
+        expired_identity = anonymous.get(
+            "/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {expired_token}"},
+        )
+
+    assert admin_login.status_code == 200
+    assert invalid_login.status_code == 401
+    assert invalid_login.json() == {"detail": "Invalid email, password, or workspace"}
+    assert applicant_login.status_code == 200
+    assert identity.status_code == 200
+    assert unauthorized.status_code == 401
+    assert forbidden.status_code == 403
+    assert logout.status_code == 204
+    assert logged_out.status_code == 401
+    assert expired_identity.status_code == 401
+    for response in (
+        admin_login,
+        invalid_login,
+        applicant_login,
+        identity,
+        unauthorized,
+        forbidden,
+        logout,
+        logged_out,
+        expired_identity,
+    ):
+        assert response.headers["cache-control"] == "no-store"
+    assert admin_token not in caplog.text
+    assert expired_token not in caplog.text
+    assert admin_password not in caplog.text
+    assert invalid_password not in caplog.text
 
 
 def test_not_found_and_validation(client):
     assert client.get("/api/v1/grants/missing").status_code == 404
-    assert client.post("/api/v1/grants", json={"name": "", "organization": "y"}, headers=ADMIN).status_code == 422
+    assert client.post("/api/v1/grants", json={"name": "", "organization": "y"}).status_code == 422
 
 
 def test_validation_and_unhandled_errors_redact_sensitive_values(client, monkeypatch, caplog):
@@ -64,7 +201,6 @@ def test_validation_and_unhandled_errors_redact_sensitive_values(client, monkeyp
     invalid = client.post(
         "/api/v1/grants",
         json={"name": {"private": secret}, "organization": "Fund"},
-        headers=ADMIN,
     )
     assert invalid.status_code == 422
     assert secret not in invalid.text
@@ -76,7 +212,7 @@ def test_validation_and_unhandled_errors_redact_sensitive_values(client, monkeyp
 
     monkeypatch.setattr(service, "create_call", fail_create)
     with caplog.at_level(logging.ERROR):
-        failed = client.post("/api/v1/grants", json={"name": "Test", "organization": "Fund"}, headers=ADMIN)
+        failed = client.post("/api/v1/grants", json={"name": "Test", "organization": "Fund"})
     assert failed.status_code == 500
     assert failed.json() == {"detail": "Internal server error"}
     assert secret not in failed.text
@@ -115,7 +251,6 @@ def test_document_extraction_error_is_redacted_from_upload_response(client, monk
     invalid_archive = client.post(
         f"/api/v1/grants/{call_id}/applications/batch",
         files=[("files", (filename_secret, b"not a zip archive", "application/zip"))],
-        headers=ADMIN,
     )
     assert invalid_archive.status_code == 422
     assert filename_secret not in invalid_archive.text
@@ -127,7 +262,6 @@ def test_document_extraction_error_is_redacted_from_upload_response(client, monk
     response = client.post(
         f"/api/v1/grants/{call_id}/applications",
         files=[("files", ("proposal.txt", b"proposal content", "text/plain"))],
-        headers=ADMIN,
     )
     assert response.status_code == 201
     assert secret not in response.text
@@ -145,7 +279,7 @@ def test_full_workflow_over_http(client):
 
     upload = client.post(
         f"/api/v1/grants/{call_id}/applications/batch",
-        files=[("files", ("apps.zip", demo_applications_zip(), "application/zip"))], headers=ADMIN,
+        files=[("files", ("apps.zip", demo_applications_zip(), "application/zip"))],
     )
     assert upload.status_code == 201
     body = upload.json()
@@ -154,7 +288,7 @@ def test_full_workflow_over_http(client):
     assert len(uploaded_rows) == 5
     assert all(row["data_origin"] == "SYNTHETIC" for row in uploaded_rows)
 
-    batch = client.post(f"/api/v1/grants/{call_id}/screen", headers=ADMIN)
+    batch = client.post(f"/api/v1/grants/{call_id}/screen")
     assert batch.status_code == 202
     progress = client.get(f"/api/v1/screening-batches/{batch.json()['id']}").json()
     assert progress["status"] == "COMPLETE" and progress["finished"] == 5
@@ -176,15 +310,25 @@ def test_full_workflow_over_http(client):
     document = client.get(f"/api/v1/documents/{detail['documents'][0]['id']}/content").json()
     assert document["pages"] and document["owner_type"] == "application"
 
-    assert client.post(f"/api/v1/findings/{failing['finding_id']}/decision", json={"action": "CONFIRM", "note": "ok"}, headers=SYSADMIN).status_code == 403
-    decision = client.post(f"/api/v1/findings/{failing['finding_id']}/decision", json={"action": "CONFIRM", "note": "Verified against page 1"}, headers=REVIEWER)
+    applicant_token = client.post("/api/v1/auth/login", json={
+        "workspace": "APPLICANT",
+        "email": "applicant@shakahive.demo",
+        "password": "Applicant123!",
+    }).json()["access_token"]
+    applicant_headers = {"Authorization": f"Bearer {applicant_token}"}
+    assert client.post(
+        f"/api/v1/findings/{failing['finding_id']}/decision",
+        json={"action": "CONFIRM", "note": "ok"},
+        headers=applicant_headers,
+    ).status_code == 403
+    decision = client.post(f"/api/v1/findings/{failing['finding_id']}/decision", json={"action": "CONFIRM", "note": "Verified against page 1"})
     assert decision.status_code == 201 and decision.json()["new_state"] == "CONFIRMED"
-    assert client.post(f"/api/v1/findings/{failing['finding_id']}/notes", json={"note": "Follow up"}, headers=REVIEWER).status_code == 201
+    assert client.post(f"/api/v1/findings/{failing['finding_id']}/notes", json={"note": "Follow up"}).status_code == 201
     finding = client.get(f"/api/v1/findings/{failing['finding_id']}").json()
     assert finding["finding"]["review_state"] == "CONFIRMED" and len(finding["notes"]) == 1
 
-    assert client.get(f"/api/v1/grants/{call_id}/audit", headers=REVIEWER).status_code == 403
-    audit = client.get(f"/api/v1/grants/{call_id}/audit", headers=SYSADMIN).json()
+    assert client.get(f"/api/v1/grants/{call_id}/audit", headers=applicant_headers).status_code == 403
+    audit = client.get(f"/api/v1/grants/{call_id}/audit").json()
     assert audit[0]["event_type"] == "finding.note_added"
 
     report = client.get(f"/api/v1/grants/{call_id}/report").json()
@@ -236,7 +380,6 @@ def test_partial_or_altered_demo_bundle_is_not_marked_synthetic(client, omit, mu
     upload = client.post(
         f"/api/v1/grants/{call_id}/applications/batch",
         files=[("files", ("applications.zip", altered.getvalue(), "application/zip"))],
-        headers=ADMIN,
     )
     assert upload.status_code == 201
     rows = client.get(f"/api/v1/grants/{call_id}/applications").json()
@@ -249,21 +392,21 @@ def test_upload_edge_cases_over_http(client):
     unsupported = client.post(
         f"/api/v1/grants/{call_id}/applications",
         files=[("files", ("proposal.txt", b"Title: T\nCountry: Rwanda", "text/plain")), ("files", ("notes.odt", b"x", "application/octet-stream"))],
-        data={"reference": "REF-1"}, headers=ADMIN,
+        data={"reference": "REF-1"},
     )
     assert unsupported.status_code == 201 and unsupported.json()["errors"]
     uploaded_id = unsupported.json()["applications_created"][0]
     assert client.get(f"/api/v1/applications/{uploaded_id}").json()["application"]["data_origin"] == "UPLOADED"
     duplicate = client.post(
         f"/api/v1/grants/{call_id}/applications", files=[("files", ("proposal.txt", b"x", "text/plain"))],
-        data={"reference": "REF-1"}, headers=ADMIN,
+        data={"reference": "REF-1"},
     )
     assert duplicate.status_code == 409
 
 
 def test_screening_before_confirmation_is_conflict(client):
-    call = client.post("/api/v1/grants", json={"name": "Draft", "organization": "Fund"}, headers=ADMIN).json()
-    assert client.post(f"/api/v1/grants/{call['id']}/screen", headers=ADMIN).status_code == 409
+    call = client.post("/api/v1/grants", json={"name": "Draft", "organization": "Fund"}).json()
+    assert client.post(f"/api/v1/grants/{call['id']}/screen").status_code == 409
 
 
 def test_sources_and_demo_files(client):

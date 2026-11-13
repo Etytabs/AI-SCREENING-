@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { DEMO_ROLE_CONFIG, isDemoRouteAvailable } from "../../lib/demo-roles";
 import { Notice, SyntheticBadge } from "./ui";
 import { useWorkspace, WorkspaceProvider } from "./WorkspaceContext";
+import { useDemoAuth } from "../auth/DemoAuthContext";
 
 function isActive(rawPathname: string, href: string) {
   const pathname = rawPathname.replace(/\/+$/, "") || "/";
@@ -15,7 +16,20 @@ function isActive(rawPathname: string, href: string) {
 function Sidebar() {
   const pathname = usePathname() ?? "/dashboard";
   const { calls, callId, setCallId, call, role, callsState } = useWorkspace();
+  const { identity, logout } = useDemoAuth();
+  const router = useRouter();
+  const [logoutError, setLogoutError] = useState<string | null>(null);
   const roleDefinition = DEMO_ROLE_CONFIG[role];
+  const handleLogout = async () => {
+    setLogoutError(null);
+    try {
+      await logout();
+    } catch (error) {
+      setLogoutError(error instanceof Error ? error.message : "The server session could not be revoked.");
+    } finally {
+      router.replace("/login");
+    }
+  };
   return (
     <aside className="sidebar ws-sidebar" aria-label="Workspace navigation">
       <div className="ws-call-picker">
@@ -37,10 +51,11 @@ function Sidebar() {
         ))}
       </nav>
       <div className="sidebar-foot ws-identity" role="group" aria-labelledby="demo-role-heading">
-        <span id="demo-role-heading" className="sidebar-label">ACTIVE DEMO ROLE · READ-ONLY</span>
+        <span id="demo-role-heading" className="sidebar-label">AUTHENTICATED DEMO WORKSPACE</span>
         <strong className="ws-identity-role">{roleDefinition.label}</strong>
-        <small>Only implemented demo workflow.</small>
-        <small>Demo identity only. The role is sent as a header and is not authenticated.</small>
+        <small>{identity?.email}</small>
+        <button className="ghost-button" type="button" onClick={() => void handleLogout()}>Sign out</button>
+        {logoutError && <small role="alert">{logoutError}</small>}
       </div>
     </aside>
   );
@@ -82,13 +97,27 @@ function WorkspaceAccessBoundary({ children }: { children: React.ReactNode }) {
 }
 
 export default function WorkspaceShell({ children }: { children: React.ReactNode }) {
+  const { accessToken, identity } = useDemoAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!accessToken) router.replace("/login");
+    else if (identity?.workspace === "APPLICANT") router.replace("/applicant/dashboard");
+  }, [accessToken, identity?.workspace, router]);
+
+  if (!accessToken || identity?.workspace !== "GRANT_ADMINISTRATOR") {
+    return (
+      <section className="workspace ws-main" aria-live="polite">
+        <Notice kind="loading" title="Opening the authenticated workspace…" />
+      </section>
+    );
+  }
+
   return (
-    <WorkspaceProvider>
+    <WorkspaceProvider accessToken={accessToken}>
       <main className="shell dashboard-shell-flow">
         <Sidebar />
-        <WorkspaceAccessBoundary>
-          {children}
-        </WorkspaceAccessBoundary>
+        <WorkspaceAccessBoundary>{children}</WorkspaceAccessBoundary>
       </main>
     </WorkspaceProvider>
   );

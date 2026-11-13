@@ -18,7 +18,6 @@ import type {
   ReviewerNote,
   RfpCriterion,
   RfpUploadResponse,
-  Role,
   ScreeningBatch,
   ScreeningReport,
   StakeholderResponse,
@@ -28,6 +27,8 @@ import type {
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL || "https://ai-screening-dhdm.onrender.com";
 
+export const DEMO_SESSION_EXPIRED_EVENT = "shakahive:demo-session-expired";
+
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message);
@@ -35,9 +36,19 @@ export class ApiError extends Error {
   }
 }
 
-export interface Identity {
-  role: Role;
-  userId: string;
+export type DemoWorkspace = "APPLICANT" | "GRANT_ADMINISTRATOR";
+
+export interface DemoIdentity {
+  user_id: string;
+  email: string;
+  workspace: DemoWorkspace;
+}
+
+export interface DemoLoginResponse {
+  access_token: string;
+  token_type: "Bearer";
+  expires_in: number;
+  identity: DemoIdentity;
 }
 
 function detailMessage(body: unknown, status: number): string {
@@ -53,30 +64,68 @@ function detailMessage(body: unknown, status: number): string {
   return `Request failed (${status})`;
 }
 
-export function createClient(identity: Identity, base: string = API_BASE) {
+async function requestApi<T>(
+  base: string,
+  method: string,
+  path: string,
+  body?: unknown,
+  accessToken?: string,
+): Promise<T> {
+  const headers: Record<string, string> = {};
+  let payload: BodyInit | undefined;
+  if (body instanceof FormData) payload = body;
+  else if (body !== undefined) {
+    headers["Content-Type"] = "application/json";
+    payload = JSON.stringify(body);
+  }
+  if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+
+  let response: Response;
+  try {
+    response = await fetch(`${base}${path}`, {
+      method,
+      headers,
+      body: payload,
+      cache: "no-store",
+      credentials: "omit",
+    });
+  } catch {
+    throw new ApiError(0, `The screening API is unreachable at ${base}. No data is shown until it responds.`);
+  }
+  const text = await response.text();
+  let data: unknown = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    if (response.ok) throw new ApiError(response.status, "The API returned a response that is not JSON.");
+  }
+  if (!response.ok) {
+    if (response.status === 401 && accessToken && typeof window !== "undefined") {
+      window.dispatchEvent(new Event(DEMO_SESSION_EXPIRED_EVENT));
+    }
+    throw new ApiError(response.status, detailMessage(data, response.status));
+  }
+  return data as T;
+}
+
+export function loginDemo(
+  credentials: { email: string; password: string; workspace: DemoWorkspace },
+  base: string = API_BASE,
+): Promise<DemoLoginResponse> {
+  return requestApi<DemoLoginResponse>(base, "POST", "/api/v1/auth/login", credentials);
+}
+
+export function getDemoIdentity(accessToken: string, base: string = API_BASE): Promise<DemoIdentity> {
+  return requestApi<DemoIdentity>(base, "GET", "/api/v1/auth/me", undefined, accessToken);
+}
+
+export function logoutDemo(accessToken: string, base: string = API_BASE): Promise<void> {
+  return requestApi<void>(base, "POST", "/api/v1/auth/logout", undefined, accessToken);
+}
+
+export function createClient(accessToken: string, base: string = API_BASE) {
   async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
-    const headers: Record<string, string> = { "X-User-Role": identity.role, "X-User-Id": identity.userId };
-    let payload: BodyInit | undefined;
-    if (body instanceof FormData) payload = body;
-    else if (body !== undefined) {
-      headers["Content-Type"] = "application/json";
-      payload = JSON.stringify(body);
-    }
-    let response: Response;
-    try {
-      response = await fetch(`${base}${path}`, { method, headers, body: payload });
-    } catch {
-      throw new ApiError(0, `The screening API is unreachable at ${base}. No data is shown until it responds.`);
-    }
-    const text = await response.text();
-    let data: unknown = null;
-    try {
-      data = text ? JSON.parse(text) : null;
-    } catch {
-      if (response.ok) throw new ApiError(response.status, "The API returned a response that is not JSON.");
-    }
-    if (!response.ok) throw new ApiError(response.status, detailMessage(data, response.status));
-    return data as T;
+    return requestApi<T>(base, method, path, body, accessToken);
   }
 
   const q = (params: Record<string, string | undefined>) => {

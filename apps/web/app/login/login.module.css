@@ -1,0 +1,132 @@
+.page {
+  min-height: calc(100vh - 60px);
+  display: grid;
+  place-items: center;
+  padding: 36px 18px;
+}
+
+.card {
+  width: min(520px, 100%);
+  padding: clamp(24px, 5vw, 42px);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--shadow-2);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.brand img {
+  width: 150px;
+  height: auto;
+}
+
+.brand span,
+.intro,
+.footer,
+.credentials small {
+  color: var(--muted);
+}
+
+.eyebrow {
+  margin: 30px 0 7px;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .14em;
+}
+
+.card h1 {
+  margin: 0;
+  font: 500 34px/1.2 var(--font-fredoka), Georgia, serif;
+}
+
+.intro {
+  margin: 9px 0 24px;
+}
+
+.card form {
+  display: grid;
+  gap: 9px;
+}
+
+.card label {
+  margin-top: 7px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .06em;
+}
+
+.card input,
+.card select {
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.card form button {
+  min-height: 46px;
+  margin-top: 13px;
+  border: 1px solid var(--ink);
+  border-radius: var(--radius-sm);
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 900;
+}
+
+.card form button:disabled {
+  cursor: wait;
+  opacity: .7;
+}
+
+.error {
+  margin: 7px 0 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--alert);
+  background: var(--ws-fail-soft);
+  color: var(--ws-fail);
+}
+
+.credentials {
+  margin-top: 23px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.credentials summary {
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.credentials dl {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 7px 12px;
+  overflow-wrap: anywhere;
+}
+
+.credentials dt {
+  font-weight: 800;
+}
+
+.credentials dd {
+  margin: 0;
+}
+
+.credentials small {
+  display: block;
+}
+
+.footer {
+  margin: 20px 0 0;
+  font-size: 12px;
+}

@@ -8,7 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from apps.api.dependencies import get_service
-from apps.api.routes import duplication, grants, health, ncst, publications, workflow
+from apps.api.routes import auth, duplication, grants, health, ncst, publications, workflow
+from services.auth.demo_auth import DemoAuthentication, DemoWorkspace
 from services.config.env import load_env_file
 from services.grant_workflow.seed import seed_demo
 from services.grant_workflow.service import WorkflowError
@@ -50,6 +51,51 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="shakaHive Research Intelligence API", version="0.1.0", lifespan=lifespan)
+app.state.demo_auth = DemoAuthentication.from_environment()
+
+
+@app.middleware("http")
+async def demo_auth_boundary(request: Request, call_next):
+    path = request.url.path
+    is_api_v1 = path == "/api/v1" or path.startswith("/api/v1/")
+    if request.method == "OPTIONS" or not is_api_v1:
+        return await call_next(request)
+    if path in {"/api/v1", "/api/v1/auth/login"}:
+        response = await call_next(request)
+        if path == "/api/v1/auth/login":
+            response.headers["Cache-Control"] = "no-store"
+        return response
+
+    authentication = request.app.state.demo_auth
+    if not authentication.enabled:
+        return JSONResponse(
+            status_code=503,
+            content={"detail": "Demo authentication is not enabled"},
+            headers={"Cache-Control": "no-store"},
+        )
+
+    token = request.headers.get("authorization", "")
+    scheme, _, value = token.partition(" ")
+    principal = authentication.resolve(value.strip() if scheme.lower() == "bearer" else None)
+    if principal is None:
+        return JSONResponse(
+            status_code=401,
+            content={"detail": "Authentication required"},
+            headers={"Cache-Control": "no-store"},
+        )
+
+    request.state.demo_principal = principal
+    auth_paths = {"/api/v1/auth/me", "/api/v1/auth/logout"}
+    if path not in auth_paths and principal.workspace != DemoWorkspace.GRANT_ADMINISTRATOR:
+        return JSONResponse(
+            status_code=403,
+            content={"detail": "Grant Administrator access is required"},
+            headers={"Cache-Control": "no-store"},
+        )
+
+    response = await call_next(request)
+    response.headers["Cache-Control"] = "no-store"
+    return response
 
 cors_origins = [
     origin.strip()
@@ -98,6 +144,7 @@ async def redact_unhandled_error(request: Request, call_next):
 
 
 app.include_router(health.router)
+app.include_router(auth.router)
 app.include_router(grants.router)
 app.include_router(ncst.router)
 app.include_router(publications.router)

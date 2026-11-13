@@ -71,10 +71,11 @@ def _upload_response(result: BatchUploadResult) -> UploadResponse:
 
 @router.get("/session", response_model=SessionInfo)
 def session(actor: OptionalActorDep) -> SessionInfo:
+    roles = [Role.GRANT_ADMINISTRATOR] if actor else []
     return SessionInfo(
         user_id=actor.user_id if actor else "anonymous",
         role=actor.role if actor else None,
-        roles=list(Role),
+        roles=roles,
     )
 
 

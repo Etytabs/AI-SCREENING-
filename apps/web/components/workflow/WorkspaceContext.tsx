@@ -2,17 +2,14 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { ApiError, createClient, type ApiClient } from "../../lib/api";
-import { ACTIVE_DEMO_ROLES, isActiveDemoRole, normalizeDemoRole } from "../../lib/demo-roles";
 import type { GrantCall, Role } from "../../lib/types";
 
-const ROLE_KEY = "ai-screening.role";
 const CALL_KEY = "ai-screening.call";
 
 export type LoadState = "loading" | "ready" | "error";
 
 export interface WorkspaceValue {
   role: Role;
-  setRole: (role: Role) => void;
   client: ApiClient;
   calls: GrantCall[];
   callsState: LoadState;
@@ -31,27 +28,23 @@ export function useWorkspace(): WorkspaceValue {
   return value;
 }
 
-export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
-  const [role, setRoleState] = useState<Role>(ACTIVE_DEMO_ROLES[0]);
+export function WorkspaceProvider({
+  children,
+  accessToken,
+}: {
+  children: React.ReactNode;
+  accessToken: string;
+}) {
+  const role: Role = "GRANT_ADMINISTRATOR";
   const [callId, setCallIdState] = useState<string | null>(null);
   const [calls, setCalls] = useState<GrantCall[]>([]);
   const [callsState, setCallsState] = useState<LoadState>("loading");
   const [callsError, setCallsError] = useState<string | null>(null);
 
-  const client = useMemo(() => createClient({ role, userId: `demo-${role.toLowerCase().replace(/_/g, "-")}` }), [role]);
+  const client = useMemo(() => createClient(accessToken), [accessToken]);
 
   useEffect(() => {
-    const storedRole = window.localStorage.getItem(ROLE_KEY);
-    const nextRole = normalizeDemoRole(storedRole);
-    setRoleState(nextRole);
-    if (storedRole !== nextRole) window.localStorage.setItem(ROLE_KEY, nextRole);
     setCallIdState(window.localStorage.getItem(CALL_KEY));
-  }, []);
-
-  const setRole = useCallback((next: Role) => {
-    if (!isActiveDemoRole(next)) return;
-    setRoleState(next);
-    window.localStorage.setItem(ROLE_KEY, next);
   }, []);
 
   const setCallId = useCallback((next: string | null) => {
@@ -86,6 +79,6 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   }, [refreshCalls]);
 
   const call = calls.find((c) => c.id === callId) ?? null;
-  const value: WorkspaceValue = { role, setRole, client, calls, callsState, callsError, callId, setCallId, call, refreshCalls };
+  const value: WorkspaceValue = { role, client, calls, callsState, callsError, callId, setCallId, call, refreshCalls };
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 }

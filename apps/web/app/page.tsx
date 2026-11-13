@@ -23,7 +23,7 @@ export default function Home() {
           <Image src={logo} alt="ShakaHive" priority className={styles.logo} />
           <small>Research Intelligence</small>
         </div>
-        <Link href="/dashboard" className={styles.headerLink}>Dashboard <ArrowIcon /></Link>
+        <Link href="/login" className={styles.headerLink}>Sign in <ArrowIcon /></Link>
       </header>
 
       <section className={styles.hero}>
@@ -31,7 +31,7 @@ export default function Home() {
           <div className={styles.kicker}>Research Intelligence · AI-assisted grant screening</div>
           <h1>Smarter grant screening.<br />Human decisions.</h1>
           <p>Bring requirements, applications and evidence together for a clearer, accountable human review of research grant proposals.</p>
-          <Link href="/dashboard" className={styles.cta}><span>Open dashboard</span><ArrowIcon /></Link>
+          <Link href="/login" className={styles.cta}><span>Sign in to ShakaHive</span><ArrowIcon /></Link>
         </div>
         <ol className={styles.steps}>
           {steps.map(({ label, detail, Icon, active }, i) => <li key={label} className={active ? styles.stepActive : ""}>

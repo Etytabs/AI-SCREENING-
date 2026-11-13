@@ -134,8 +134,5 @@ class SessionInfo(BaseModel):
     user_id: str
     role: Role | None
     roles: list[Role]
-    identity_mode: str = "demo_headers"
-    notice: str = (
-        "Demo identity: the role is taken from the X-User-Role header and is not authenticated. "
-        "Replace with an identity provider before handling real applications."
-    )
+    identity_mode: str = "demo_bearer_session"
+    notice: str = "Authenticated synthetic demo session; not a production identity system."

@@ -16,7 +16,7 @@ const project: ArchivedProject = {
 
 function context(overrides: Partial<WorkspaceValue> = {}): WorkspaceValue {
   return {
-    role: "GRANT_ADMINISTRATOR", setRole: vi.fn(), client: createClient({ role: "GRANT_ADMINISTRATOR", userId: "admin" }),
+    role: "GRANT_ADMINISTRATOR", client: createClient("demo-access-token"),
     calls: [], callsState: "ready", callsError: null, callId: null, setCallId: vi.fn(), call: null, refreshCalls: vi.fn(),
     ...overrides,
   };

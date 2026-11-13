@@ -162,11 +162,11 @@ describe("research check result cards", () => {
 });
 
 describe("evidence popup", () => {
-  function context(getFinding: ReturnType<typeof vi.fn>): WorkspaceValue {
-    const client = createClient({ role: "GRANT_ADMINISTRATOR", userId: "admin" });
+  function context(getFinding: WorkspaceValue["client"]["getFinding"]): WorkspaceValue {
+    const client = createClient("demo-access-token");
     client.getFinding = getFinding;
     return {
-      role: "GRANT_ADMINISTRATOR", setRole: vi.fn(), client,
+      role: "GRANT_ADMINISTRATOR", client,
       calls: [], callsState: "ready", callsError: null, callId: "call-1", setCallId: vi.fn(),
       call: fx.grantCall(), refreshCalls: vi.fn(),
     };
@@ -176,7 +176,7 @@ describe("evidence popup", () => {
     const detail = fx.findingDetail({
       type: "eligibility", status: "REVIEW_REQUIRED", title: "R04 - Geographic eligibility: Rwanda",
     });
-    const getFinding = vi.fn().mockResolvedValue(detail);
+    const getFinding = vi.fn<WorkspaceValue["client"]["getFinding"]>().mockResolvedValue(detail);
     render(
       <WorkspaceContext.Provider value={context(getFinding)}>
         <EvidenceModal findings={[eligibility("R04", "REVIEW_REQUIRED")]} onClose={vi.fn()} />
@@ -194,7 +194,7 @@ describe("evidence popup", () => {
 
   it("closes on the close button and on Escape", async () => {
     const onClose = vi.fn();
-    const getFinding = vi.fn().mockResolvedValue(fx.findingDetail());
+    const getFinding = vi.fn<WorkspaceValue["client"]["getFinding"]>().mockResolvedValue(fx.findingDetail());
     const { unmount } = render(
       <WorkspaceContext.Provider value={context(getFinding)}>
         <EvidenceModal findings={findings} onClose={onClose} />
@@ -228,10 +228,10 @@ describe("evidence popup", () => {
 
 describe("human decision popup", () => {
   function workspace(): WorkspaceValue {
-    const client = createClient({ role: "GRANT_ADMINISTRATOR", userId: "admin" });
+    const client = createClient("demo-access-token");
     client.decide = vi.fn().mockResolvedValue({});
     return {
-      role: "GRANT_ADMINISTRATOR", setRole: vi.fn(), client,
+      role: "GRANT_ADMINISTRATOR", client,
       calls: [], callsState: "ready", callsError: null, callId: "call-1", setCallId: vi.fn(),
       call: fx.grantCall(), refreshCalls: vi.fn(),
     };
@@ -301,11 +301,11 @@ describe("evidence popup with several findings", () => {
     const getFinding = vi.fn().mockImplementation(async (id: string) =>
       fx.findingDetail({ finding_id: id, type: "eligibility", title: `Detail for ${id}` }),
     );
-    const client = createClient({ role: "GRANT_ADMINISTRATOR", userId: "admin" });
+    const client = createClient("demo-access-token");
     client.getFinding = getFinding;
     render(
       <WorkspaceContext.Provider value={{
-        role: "GRANT_ADMINISTRATOR", setRole: vi.fn(), client,
+        role: "GRANT_ADMINISTRATOR", client,
         calls: [], callsState: "ready", callsError: null, callId: "call-1", setCallId: vi.fn(),
         call: fx.grantCall(), refreshCalls: vi.fn(),
       }}>
@@ -333,7 +333,7 @@ describe("stale grant call recovery", () => {
       const { callId, callsState } = useWorkspace();
       return <span data-testid="probe">{callsState}:{callId ?? "none"}</span>;
     }
-    render(<WorkspaceProvider><Probe /></WorkspaceProvider>);
+    render(<WorkspaceProvider accessToken="test-session"><Probe /></WorkspaceProvider>);
 
     await waitFor(() => expect(screen.getByTestId("probe").textContent).toBe("ready:call_live"));
     expect(window.localStorage.getItem("ai-screening.call")).toBe("call_live");

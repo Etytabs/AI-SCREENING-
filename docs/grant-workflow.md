@@ -47,11 +47,11 @@ A stage that raises an error produces a `NOT_ASSESSABLE` finding for that check 
 | `REVIEWER` | read calls, applications, findings and evidence; record decisions and notes |
 | `SYSTEM_ADMINISTRATOR` | administrative call actions, sources, audit |
 
-**Identity is a demo mechanism.** The frontend sends `X-User-Role` and `X-User-Id` headers chosen in the sidebar. They are not authenticated. On actions that need a role, a missing role header returns `401`, an unknown role `400` and a disallowed action `403`. A real deployment must replace this with the institution's identity provider.
+**Identity is a controlled demo mechanism.** Sign-in uses the fixed Applicant and Grant Administrator credentials recorded in FPDR-002. The API validates the selected workspace and credentials, issues a 15-minute opaque bearer session, and derives identity and role server-side. The frontend keeps the token in memory only; refresh, API restart, expiry or sign-out ends access. `X-User-Role` and `X-User-Id` are ignored. All `/api/v1` business routes require a valid session, and the Applicant workspace is denied access to the existing Grant Administrator API until Applicant submission endpoints are implemented. Only synthetic demo data is permitted.
 
 ## REST API
 
-Base path `/api/v1`. Every write action and the audit trail need `X-User-Role`; read endpoints do not check a role in this demo build. Errors return `{"detail": "..."}` with 400, 401, 403, 404, 409 or 422.
+Base path `/api/v1`. Except for `GET /health`, `GET /api/v1` and `POST /api/v1/auth/login`, API operations require `Authorization: Bearer <session>`. Use `GET /api/v1/auth/me` to inspect the authenticated demo identity and `POST /api/v1/auth/logout` to revoke the session. Applicant identities may use these authentication endpoints but are denied access to the existing grant-screening API until Applicant routes are implemented. Errors return `{"detail": "..."}` with 400, 401, 403, 404, 409, 422 or 503.
 
 | Method | Path | Purpose |
 | --- | --- | --- |
@@ -102,6 +102,8 @@ Regular uploads are marked `UPLOADED`. The exact generated synthetic application
 
 | Variable | Default | Effect |
 | --- | --- | --- |
+| `AI_SCREENING_DEMO_AUTH_ENABLED` | `false` | Enables the seeded Applicant and Grant Administrator demo identities; must remain disabled in production |
+| `AI_SCREENING_ENVIRONMENT` | `development` | Prevents demo authentication from being enabled in production |
 | `AI_SCREENING_DEMO_SEED` | `true` | Seed the synthetic demo call at API start-up |
 | `AI_SCREENING_CORS_ORIGINS` | `http://localhost:3000,http://localhost:3001` | Allowed browser origins (comma separated) |
 | `AI_SCREENING_SCREENING_WORKERS` | `2` | Background screening threads |
@@ -111,14 +113,14 @@ Regular uploads are marked `UPLOADED`. The exact generated synthetic application
 | `AI_SCREENING_RERANKER_ENABLED` | `false` | Cross-encoder reranking of similarity candidates |
 | `NEXT_PUBLIC_API_BASE_URL` (web) | `http://localhost:8000` | API base URL used by the browser |
 
-No API keys or credentials are used or stored by the frontend.
+The frontend uses no production credentials or API keys. The approved synthetic demo credentials are displayed on the login page and submitted transiently during login; the issued bearer token remains in React memory and is not persisted in browser storage.
 
 ## Running locally
 
 ```bash
 # API (from the repository root)
 pip install ".[dev]"
-AI_SCREENING_DUPLICATION_DB=/tmp/shakahive-demo-duplication.sqlite3 uvicorn apps.api.main:app --port 8001
+AI_SCREENING_DEMO_AUTH_ENABLED=true AI_SCREENING_ENVIRONMENT=development AI_SCREENING_DUPLICATION_DB=/tmp/shakahive-demo-duplication.sqlite3 uvicorn apps.api.main:app --port 8001
 
 # Web (from apps/web)
 npm install
@@ -127,7 +129,7 @@ echo NEXT_PUBLIC_API_BASE_URL=http://localhost:8001 > .env.local
 npm run dev
 ```
 
-Open `http://localhost:3000/dashboard`.
+Open `http://localhost:3000/login` and sign in to the Grant Administrator workspace using the fixed demo credentials recorded in FPDR-002.
 
 Checks: `pytest`, `ruff check .`, and in `apps/web`: `npm run lint`, `npx tsc --noEmit`, `npm test`, `npm run build`.
 
@@ -139,8 +141,9 @@ call again. Use a dedicated `AI_SCREENING_DUPLICATION_DB` path as above so any u
 proposal comparison records remain isolated from other local work.
 
 1. Start the API and web app as shown in **Running locally**. Open
-   `http://localhost:3000/dashboard`, choose **Climate Resilience Research Grant 2026
-   (synthetic demo)**, and confirm the visible **SYNTHETIC** label.
+   `http://localhost:3000/login`, sign in to the Grant Administrator workspace using the
+   fixed demo credentials recorded in FPDR-002, choose **Climate Resilience Research Grant
+   2026 (synthetic demo)**, and confirm the visible **SYNTHETIC** label.
 2. To exercise a new call, create one in **Grant Calls**, download the synthetic RFP
    with `curl -fsS http://localhost:8001/api/v1/demo/rfp -o /tmp/shakahive-demo-rfp.txt`,
    then upload it to that call. Inspect the extracted quotations and page/section

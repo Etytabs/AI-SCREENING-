@@ -9,6 +9,7 @@ import { FileDrop } from "../../../components/workflow/FileDrop";
 import { NoCallSelected, Notice, PageHeader } from "../../../components/workflow/ui";
 import { useWorkspace } from "../../../components/workflow/WorkspaceContext";
 import { ApiError } from "../../../lib/api";
+import { DEMO_ROLE_CONFIG } from "../../../lib/demo-roles";
 import type { ApplicationDetail, BatchProgress, Finding } from "../../../lib/types";
 
 type Phase = "idle" | "uploading" | "screening" | "done" | "error";
@@ -27,6 +28,7 @@ export default function ResearchCheckPage() {
   const [deciding, setDeciding] = useState(false);
 
   const open = !!call && ["READY_FOR_SUBMISSIONS", "SCREENING", "REVIEW"].includes(call.status);
+  const canCheckResearch = DEMO_ROLE_CONFIG[role].capabilities.canUploadApplications && DEMO_ROLE_CONFIG[role].capabilities.canRunScreening;
   const busy = phase === "uploading" || phase === "screening";
   const showResults = phase === "done" && !!detail;
 
@@ -127,20 +129,20 @@ export default function ResearchCheckPage() {
 
       {callsState === "ready" && !callId && <NoCallSelected />}
 
-      {call && role === "REVIEWER" && (
-        <Notice kind="info" title="Read-only">
-          Switch to Grant Administrator in the sidebar to upload submitted research.
+      {call && !canCheckResearch && (
+        <Notice kind="info" title="Unavailable for this demo role">
+          This demo role cannot upload or screen submitted research.
         </Notice>
       )}
 
-      {call && role !== "REVIEWER" && !open && (
+      {call && canCheckResearch && !open && (
         <Notice kind="review" title="Call not open">
           Confirm this call&apos;s requirements first.{" "}
           <Link href={`/dashboard/calls?id=${call.id}`}>Go to requirement review</Link>
         </Notice>
       )}
 
-      {call && role !== "REVIEWER" && open && !showResults && (
+      {call && canCheckResearch && open && !showResults && (
         <section className="panel">
           <p className="muted small">
             Funding call: <b>{call.name}</b>

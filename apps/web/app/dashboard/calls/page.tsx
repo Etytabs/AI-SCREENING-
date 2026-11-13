@@ -9,6 +9,7 @@ import { RequirementReview } from "../../../components/workflow/RequirementRevie
 import { CallStatusBadge, Notice, PageHeader, SyntheticBadge } from "../../../components/workflow/ui";
 import { useWorkspace } from "../../../components/workflow/WorkspaceContext";
 import { API_BASE, ApiError } from "../../../lib/api";
+import { DEMO_ROLE_CONFIG } from "../../../lib/demo-roles";
 import { formatAmount, formatDate, ROLE_LABELS } from "../../../lib/labels";
 import type { GrantCall, RfpCriterion, RfpUploadResponse } from "../../../lib/types";
 
@@ -18,7 +19,7 @@ const errorText = (e: unknown) => (e instanceof ApiError || e instanceof Error ?
 function CallList() {
   const { calls, callsState, callsError, client, role, refreshCalls, setCallId } = useWorkspace();
   const router = useRouter();
-  const canCreate = role !== "REVIEWER";
+  const canCreate = DEMO_ROLE_CONFIG[role].capabilities.canManageGrantCalls;
   return (
     <>
       <PageHeader eyebrow="GRANT SCREENING / GRANT CALLS" title="Grant calls" intro="Create a call, upload its call document (RFP) and verify the requirements before accepting submissions." />
@@ -66,7 +67,7 @@ function CallSetup({ id }: { id: string }) {
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [lastUpload, setLastUpload] = useState<RfpUploadResponse | null>(null);
-  const canEdit = role !== "REVIEWER";
+  const canEdit = DEMO_ROLE_CONFIG[role].capabilities.canManageGrantCalls;
 
   const load = useCallback(async () => {
     try {

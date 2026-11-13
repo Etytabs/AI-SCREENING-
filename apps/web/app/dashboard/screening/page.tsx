@@ -6,6 +6,7 @@ import { ScreeningStatusDialog } from "../../../components/workflow/ScreeningSta
 import { NoCallSelected, Notice, PageHeader, StatusBadge } from "../../../components/workflow/ui";
 import { useWorkspace } from "../../../components/workflow/WorkspaceContext";
 import { ApiError } from "../../../lib/api";
+import { DEMO_ROLE_CONFIG } from "../../../lib/demo-roles";
 import { SCREENING_STATE_LABELS } from "../../../lib/labels";
 import type { ApplicationRow, BatchProgress } from "../../../lib/types";
 
@@ -71,7 +72,7 @@ export default function ScreeningPage() {
     }
   }
 
-  const canLaunch = role !== "REVIEWER" && !!call && ["READY_FOR_SUBMISSIONS", "SCREENING", "REVIEW"].includes(call.status);
+  const canLaunch = DEMO_ROLE_CONFIG[role].capabilities.canRunScreening && !!call && ["READY_FOR_SUBMISSIONS", "SCREENING", "REVIEW"].includes(call.status);
   const unscreened = rows.filter((r) => r.screening_status === "NOT_SCREENED").map((r) => r.id);
   const busy = !!progress && progress.finished < progress.total;
   const statusRow = rows.find((r) => r.id === statusFor) ?? null;
@@ -87,8 +88,8 @@ export default function ScreeningPage() {
         <>
           <section className="panel">
             <h2>Launch screening</h2>
-            {!canLaunch && role === "REVIEWER" && <Notice kind="info" title="Read-only">Only administrators can launch screening.</Notice>}
-            {!canLaunch && role !== "REVIEWER" && call && (
+            {!canLaunch && !DEMO_ROLE_CONFIG[role].capabilities.canRunScreening && <Notice kind="info" title="Read-only">This demo role cannot launch screening.</Notice>}
+            {!canLaunch && DEMO_ROLE_CONFIG[role].capabilities.canRunScreening && call && (
               <Notice kind="review" title="Requirements not confirmed"><Link href={`/dashboard/calls?id=${call.id}`}>Confirm the requirements</Link> before screening.</Notice>
             )}
             {rows.length === 0 ? (

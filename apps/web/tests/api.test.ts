@@ -6,6 +6,16 @@ const client = createClient({ role: "REVIEWER", userId: "demo-reviewer" }, "http
 afterEach(() => vi.unstubAllGlobals());
 
 describe("api client", () => {
+  it("sends NCST Grant Personnel as that role instead of aliasing it to administrator", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response("[]", { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    await createClient({ role: "NCST_GRANT_PERSONNEL", userId: "demo-ncst" }, "http://api.test").listCalls();
+    expect(fetchMock.mock.calls[0][1].headers).toMatchObject({
+      "X-User-Role": "NCST_GRANT_PERSONNEL",
+      "X-User-Id": "demo-ncst",
+    });
+  });
+
   it("uploads historical project metadata and a file as multipart data with identity headers", async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ id: "project-1" }), { status: 201 }));
     vi.stubGlobal("fetch", fetchMock);

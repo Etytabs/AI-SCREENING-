@@ -77,7 +77,7 @@ plagiarism finding, and a reviewer decision is not a retrieval label. OpenAlex s
 availability and unusable-result counts are recorded independently from matched-source
 counts.
 
-## Expanded graded retrieval diagnostic — v1.0
+## Expanded fixed-pool graded ranking diagnostic — v1.0
 
 `data/evaluation/retrieval_evaluation_v1.json` is a new, frozen synthetic benchmark.
 It supplements rather than replaces the Phase 2 corpora above. It contains 27 catalog
@@ -111,28 +111,32 @@ python -m scripts.evaluate_retrieval_dataset \
 ```
 
 The evaluator deduplicates by DOI/record ID, concatenates available title and abstract
-text, and calls the existing `rank_candidates` token-Jaccard implementation without
-changing its scoring formula. Candidate-generation metrics describe the relevant
-candidates present in the ranker's top-K selections from this fixed pool: Recall@K is
-the fraction of all judged relevant candidates recovered, coverage@20 is the fraction
-of the 25-work pool returned at depth 20, and relevant-candidate retrieval rate@20 is
-the share of judged relevant candidates returned at that depth. Ranking metrics describe
-the order: Precision@5 and MRR treat grades 1–3 as relevant; nDCG uses graded gain
-`2^grade - 1`. Candidate and ranking metrics are separate reports over the same ranked
-output, not independent retrieval components. None of these offline metrics measures
-live OpenAlex query recall: in the current literature workflow OpenAlex supplies result
-order, records are deduplicated and abstract-filtered, and the generic ranker does not
-reorder those works before text comparison.
+text, and supplies all 25 unique records directly to the existing `rank_candidates`
+token-Jaccard ranker without changing its scoring formula. The artifact field
+`ranked_pool_recall_metrics` reports fixed-pool Recall@K: the fraction of all judged
+relevant candidates that appear in the top K of the supplied pool. These values do not
+measure independent candidate generation or the retrieval of records outside the
+supplied pool. Independent candidate generation and live-source retrieval recall have
+not been evaluated.
+
+The artifact's `ranked_pool_fraction_at_20` is a selection-depth statistic (20 of the
+25 supplied records, or 0.8), not a retrieval-quality measure. Relevant-candidate
+retrieval rate@20 is omitted because it is mathematically identical to Recall@20 in
+this fixed-pool experiment. Ranking metrics describe ordering within the same ranked
+pool: Precision@5 and MRR treat grades 1–3 as relevant; nDCG uses graded gain
+`2^grade - 1`. These offline ranking metrics do not measure live OpenAlex query recall:
+in the current literature workflow OpenAlex supplies result order, records are
+deduplicated and abstract-filtered, and the generic ranker does not reorder those works
+before text comparison.
 
 The 13 November 2026 lexical-only baseline is:
 
-| Evaluation stage | Metric | Result |
+| Evaluation view | Metric | Result |
 |---|---|---:|
-| Candidate selection | Recall@5 | 0.8333 |
-| Candidate selection | Recall@10 | 0.9167 |
-| Candidate selection | Recall@20 | 0.9444 |
-| Candidate selection | Candidate coverage@20 | 0.8000 |
-| Candidate selection | Relevant-candidate retrieval rate@20 | 0.9444 |
+| Fixed-pool top-K recall | Recall@5 | 0.8333 |
+| Fixed-pool top-K recall | Recall@10 | 0.9167 |
+| Fixed-pool top-K recall | Recall@20 | 0.9444 |
+| Selection depth (not retrieval quality) | Ranked-pool fraction@20 | 0.8000 |
 | Ranking | Precision@5 | 0.5000 |
 | Ranking | MRR | 1.0000 |
 | Ranking | Graded nDCG@5 | 0.8314 |

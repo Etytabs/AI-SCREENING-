@@ -63,6 +63,7 @@ def evaluate_dataset(dataset_path: Path) -> dict[str, Any]:
     false_negatives: list[dict[str, Any]] = []
     totals: Counter[str] = Counter()
     consistency_scores: list[float] = []
+    pool_fraction_scores: list[float] = []
     tie_sensitive_query_count = 0
 
     for case in dataset["cases"]:
@@ -126,15 +127,12 @@ def evaluate_dataset(dataset_path: Path) -> dict[str, Any]:
             }
             top_20 = ranked_ids[:RETRIEVAL_DEPTH]
             top_5 = ranked_ids[:5]
-            relevant_retrieved = len(set(top_20) & positive_ids)
+            pool_fraction = len(top_20) / len(candidates)
+            pool_fraction_scores.append(pool_fraction)
             metric_row = {
                 "recall_at_5": _rounded(recall_at_k(ranked_ids, positive_ids, 5)),
                 "recall_at_10": _rounded(recall_at_k(ranked_ids, positive_ids, 10)),
                 "recall_at_20": _rounded(recall_at_k(ranked_ids, positive_ids, 20)),
-                "candidate_coverage_at_20": _rounded(len(top_20) / len(candidates)),
-                "relevant_candidate_retrieval_rate_at_20": _rounded(
-                    relevant_retrieved / len(positive_ids)
-                ),
                 "precision_at_5": _rounded(precision_at_k(ranked_ids, positive_ids, 5)),
                 "mrr": _rounded(mean_reciprocal_rank(ranked_ids, positive_ids)),
                 "ndcg_at_5": _rounded(graded_ndcg_at_k(ranked_ids, relevance, 5)),
@@ -164,7 +162,19 @@ def evaluate_dataset(dataset_path: Path) -> dict[str, Any]:
                 "query_type": variant["type"],
                 "candidate_count": len(candidates),
                 "positive_candidate_count": len(positive_ids),
-                "metrics": metric_row,
+                "ranked_pool_recall_metrics": {
+                    key: metric_row[key]
+                    for key in ("recall_at_5", "recall_at_10", "recall_at_20")
+                },
+                "ranking_metrics": {
+                    key: metric_row[key]
+                    for key in ("precision_at_5", "mrr", "ndcg_at_5", "ndcg_at_10")
+                },
+                "selection_depth_statistics": {
+                    "returned_at_20": len(top_20),
+                    "supplied_pool_size": len(candidates),
+                    "ranked_pool_fraction_at_20": _rounded(pool_fraction),
+                },
                 "ranking_consistency": {
                     "repeat_is_identical": repeat_is_identical,
                     "pairwise_order_agreement_vs_reversed_input": _rounded(agreement),
@@ -188,8 +198,6 @@ def evaluate_dataset(dataset_path: Path) -> dict[str, Any]:
             "recall_at_5",
             "recall_at_10",
             "recall_at_20",
-            "candidate_coverage_at_20",
-            "relevant_candidate_retrieval_rate_at_20",
             "precision_at_5",
             "mrr",
             "ndcg_at_5",
@@ -201,6 +209,11 @@ def evaluate_dataset(dataset_path: Path) -> dict[str, Any]:
         "dataset_id": dataset["dataset_id"],
         "dataset_sha256": hashlib.sha256(dataset_path.read_bytes()).hexdigest(),
         "status": "SYNTHETIC_BASELINE_ONLY",
+        "evaluation_scope": {
+            "fixed_candidate_pool_supplied_directly": True,
+            "independent_candidate_generation_evaluated": False,
+            "live_source_retrieval_recall_evaluated": False,
+        },
         "configuration": {
             "ranker": "ml.semantic_matching.hybrid.rank_candidates",
             "method": "token_jaccard_baseline",
@@ -228,15 +241,20 @@ def evaluate_dataset(dataset_path: Path) -> dict[str, Any]:
                 str(grade): label_counts[grade] for grade in range(4)
             },
         },
-        "candidate_generation_metrics": {
+        "ranked_pool_recall_metrics": {
             key: average_metrics[key]
-            for key in (
-                "recall_at_5",
-                "recall_at_10",
-                "recall_at_20",
-                "candidate_coverage_at_20",
-                "relevant_candidate_retrieval_rate_at_20",
-            )
+            for key in ("recall_at_5", "recall_at_10", "recall_at_20")
+        },
+        "selection_depth_statistics": {
+            "ranked_pool_fraction_at_20": _rounded(
+                sum(pool_fraction_scores) / len(pool_fraction_scores)
+            ),
+            "selection_depth": RETRIEVAL_DEPTH,
+            "supplied_pool_size_per_query": query_results[0]["candidate_count"],
+            "interpretation": (
+                "Share of the supplied fixed pool included in the top 20; "
+                "a selection-depth statistic, not a retrieval-quality measure."
+            ),
         },
         "ranking_metrics": {
             key: average_metrics[key]
@@ -259,10 +277,12 @@ def evaluate_dataset(dataset_path: Path) -> dict[str, Any]:
         "false_negatives_at_20": false_negatives,
         "queries": query_results,
         "interpretation": (
-            "These deterministic metrics evaluate a fixed synthetic candidate pool and "
-            "the existing lexical ranker only. They do not measure live OpenAlex query "
-            "recall, scientific relevance, institutional performance, plagiarism, or "
-            "funding decisions."
+            "The evaluator supplies a fixed synthetic candidate pool directly to the "
+            "existing lexical ranker. Recall@K measures relevant candidates in the top "
+            "K of that supplied pool. Independent candidate generation and live-source "
+            "retrieval recall have not been evaluated. These metrics do not establish "
+            "scientific relevance, institutional performance, plagiarism, or funding "
+            "decisions."
         ),
     }
 

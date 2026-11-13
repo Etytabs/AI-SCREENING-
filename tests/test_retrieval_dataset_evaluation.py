@@ -1,4 +1,5 @@
 import copy
+import hashlib
 import json
 from pathlib import Path
 
@@ -106,19 +107,68 @@ def test_retrieval_and_ranking_metrics_are_reported_separately_and_repeatably():
     second = evaluate_dataset(DATASET)
 
     assert first == second
-    assert first["candidate_generation_metrics"]["recall_at_20"] > 0
-    assert "precision_at_5" not in first["candidate_generation_metrics"]
+    assert first["ranked_pool_recall_metrics"] == {
+        "recall_at_5": 0.833333,
+        "recall_at_10": 0.916667,
+        "recall_at_20": 0.944445,
+    }
     assert set(first["ranking_metrics"]) == {
         "precision_at_5",
         "mrr",
         "ndcg_at_5",
         "ndcg_at_10",
     }
+    assert first["ranking_metrics"] == {
+        "precision_at_5": 0.5,
+        "mrr": 1.0,
+        "ndcg_at_5": 0.831415,
+        "ndcg_at_10": 0.864974,
+    }
+    assert first["evaluation_scope"] == {
+        "fixed_candidate_pool_supplied_directly": True,
+        "independent_candidate_generation_evaluated": False,
+        "live_source_retrieval_recall_evaluated": False,
+    }
+    assert first["selection_depth_statistics"]["ranked_pool_fraction_at_20"] == 0.8
+    assert "candidate_coverage_at_20" not in json.dumps(first)
+    assert "relevant_candidate_retrieval_rate_at_20" not in json.dumps(first)
+    for query in first["queries"]:
+        relevant_count = query["positive_candidate_count"]
+        top_20 = query["top_20"]
+        for k in (5, 10, 20):
+            hits = sum(item["grade"] > 0 for item in top_20[:k])
+            assert query["ranked_pool_recall_metrics"][f"recall_at_{k}"] == pytest.approx(
+                hits / relevant_count
+            )
     assert first["ranking_consistency"]["all_repeated_runs_identical"] is True
     assert first["ranking_consistency"]["input_order_sensitive_tie_query_count"] > 0
     assert first["false_positives_at_5"]
     assert first["false_negatives_at_20"]
     assert len(first["queries"]) == 12
+
+
+def test_result_artifact_and_docs_use_fixed_pool_terminology():
+    artifact_path = Path("data/evaluation/retrieval_evaluation_v1_results.json")
+    docs_path = Path("docs/ai-ml/retrieval-evaluation.md")
+    artifact = json.loads(artifact_path.read_text())
+    docs = " ".join(docs_path.read_text().split())
+
+    assert artifact == evaluate_dataset(DATASET)
+    assert artifact["dataset_sha256"] == hashlib.sha256(DATASET.read_bytes()).hexdigest()
+    assert artifact["dataset_sha256"] == (
+        "e79358fb35bb37f2e12adc7e435b38d0a056a67d3c5222ab3f5e1b6a6dc59a6a"
+    )
+    assert "ranked_pool_recall_metrics" in docs
+    assert "ranked_pool_fraction_at_20" in docs
+    assert "Independent candidate generation and live-source retrieval recall have not been evaluated." in docs
+    assert "Independent candidate generation and live-source retrieval recall have not been evaluated." in (
+        artifact["interpretation"]
+    )
+    assert "not a retrieval-quality measure" in (
+        artifact["selection_depth_statistics"]["interpretation"]
+    )
+    assert "candidate_generation_metrics" not in json.dumps(artifact)
+    assert "candidate_coverage_at_20" not in docs
 
 
 def test_equal_scores_are_stable_for_fixed_input_and_follow_input_order():

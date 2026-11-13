@@ -226,6 +226,19 @@ def test_literature_source_deduplicates_distinct_openalex_ids_by_doi():
     assert "1 duplicate work record(s) removed" in result.message
 
 
+def test_literature_source_falls_back_to_casefolded_record_id_without_doi():
+    first = replace(WORK, record_id="W-no-doi", doi=None)
+    duplicate = replace(WORK, record_id="w-NO-DOI", doi="")
+    result = PublishedLiteratureSource(
+        search=lambda query, rows: [first, duplicate]
+    ).search(["query"])
+
+    assert [record.record_id for record in result.records] == ["W-no-doi"]
+    assert result.state == RunState.COMPLETE
+    assert result.retrieved_records == 2
+    assert "1 duplicate work record(s) removed" in result.message
+
+
 def test_literature_source_does_not_report_unusable_results_as_zero_matches():
     no_abstract = replace(WORK, record_id="W-no-abstract", abstract="")
     result = PublishedLiteratureSource(search=lambda query, rows: [no_abstract]).search(["query"])

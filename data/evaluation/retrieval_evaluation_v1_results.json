@@ -3,6 +3,11 @@
   "dataset_id": "synthetic-research-retrieval-v1.0",
   "dataset_sha256": "e79358fb35bb37f2e12adc7e435b38d0a056a67d3c5222ab3f5e1b6a6dc59a6a",
   "status": "SYNTHETIC_BASELINE_ONLY",
+  "evaluation_scope": {
+    "fixed_candidate_pool_supplied_directly": true,
+    "independent_candidate_generation_evaluated": false,
+    "live_source_retrieval_recall_evaluated": false
+  },
   "configuration": {
     "ranker": "ml.semantic_matching.hybrid.rank_candidates",
     "method": "token_jaccard_baseline",
@@ -33,12 +38,16 @@
       "3": 12
     }
   },
-  "candidate_generation_metrics": {
+  "ranked_pool_recall_metrics": {
     "recall_at_5": 0.833333,
     "recall_at_10": 0.916667,
-    "recall_at_20": 0.944445,
-    "candidate_coverage_at_20": 0.8,
-    "relevant_candidate_retrieval_rate_at_20": 0.944445
+    "recall_at_20": 0.944445
+  },
+  "selection_depth_statistics": {
+    "ranked_pool_fraction_at_20": 0.8,
+    "selection_depth": 20,
+    "supplied_pool_size_per_query": 25,
+    "interpretation": "Share of the supplied fixed pool included in the top 20; a selection-depth statistic, not a retrieval-quality measure."
   },
   "ranking_metrics": {
     "precision_at_5": 0.5,
@@ -284,16 +293,21 @@
       "query_type": "research_question",
       "candidate_count": 25,
       "positive_candidate_count": 3,
-      "metrics": {
+      "ranked_pool_recall_metrics": {
         "recall_at_5": 1.0,
         "recall_at_10": 1.0,
-        "recall_at_20": 1.0,
-        "candidate_coverage_at_20": 0.8,
-        "relevant_candidate_retrieval_rate_at_20": 1.0,
+        "recall_at_20": 1.0
+      },
+      "ranking_metrics": {
         "precision_at_5": 0.6,
         "mrr": 1.0,
         "ndcg_at_5": 0.946136,
         "ndcg_at_10": 0.946136
+      },
+      "selection_depth_statistics": {
+        "returned_at_20": 20,
+        "supplied_pool_size": 25,
+        "ranked_pool_fraction_at_20": 0.8
       },
       "ranking_consistency": {
         "repeat_is_identical": true,
@@ -409,16 +423,21 @@
       "query_type": "proposal_statement",
       "candidate_count": 25,
       "positive_candidate_count": 3,
-      "metrics": {
+      "ranked_pool_recall_metrics": {
         "recall_at_5": 1.0,
         "recall_at_10": 1.0,
-        "recall_at_20": 1.0,
-        "candidate_coverage_at_20": 0.8,
-        "relevant_candidate_retrieval_rate_at_20": 1.0,
+        "recall_at_20": 1.0
+      },
+      "ranking_metrics": {
         "precision_at_5": 0.6,
         "mrr": 1.0,
         "ndcg_at_5": 0.830782,
         "ndcg_at_10": 0.830782
+      },
+      "selection_depth_statistics": {
+        "returned_at_20": 20,
+        "supplied_pool_size": 25,
+        "ranked_pool_fraction_at_20": 0.8
       },
       "ranking_consistency": {
         "repeat_is_identical": true,
@@ -534,16 +553,21 @@
       "query_type": "research_question",
       "candidate_count": 25,
       "positive_candidate_count": 3,
-      "metrics": {
+      "ranked_pool_recall_metrics": {
         "recall_at_5": 0.333333,
         "recall_at_10": 1.0,
-        "recall_at_20": 1.0,
-        "candidate_coverage_at_20": 0.8,
-        "relevant_candidate_retrieval_rate_at_20": 1.0,
+        "recall_at_20": 1.0
+      },
+      "ranking_metrics": {
         "precision_at_5": 0.2,
         "mrr": 1.0,
         "ndcg_at_5": 0.745253,
         "ndcg_at_10": 0.882492
+      },
+      "selection_depth_statistics": {
+        "returned_at_20": 20,
+        "supplied_pool_size": 25,
+        "ranked_pool_fraction_at_20": 0.8
       },
       "ranking_consistency": {
         "repeat_is_identical": true,
@@ -659,16 +683,21 @@
       "query_type": "proposal_statement",
       "candidate_count": 25,
       "positive_candidate_count": 3,
-      "metrics": {
+      "ranked_pool_recall_metrics": {
         "recall_at_5": 1.0,
         "recall_at_10": 1.0,
-        "recall_at_20": 1.0,
-        "candidate_coverage_at_20": 0.8,
-        "relevant_candidate_retrieval_rate_at_20": 1.0,
+        "recall_at_20": 1.0
+      },
+      "ranking_metrics": {
         "precision_at_5": 0.6,
         "mrr": 1.0,
         "ndcg_at_5": 0.987954,
         "ndcg_at_10": 0.987954
+      },
+      "selection_depth_statistics": {
+        "returned_at_20": 20,
+        "supplied_pool_size": 25,
+        "ranked_pool_fraction_at_20": 0.8
       },
       "ranking_consistency": {
         "repeat_is_identical": true,
@@ -784,16 +813,21 @@
       "query_type": "research_question",
       "candidate_count": 25,
       "positive_candidate_count": 3,
-      "metrics": {
+      "ranked_pool_recall_metrics": {
         "recall_at_5": 0.666667,
         "recall_at_10": 0.666667,
-        "recall_at_20": 1.0,
-        "candidate_coverage_at_20": 0.8,
-        "relevant_candidate_retrieval_rate_at_20": 1.0,
+        "recall_at_20": 1.0
+      },
+      "ranking_metrics": {
         "precision_at_5": 0.4,
         "mrr": 1.0,
         "ndcg_at_5": 0.90495,
         "ndcg_at_10": 0.90495
+      },
+      "selection_depth_statistics": {
+        "returned_at_20": 20,
+        "supplied_pool_size": 25,
+        "ranked_pool_fraction_at_20": 0.8
       },
       "ranking_consistency": {
         "repeat_is_identical": true,
@@ -909,16 +943,21 @@
       "query_type": "proposal_statement",
       "candidate_count": 25,
       "positive_candidate_count": 3,
-      "metrics": {
+      "ranked_pool_recall_metrics": {
         "recall_at_5": 1.0,
         "recall_at_10": 1.0,
-        "recall_at_20": 1.0,
-        "candidate_coverage_at_20": 0.8,
-        "relevant_candidate_retrieval_rate_at_20": 1.0,
+        "recall_at_20": 1.0
+      },
+      "ranking_metrics": {
         "precision_at_5": 0.6,
         "mrr": 1.0,
         "ndcg_at_5": 0.835448,
         "ndcg_at_10": 0.835448
+      },
+      "selection_depth_statistics": {
+        "returned_at_20": 20,
+        "supplied_pool_size": 25,
+        "ranked_pool_fraction_at_20": 0.8
       },
       "ranking_consistency": {
         "repeat_is_identical": true,
@@ -1034,16 +1073,21 @@
       "query_type": "research_question",
       "candidate_count": 25,
       "positive_candidate_count": 3,
-      "metrics": {
+      "ranked_pool_recall_metrics": {
         "recall_at_5": 1.0,
         "recall_at_10": 1.0,
-        "recall_at_20": 1.0,
-        "candidate_coverage_at_20": 0.8,
-        "relevant_candidate_retrieval_rate_at_20": 1.0,
+        "recall_at_20": 1.0
+      },
+      "ranking_metrics": {
         "precision_at_5": 0.6,
         "mrr": 1.0,
         "ndcg_at_5": 0.737872,
         "ndcg_at_10": 0.737872
+      },
+      "selection_depth_statistics": {
+        "returned_at_20": 20,
+        "supplied_pool_size": 25,
+        "ranked_pool_fraction_at_20": 0.8
       },
       "ranking_consistency": {
         "repeat_is_identical": true,
@@ -1159,16 +1203,21 @@
       "query_type": "proposal_statement",
       "candidate_count": 25,
       "positive_candidate_count": 3,
-      "metrics": {
+      "ranked_pool_recall_metrics": {
         "recall_at_5": 0.666667,
         "recall_at_10": 0.666667,
-        "recall_at_20": 0.666667,
-        "candidate_coverage_at_20": 0.8,
-        "relevant_candidate_retrieval_rate_at_20": 0.666667,
+        "recall_at_20": 0.666667
+      },
+      "ranking_metrics": {
         "precision_at_5": 0.4,
         "mrr": 1.0,
         "ndcg_at_5": 0.812424,
         "ndcg_at_10": 0.812424
+      },
+      "selection_depth_statistics": {
+        "returned_at_20": 20,
+        "supplied_pool_size": 25,
+        "ranked_pool_fraction_at_20": 0.8
       },
       "ranking_consistency": {
         "repeat_is_identical": true,
@@ -1284,16 +1333,21 @@
       "query_type": "research_question",
       "candidate_count": 25,
       "positive_candidate_count": 3,
-      "metrics": {
+      "ranked_pool_recall_metrics": {
         "recall_at_5": 1.0,
         "recall_at_10": 1.0,
-        "recall_at_20": 1.0,
-        "candidate_coverage_at_20": 0.8,
-        "relevant_candidate_retrieval_rate_at_20": 1.0,
+        "recall_at_20": 1.0
+      },
+      "ranking_metrics": {
         "precision_at_5": 0.6,
         "mrr": 1.0,
         "ndcg_at_5": 0.842828,
         "ndcg_at_10": 0.842828
+      },
+      "selection_depth_statistics": {
+        "returned_at_20": 20,
+        "supplied_pool_size": 25,
+        "ranked_pool_fraction_at_20": 0.8
       },
       "ranking_consistency": {
         "repeat_is_identical": true,
@@ -1409,16 +1463,21 @@
       "query_type": "proposal_statement",
       "candidate_count": 25,
       "positive_candidate_count": 3,
-      "metrics": {
+      "ranked_pool_recall_metrics": {
         "recall_at_5": 0.666667,
         "recall_at_10": 1.0,
-        "recall_at_20": 1.0,
-        "candidate_coverage_at_20": 0.8,
-        "relevant_candidate_retrieval_rate_at_20": 1.0,
+        "recall_at_20": 1.0
+      },
+      "ranking_metrics": {
         "precision_at_5": 0.4,
         "mrr": 1.0,
         "ndcg_at_5": 0.386566,
         "ndcg_at_10": 0.65203
+      },
+      "selection_depth_statistics": {
+        "returned_at_20": 20,
+        "supplied_pool_size": 25,
+        "ranked_pool_fraction_at_20": 0.8
       },
       "ranking_consistency": {
         "repeat_is_identical": true,
@@ -1534,16 +1593,21 @@
       "query_type": "research_question",
       "candidate_count": 25,
       "positive_candidate_count": 3,
-      "metrics": {
+      "ranked_pool_recall_metrics": {
         "recall_at_5": 0.666667,
         "recall_at_10": 0.666667,
-        "recall_at_20": 0.666667,
-        "candidate_coverage_at_20": 0.8,
-        "relevant_candidate_retrieval_rate_at_20": 0.666667,
+        "recall_at_20": 0.666667
+      },
+      "ranking_metrics": {
         "precision_at_5": 0.4,
         "mrr": 1.0,
         "ndcg_at_5": 0.946768,
         "ndcg_at_10": 0.946768
+      },
+      "selection_depth_statistics": {
+        "returned_at_20": 20,
+        "supplied_pool_size": 25,
+        "ranked_pool_fraction_at_20": 0.8
       },
       "ranking_consistency": {
         "repeat_is_identical": true,
@@ -1659,16 +1723,21 @@
       "query_type": "proposal_statement",
       "candidate_count": 25,
       "positive_candidate_count": 3,
-      "metrics": {
+      "ranked_pool_recall_metrics": {
         "recall_at_5": 1.0,
         "recall_at_10": 1.0,
-        "recall_at_20": 1.0,
-        "candidate_coverage_at_20": 0.8,
-        "relevant_candidate_retrieval_rate_at_20": 1.0,
+        "recall_at_20": 1.0
+      },
+      "ranking_metrics": {
         "precision_at_5": 0.6,
         "mrr": 1.0,
         "ndcg_at_5": 1.0,
         "ndcg_at_10": 1.0
+      },
+      "selection_depth_statistics": {
+        "returned_at_20": 20,
+        "supplied_pool_size": 25,
+        "ranked_pool_fraction_at_20": 0.8
       },
       "ranking_consistency": {
         "repeat_is_identical": true,
@@ -1780,5 +1849,5 @@
       ]
     }
   ],
-  "interpretation": "These deterministic metrics evaluate a fixed synthetic candidate pool and the existing lexical ranker only. They do not measure live OpenAlex query recall, scientific relevance, institutional performance, plagiarism, or funding decisions."
+  "interpretation": "The evaluator supplies a fixed synthetic candidate pool directly to the existing lexical ranker. Recall@K measures relevant candidates in the top K of that supplied pool. Independent candidate generation and live-source retrieval recall have not been evaluated. These metrics do not establish scientific relevance, institutional performance, plagiarism, or funding decisions."
 }

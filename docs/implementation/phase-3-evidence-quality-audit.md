@@ -179,22 +179,28 @@ normalization helper as the literature source and uses the existing ranker on th
 concatenated title and abstract. No ranking formula, query-generation rule, threshold, or
 external-model dependency changed.
 
-Candidate-selection metrics are Recall@5/10/20, coverage@20 (returned unique candidates
-over the fixed 25-work pool), and relevant-candidate retrieval rate@20. Ranking metrics
-are Precision@5 and MRR over grades 1–3, plus graded nDCG@5/10 with gain `2^grade - 1`.
-These metrics are separately reported but share the same ranked output; they measure
-top-K selection and order within this fixed synthetic pool. They do not measure recall
-of live OpenAlex queries or establish production ranking quality.
+The evaluator supplies all 25 unique works directly to the ranker; it does not execute
+an independent candidate-generation or external literature-retrieval stage.
+`ranked_pool_recall_metrics` reports Recall@5/10/20: relevant candidates appearing in
+the top K of that supplied pool. Independent candidate generation and live-source
+retrieval recall have not been evaluated. The `ranked_pool_fraction_at_20` result
+(20/25 = 0.8000) is only the selected fraction of the fixed input pool, not a
+retrieval-quality metric. Relevant-candidate retrieval rate@20 is omitted because it is
+mathematically identical to Recall@20 in this experiment.
+
+Ranking metrics are Precision@5 and MRR over grades 1–3, plus graded nDCG@5/10 with
+gain `2^grade - 1`. These metrics are separately reported but share the same ranked
+output; they describe ranking quality within the supplied synthetic pool. They do not
+measure recall of live OpenAlex queries or establish production ranking quality.
 
 ### Baseline results and error analysis
 
-| Candidate selection | Result | Ranking | Result |
+| Fixed-pool top-K recall | Result | Ranking | Result |
 |---|---:|---|---:|
 | Recall@5 | 0.8333 | Precision@5 | 0.5000 |
 | Recall@10 | 0.9167 | MRR | 1.0000 |
 | Recall@20 | 0.9444 | Graded nDCG@5 | 0.8314 |
-| Candidate coverage@20 | 0.8000 | Graded nDCG@10 | 0.8650 |
-| Relevant-candidate retrieval rate@20 | 0.9444 | | |
+| Ranked-pool fraction@20 (selection depth only) | 0.8000 | Graded nDCG@10 | 0.8650 |
 
 Across 12 queries, there were 30 grade-0 top-five results (2.5 per query on average)
 and two positive judgments below depth 20: `PUB-ENE-02` (grade 2, `ENE-Q2`) and
@@ -216,11 +222,12 @@ from this small, hand-authored dataset. No retrieval improvement is claimed.
 
 ### Regression results, limitations, and next activity
 
-- Backend: **185 passed**, including Phase 2 workflow, OpenAlex state/deduplication,
+- Backend: **187 passed**, including Phase 2 workflow, OpenAlex state/deduplication,
   evidence provenance, API error redaction, and the new dataset/metric tests.
+- Literature-source regression tests: **19 passed**, including DOI URL/bare DOI
+  normalization, cross-ID DOI deduplication, and case-folded record-ID fallback.
 - Frontend: **72 passed** across six files; ESLint, TypeScript checking, and production
-  build passed. The build emitted existing optional-`sharp`, Autoprefixer, and webpack
-  cache warnings.
+  build passed.
 - Changed Python files: Ruff passed. Repository-wide Ruff reports the pre-existing
   import-order finding in `services/plagiarism/attribution.py`.
 - The baseline output is byte-for-byte repeatable and records the dataset SHA-256.

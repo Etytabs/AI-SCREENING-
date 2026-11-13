@@ -38,8 +38,11 @@ Benchmark #2 should be interpreted as a diagnostic evaluation. A semantic or hyb
 The lexical-only execution on 12 November 2026 measured Recall@5 **1.00**, Precision@5
 **0.24**, MRR **0.562** and nDCG@5 **0.667** across the 10 synthetic cases. The high
 recall but low precision/ranking scores show that relevant candidates are retrieved but
-often mixed with distractors. Embedding and reranker strategies were not run in this
-execution; these results are not scientific or institutional validation.
+often mixed with distractors. At Precision@5 0.24, only about 1.2 of five returned
+candidates per query were labeled relevant on average in this small set; the remaining
+results need human filtering. These metrics describe retrieval labels, not plagiarism
+probability or scientific validity. Embedding and reranker strategies were not run in
+this execution; these results are not scientific or institutional validation.
 
 ## Cross-encoder reranking
 

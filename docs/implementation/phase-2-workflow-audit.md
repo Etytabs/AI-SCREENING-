@@ -68,6 +68,13 @@ decision and synthetic-data notice. The dashboard and evidence workspace had no
 horizontal overflow at 1440×900, 768×1024 or 390×844; light/dark theme toggling was
 verified, and the theme hydration warning was corrected.
 
+On final revalidation, viewport screenshots at desktop and mobile showed the global
+header at the top of the viewport, the sidebar below it, and the evidence drawer below
+the header; the earlier apparent overlap was not reproduced and is consistent with a
+scrolled/full-page capture. The mobile drawer's close label wrapped, so it was kept on
+one line. The application remains within the viewport without horizontal overflow at
+390 CSS pixels.
+
 The synthetic retrieval diagnostics measured Recall@5 1.00, Precision@5 0.20, MRR 1.00
 and nDCG@5 1.00 on the four-case baseline; the 10-case adversarial set measured Recall@5
 1.00, Precision@5 0.24, MRR 0.562 and nDCG@5 0.667. These small labeled synthetic sets

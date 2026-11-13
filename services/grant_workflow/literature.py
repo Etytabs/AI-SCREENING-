@@ -18,7 +18,7 @@ from services.research_sources.connectors import (
     openalex_contact,
     search_openalex,
 )
-from services.research_sources.models import ResearchRecord
+from services.research_sources.models import ResearchRecord, record_deduplication_key
 from services.sources.registry import SourceAccessStatus
 
 logger = logging.getLogger(__name__)
@@ -172,14 +172,6 @@ def openalex_enabled() -> bool:
     return bool(openalex_api_key() or openalex_contact())
 
 
-def _record_key(record: ResearchRecord) -> str:
-    doi = (record.doi or "").strip().casefold()
-    doi = re.sub(r"^(?:https?://(?:dx\.)?doi\.org/|doi:\s*)", "", doi)
-    if doi:
-        return f"doi:{doi.rstrip(' .')}"
-    return f"record:{record.record_id.strip().casefold()}"
-
-
 class PublishedLiteratureSource:
     """OpenAlex-backed comparison source for the plagiarism check."""
 
@@ -229,7 +221,7 @@ class PublishedLiteratureSource:
                 if not record.record_id or len(record.abstract.split()) < MIN_ABSTRACT_WORDS:
                     unusable_records += 1
                     continue
-                found.setdefault(_record_key(record), record)
+                found.setdefault(record_deduplication_key(record.record_id, record.doi), record)
         records = tuple(found.values())
         retrieved_at = datetime.now(UTC)
         if errors and not records:

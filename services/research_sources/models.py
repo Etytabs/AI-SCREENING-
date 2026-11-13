@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -38,3 +39,15 @@ class ResearchRecord:
 
     def searchable_text(self) -> str:
         return " ".join(part for part in (self.title, self.abstract, " ".join(self.keywords)) if part)
+
+
+def record_deduplication_key(record_id: str, doi: str | None = None) -> str:
+    normalized_doi = (doi or "").strip().casefold()
+    normalized_doi = re.sub(
+        r"^(?:https?://(?:dx\.)?doi\.org/|doi:\s*)",
+        "",
+        normalized_doi,
+    )
+    if normalized_doi:
+        return f"doi:{normalized_doi.rstrip(' .')}"
+    return f"record:{record_id.strip().casefold()}"

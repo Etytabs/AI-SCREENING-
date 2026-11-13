@@ -1,0 +1,291 @@
+{
+  "schema_version": "1.0",
+  "dataset_id": "synthetic-research-retrieval-v1.0",
+  "status": "SYNTHETIC_EVALUATION_ONLY",
+  "description": "Hand-authored synthetic publication records and query-to-record relevance judgments. Not institutional, scientific, or live-source validation.",
+  "construction": {
+    "domains": ["agriculture", "maternal health", "water quality", "renewable energy", "education", "biodiversity"],
+    "catalog_record_count": 27,
+    "unique_work_count": 25,
+    "query_group_count": 6,
+    "query_variant_count": 12,
+    "candidates_per_query_after_deduplication": 25,
+    "relevance_scale": {
+      "0": "Not relevant",
+      "1": "Weakly relevant",
+      "2": "Relevant",
+      "3": "Highly relevant"
+    }
+  },
+  "candidates": [
+    {
+      "candidate_id": "PUB-AGR-01",
+      "doi": "10.5555/synthetic.agr.001",
+      "title": "Field validation of image-based maize disease detection",
+      "abstract": "This synthetic study trains image classifiers to identify fungal disease in maize leaves collected from smallholder farms. Field validation compares model alerts with laboratory diagnosis and agronomist assessment across multiple growing seasons."
+    },
+    {
+      "candidate_id": "PUB-AGR-02",
+      "doi": "10.5555/synthetic.agr.002",
+      "title": "Low-cost camera screening of crop infections in small farms",
+      "abstract": "Farmers photograph damaged foliage with basic mobile devices, and plant-health workers confirm suspected infections during field visits. The study measures whether image triage can identify outbreaks early enough to guide crop protection."
+    },
+    {
+      "candidate_id": "PUB-AGR-03",
+      "doi": "10.5555/synthetic.agr.003",
+      "title": "Community reporting of crop disease outbreaks",
+      "abstract": "Agricultural extension workers combine farmer reports and periodic field observations to map plant disease incidence. The work studies surveillance coverage and response time but does not classify photographs or train an image model."
+    },
+    {
+      "candidate_id": "PUB-AGR-04",
+      "doi": "10.5555/synthetic.agr.004",
+      "title": "Maize leaf image analysis for nutrient deficiency rather than infection",
+      "abstract": "A computer-vision system classifies nitrogen and potassium stress in maize leaves from field photographs. Pathogen detection is explicitly outside scope, although the imagery, crop, and image-classification terminology overlap with disease-screening research."
+    },
+    {
+      "candidate_id": "PUB-AGR-05",
+      "doi": "10.5555/synthetic.agr.005",
+      "title": "Remote-sensing estimates of seasonal crop yield",
+      "abstract": "Satellite vegetation indices and rainfall histories are combined to estimate regional harvest volumes. The analysis supports food-supply planning and contains no plant-disease diagnosis or leaf-image classification."
+    },
+    {
+      "candidate_id": "PUB-AGR-01-DUP",
+      "doi": "https://doi.org/10.5555/synthetic.agr.001",
+      "title": "Image-based maize disease detection validated in farm fields",
+      "abstract": "This duplicate synthetic metadata record describes the same work as PUB-AGR-01 under a reordered title and a DOI URL."
+    },
+    {
+      "candidate_id": "PUB-MAT-01",
+      "doi": "10.5555/synthetic.mat.001",
+      "title": "Clinical prediction and referral for high-risk pregnancies",
+      "abstract": "This synthetic clinical study develops a risk model to identify pregnant patients needing escalation and evaluates referrals from community providers to facilities. Outcomes include timely care, severe complications, and referral completion."
+    },
+    {
+      "candidate_id": "PUB-MAT-01-DUP",
+      "doi": "https://doi.org/10.5555/synthetic.mat.001",
+      "title": "Referral and clinical prediction for high-risk pregnancy",
+      "abstract": "This duplicate synthetic metadata record describes the same work as PUB-MAT-01 under a reordered title and a DOI URL."
+    },
+    {
+      "candidate_id": "PUB-MAT-02",
+      "doi": "10.5555/synthetic.mat.002",
+      "title": "Routing expectant mothers with warning signs to emergency obstetric care",
+      "abstract": "Community health workers use a structured triage pathway to connect women showing danger signs with facilities able to provide urgent obstetric services. The evaluation follows referral decisions and maternal outcomes."
+    },
+    {
+      "candidate_id": "PUB-MAT-03",
+      "doi": "10.5555/synthetic.mat.003",
+      "title": "Mobile maternal-health education and antenatal appointment reminders",
+      "abstract": "Text messages provide pregnancy education and reminders to attend routine antenatal visits. The programme measures knowledge and appointment attendance but does not estimate individual clinical risk or direct high-risk referrals."
+    },
+    {
+      "candidate_id": "PUB-MAT-04",
+      "doi": "10.5555/synthetic.mat.004",
+      "title": "Referral directory for maternity services",
+      "abstract": null
+    },
+    {
+      "candidate_id": "PUB-WAT-01",
+      "doi": "10.5555/synthetic.wat.001",
+      "title": "Detecting contamination events from drinking-water sensor streams",
+      "abstract": "This synthetic engineering study analyses continuous chemical and microbial measurements from drinking-water probes. It identifies anomalous contamination signatures and validates alerts against laboratory samples collected at distribution points."
+    },
+    {
+      "candidate_id": "PUB-WAT-02",
+      "doi": "10.5555/synthetic.wat.002",
+      "title": "Early warning for unsafe water using automated probe readings",
+      "abstract": "A monitoring network flags unusual combinations of turbidity, conductivity, and microbial indicators before routine sampling would detect a problem. The study evaluates warning accuracy and response time for drinking-water contamination."
+    },
+    {
+      "candidate_id": "PUB-WAT-03",
+      "doi": "10.5555/synthetic.wat.003",
+      "title": "Community field-kit testing of rural water sources",
+      "abstract": "Local teams test wells and springs with portable kits and report results to district water officers. The project examines sampling access and community response but does not use continuous sensor streams or anomaly detection."
+    },
+    {
+      "candidate_id": "PUB-WAT-04",
+      "doi": "10.5555/synthetic.wat.004",
+      "title": "Sensor-based scheduling of irrigation from reservoirs",
+      "abstract": "Water-level probes and weather forecasts guide irrigation releases to reduce crop water shortages. The work shares water monitoring and sensor terminology but studies agricultural allocation, not contamination or drinking-water safety."
+    },
+    {
+      "candidate_id": "PUB-ENE-01",
+      "doi": "10.5555/synthetic.ene.001",
+      "title": "Forecasting photovoltaic output from weather observations",
+      "abstract": "This synthetic energy study predicts solar-farm generation from irradiance, cloud cover, temperature, and wind measurements. Time-series forecasts are evaluated against observed output to support grid dispatch and storage planning."
+    },
+    {
+      "candidate_id": "PUB-ENE-02",
+      "doi": "10.5555/synthetic.ene.002",
+      "title": "Estimating sunlight-driven electricity production under changing clouds",
+      "abstract": "A statistical model anticipates the power delivered by solar panels as atmospheric conditions change. It combines sky imagery and meteorological observations and evaluates short-term generation forecasts at distributed photovoltaic sites."
+    },
+    {
+      "candidate_id": "PUB-ENE-03",
+      "doi": "10.5555/synthetic.ene.003",
+      "title": "Solar mini-grid feasibility and household energy access",
+      "abstract": "Geographic coverage, household demand, and installation cost are assessed to select locations for rural solar mini-grids. The research concerns infrastructure planning rather than forecasting photovoltaic output from weather data."
+    },
+    {
+      "candidate_id": "PUB-ENE-04",
+      "doi": "10.5555/synthetic.ene.004",
+      "title": "Weather-driven forecasts of electricity demand",
+      "abstract": "Temperature and rainfall records are used to predict hourly electricity consumption by households. The forecasting method and meteorological inputs overlap lexically, but the target is demand rather than solar generation."
+    },
+    {
+      "candidate_id": "PUB-EDU-01",
+      "doi": "10.5555/synthetic.edu.001",
+      "title": "Improving early-grade reading comprehension through phonics instruction",
+      "abstract": "This synthetic education study tests structured phonics lessons and guided reading in primary classrooms. Reading fluency and comprehension are measured before and after instruction across schools serving multilingual learners."
+    },
+    {
+      "candidate_id": "PUB-EDU-02",
+      "doi": "10.5555/synthetic.edu.002",
+      "title": "Helping young pupils decode unfamiliar words and understand short texts",
+      "abstract": "Teachers use sound-letter activities and supported reading passages to strengthen literacy in the first years of school. The study measures decoding, oral fluency, and understanding among children learning in more than one language."
+    },
+    {
+      "candidate_id": "PUB-EDU-03",
+      "doi": "10.5555/synthetic.edu.003",
+      "title": "Teacher attendance and classroom resource availability",
+      "abstract": "School visits document staff presence, textbook access, and lesson time in rural primary education. The study describes learning conditions but does not evaluate reading instruction or literacy outcomes."
+    },
+    {
+      "candidate_id": "PUB-EDU-04",
+      "doi": null,
+      "title": null,
+      "abstract": null
+    },
+    {
+      "candidate_id": "PUB-BIO-01",
+      "doi": "10.5555/synthetic.bio.001",
+      "title": "Restoring native forest corridors to support pollinator diversity",
+      "abstract": "This synthetic ecology study restores connected native vegetation and measures wild pollinator richness across fragmented landscapes. Repeated field surveys assess whether habitat corridors improve species persistence and movement between reserves."
+    },
+    {
+      "candidate_id": "PUB-BIO-02",
+      "doi": "10.5555/synthetic.bio.002",
+      "title": "Reconnecting fragmented habitats for wild-pollinator recovery",
+      "abstract": "Researchers compare insect communities before and after planting native strips between isolated forest patches. The work tests whether landscape connectivity supports pollination services and the survival of locally observed species."
+    },
+    {
+      "candidate_id": "PUB-BIO-03",
+      "doi": "10.5555/synthetic.bio.003",
+      "title": "Farmer knowledge and conservation attitudes near forest reserves",
+      "abstract": "Interviews examine local views about wildlife protection, reserve access, and conservation incentives. The study concerns community perspectives but does not restore habitat or measure pollinator diversity."
+    },
+    {
+      "candidate_id": "PUB-BIO-04",
+      "doi": "10.5555/synthetic.bio.004",
+      "title": "Tree planting for carbon storage in degraded landscapes",
+      "abstract": "Native and introduced tree species are compared for biomass accumulation and carbon storage. The study uses restoration terminology but does not assess ecological corridors, pollinators, or biodiversity outcomes."
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "agriculture",
+      "default_judgment": {
+        "grade": 0,
+        "rationale": "The record is from a different research domain and does not address the proposal's crop-disease image-detection objective."
+      },
+      "judgments": [
+        {"candidate_id": "PUB-AGR-01", "grade": 3, "rationale": "Direct match on maize disease, leaf images, model-based detection, and field validation."},
+        {"candidate_id": "PUB-AGR-01-DUP", "grade": 3, "rationale": "Duplicate DOI for PUB-AGR-01; it is the same highly relevant work, not an additional publication."},
+        {"candidate_id": "PUB-AGR-02", "grade": 2, "rationale": "Same crop-infection detection objective with farmer images, but less direct evidence of a trained model and field validation."},
+        {"candidate_id": "PUB-AGR-03", "grade": 1, "rationale": "Related crop-disease surveillance, but relies on reports rather than image-based diagnosis."},
+        {"candidate_id": "PUB-AGR-04", "grade": 0, "rationale": "High lexical overlap and near-duplicate imagery, but classifies nutrient stress and explicitly excludes infection diagnosis."},
+        {"candidate_id": "PUB-AGR-05", "grade": 0, "rationale": "Agriculture is shared, but satellite yield estimation does not detect crop disease from leaf images."}
+      ],
+      "query_variants": [
+        {"query_id": "AGR-Q1", "type": "research_question", "text": "Can leaf photographs identify fungal disease in maize before symptoms spread through smallholder fields?"},
+        {"query_id": "AGR-Q2", "type": "proposal_statement", "text": "We will assess whether image-based screening of maize foliage can detect crop infections early and reliably under field conditions."}
+      ]
+    },
+    {
+      "case_id": "maternal-health",
+      "default_judgment": {
+        "grade": 0,
+        "rationale": "The record is from a different research domain and does not address clinical pregnancy-risk prediction and referral."
+      },
+      "judgments": [
+        {"candidate_id": "PUB-MAT-01", "grade": 3, "rationale": "Direct match on clinical risk prediction, high-risk pregnancy identification, and referral outcomes."},
+        {"candidate_id": "PUB-MAT-01-DUP", "grade": 3, "rationale": "Duplicate DOI for PUB-MAT-01; it is the same highly relevant work, not an additional publication."},
+        {"candidate_id": "PUB-MAT-02", "grade": 2, "rationale": "Strongly related danger-sign triage and emergency referral, without an explicit predictive risk model."},
+        {"candidate_id": "PUB-MAT-03", "grade": 1, "rationale": "Shares maternal-health context and mobile delivery, but provides education rather than clinical risk screening or referral."},
+        {"candidate_id": "PUB-MAT-04", "grade": 0, "rationale": "Shares maternity and referral terminology, but is a directory with no risk assessment; its abstract is missing."}
+      ],
+      "query_variants": [
+        {"query_id": "MAT-Q1", "type": "research_question", "text": "Which expectant patients are likely to develop severe complications, and how can they be connected to appropriate care?"},
+        {"query_id": "MAT-Q2", "type": "proposal_statement", "text": "The project will test a clinical approach for recognizing high-risk pregnancies and completing timely referrals from community services."}
+      ]
+    },
+    {
+      "case_id": "water-quality",
+      "default_judgment": {
+        "grade": 0,
+        "rationale": "The record is from a different research domain and does not address detection of drinking-water contamination."
+      },
+      "judgments": [
+        {"candidate_id": "PUB-WAT-01", "grade": 3, "rationale": "Direct match on drinking-water contamination, continuous sensor streams, anomaly detection, and laboratory validation."},
+        {"candidate_id": "PUB-WAT-02", "grade": 2, "rationale": "Strongly related automated probe-based early warning for unsafe drinking water, with less explicit microbial anomaly modeling."},
+        {"candidate_id": "PUB-WAT-03", "grade": 1, "rationale": "Related water-quality surveillance, but uses manual field kits rather than sensor streams or anomaly detection."},
+        {"candidate_id": "PUB-WAT-04", "grade": 0, "rationale": "High lexical overlap on water sensors and monitoring, but targets irrigation allocation rather than contamination or drinking-water safety."}
+      ],
+      "query_variants": [
+        {"query_id": "WAT-Q1", "type": "research_question", "text": "Can continuous measurements from drinking-water probes reveal contamination events before routine sampling?"},
+        {"query_id": "WAT-Q2", "type": "proposal_statement", "text": "We will develop early warnings of unsafe drinking water by detecting abnormal patterns in chemical and microbial sensor data."}
+      ]
+    },
+    {
+      "case_id": "renewable-energy",
+      "default_judgment": {
+        "grade": 0,
+        "rationale": "The record is from a different research domain and does not address weather-based photovoltaic generation forecasts."
+      },
+      "judgments": [
+        {"candidate_id": "PUB-ENE-01", "grade": 3, "rationale": "Direct match on solar generation forecasting from meteorological observations and measured output."},
+        {"candidate_id": "PUB-ENE-02", "grade": 2, "rationale": "Same photovoltaic output forecasting objective with different phrasing and additional sky imagery."},
+        {"candidate_id": "PUB-ENE-03", "grade": 1, "rationale": "Related solar-energy planning, but studies mini-grid siting rather than generation prediction."},
+        {"candidate_id": "PUB-ENE-04", "grade": 0, "rationale": "High lexical overlap on weather-driven electricity forecasts, but predicts demand rather than photovoltaic supply."}
+      ],
+      "query_variants": [
+        {"query_id": "ENE-Q1", "type": "research_question", "text": "How accurately can local weather observations predict the electricity produced by photovoltaic farms?"},
+        {"query_id": "ENE-Q2", "type": "proposal_statement", "text": "The study will estimate solar-farm output from irradiance, cloud conditions, temperature, and wind measurements."}
+      ]
+    },
+    {
+      "case_id": "education",
+      "default_judgment": {
+        "grade": 0,
+        "rationale": "The record is from a different research domain and does not address early-grade reading instruction."
+      },
+      "judgments": [
+        {"candidate_id": "PUB-EDU-01", "grade": 3, "rationale": "Direct match on early-grade reading, phonics instruction, and measured comprehension outcomes."},
+        {"candidate_id": "PUB-EDU-02", "grade": 2, "rationale": "Strongly related decoding and literacy instruction with paraphrased terminology and comparable pupil outcomes."},
+        {"candidate_id": "PUB-EDU-03", "grade": 1, "rationale": "Related primary-school learning conditions, but does not evaluate reading instruction or comprehension."},
+        {"candidate_id": "PUB-EDU-04", "grade": 0, "rationale": "No title, abstract, or DOI is available, so the record supplies no assessable evidence for the reading objective."}
+      ],
+      "query_variants": [
+        {"query_id": "EDU-Q1", "type": "research_question", "text": "Do structured sound-letter lessons improve reading comprehension among children in the first years of school?"},
+        {"query_id": "EDU-Q2", "type": "proposal_statement", "text": "We will evaluate early literacy teaching methods and measure how well young pupils decode and understand written passages."}
+      ]
+    },
+    {
+      "case_id": "biodiversity",
+      "default_judgment": {
+        "grade": 0,
+        "rationale": "The record is from a different research domain and does not address habitat connectivity and pollinator biodiversity."
+      },
+      "judgments": [
+        {"candidate_id": "PUB-BIO-01", "grade": 3, "rationale": "Direct match on native habitat corridors, pollinator diversity, restoration, and field measurement."},
+        {"candidate_id": "PUB-BIO-02", "grade": 2, "rationale": "Strongly related reconnection of fragmented habitat and measurement of wild-pollinator recovery."},
+        {"candidate_id": "PUB-BIO-03", "grade": 1, "rationale": "Related conservation context, but studies community attitudes rather than habitat restoration or biodiversity."},
+        {"candidate_id": "PUB-BIO-04", "grade": 0, "rationale": "Shares restoration terminology, but measures carbon storage rather than habitat connectivity or pollinator outcomes."}
+      ],
+      "query_variants": [
+        {"query_id": "BIO-Q1", "type": "research_question", "text": "Can restoring connected native vegetation help wild pollinators persist across fragmented landscapes?"},
+        {"query_id": "BIO-Q2", "type": "proposal_statement", "text": "The project will test whether forest corridors increase pollinator richness and movement between isolated habitats."}
+      ]
+    }
+  ]
+}

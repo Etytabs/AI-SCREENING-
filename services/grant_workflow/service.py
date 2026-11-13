@@ -16,6 +16,7 @@ from ml.evidence.state import ReviewStatus, RunState
 from ml.semantic_matching.hybrid import TextEmbedder
 from ml.semantic_matching.reranker import CrossEncoderReranker
 from services.grant_workflow.audit import WorkflowAudit
+from services.grant_workflow.demo_data import DEMO_APPLICATION_FILES
 from services.grant_workflow.documents import (
     UploadedFile,
     UploadError,
@@ -566,6 +567,15 @@ class GrantWorkflowService:
         self._require(actor, ADMIN_ROLES, "upload applications")
         self._open_call(call_id)
         expanded, errors = expand_uploads(files)
+        expected_demo_files = {
+            path: text.encode("utf-8") for path, text in DEMO_APPLICATION_FILES.items()
+        }
+        if (
+            data_origin == DataOrigin.UPLOADED
+            and len(expanded) == len(expected_demo_files)
+            and {upload.path: upload.data for upload in expanded} == expected_demo_files
+        ):
+            data_origin = DataOrigin.SYNTHETIC
         result = BatchUploadResult(files_received=len(expanded), errors=list(errors))
         if not expanded:
             raise ValidationFailedError("Empty submission: no files were provided" + (f" ({'; '.join(errors)})" if errors else ""))

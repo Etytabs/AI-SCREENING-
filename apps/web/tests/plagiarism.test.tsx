@@ -34,7 +34,7 @@ describe("plagiarism evidence", () => {
     expect(within(panel).getByRole("img", { name: "Highest published-source similarity score 42 percent" })).toBeTruthy();
     const split = within(panel).getByRole("list", { name: "Similarity breakdown" });
     expect(within(split).getByText("18%").parentElement?.textContent).toContain("verbatim passage coverage");
-    expect(within(split).getByText("42%").parentElement?.textContent).toContain("content phrase overlap");
+    expect(within(split).getByText("42%").parentElement?.textContent).toContain("published-source phrase coverage");
     expect(within(split).getByText("1").parentElement?.textContent).toContain("published source");
     expect(within(panel).getByText("24 published works compared from OpenAlex.")).toBeTruthy();
   });

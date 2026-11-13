@@ -2,6 +2,8 @@
 
 This document describes the grant-call workflow that is implemented in this repository: what each step does, the REST API behind it, the roles, the synthetic demo data and the current limitations. It only describes behaviour that exists in the code today.
 
+See the [Phase 2 workflow audit](implementation/phase-2-workflow-audit.md) for verified capability status, remaining gaps and validation scope.
+
 ## Workflow
 
 | Step | Who | What happens | Where |
@@ -94,7 +96,7 @@ On start-up the API seeds one synthetic call, **"Climate Resilience Research Gra
 
 The seed verifies the extracted requirements automatically, with the note *"Verified automatically by the synthetic demo seed; not a human verification."*, so the demo can be screened immediately. Calls you create yourself go through manual verification.
 
-Uploaded files are marked `UPLOADED`. No real applicant, NCST, NRIF or RIGMS data is included in this repository. Disable the seed with `AI_SCREENING_DEMO_SEED=false`.
+Regular uploads are marked `UPLOADED`. The exact generated synthetic application bundle is recognized by its file paths and contents and marked `SYNTHETIC`, so its badge and report notice remain accurate after upload. No real applicant, NCST, NRIF or RIGMS data is included in this repository. Disable the seed with `AI_SCREENING_DEMO_SEED=false`.
 
 ## Configuration
 
@@ -116,7 +118,7 @@ No API keys or credentials are used or stored by the frontend.
 ```bash
 # API (from the repository root)
 pip install ".[dev]"
-uvicorn apps.api.main:app --port 8001
+AI_SCREENING_DUPLICATION_DB=/tmp/shakahive-demo-duplication.sqlite3 uvicorn apps.api.main:app --port 8001
 
 # Web (from apps/web)
 npm install
@@ -128,6 +130,49 @@ npm run dev
 Open `http://localhost:3000/dashboard`.
 
 Checks: `pytest`, `ruff check .`, and in `apps/web`: `npm run lint`, `npx tsc --noEmit`, `npm test`, `npm run build`.
+
+## Repeatable synthetic walkthrough
+
+Use only the seeded synthetic call or the synthetic files returned by the demo endpoints.
+The API's workflow records are in memory, so a fresh API process starts from the seeded
+call again. Use a dedicated `AI_SCREENING_DUPLICATION_DB` path as above so any uploaded
+proposal comparison records remain isolated from other local work.
+
+1. Start the API and web app as shown in **Running locally**. Open
+   `http://localhost:3000/dashboard`, choose **Climate Resilience Research Grant 2026
+   (synthetic demo)**, and confirm the visible **SYNTHETIC** label.
+2. To exercise a new call, create one in **Grant Calls**, download the synthetic RFP
+   with `curl -fsS http://localhost:8001/api/v1/demo/rfp -o /tmp/shakahive-demo-rfp.txt`,
+   then upload it to that call. Inspect the extracted quotations and page/section
+   references, verify or reject each candidate requirement, and confirm requirements.
+   Screening remains unavailable until all active requirements are verified.
+3. In **Applications**, download the synthetic batch with
+   `curl -fsS http://localhost:8001/api/v1/demo/applications.zip -o /tmp/shakahive-demo-applications.zip`
+   and upload it. The expected result is five separately identified applications
+   (`DEMO-APP-001` through `DEMO-APP-005`); unassociated files remain in the pending
+   uploads queue rather than being silently assigned.
+4. Start screening from **Screening** and wait for the batch to finish. Open an
+   application and inspect its findings and evidence drawer. Evidence excerpts and page
+   references come from extracted files; source coverage identifies literature that was
+   not searched or unavailable. OpenAlex is not searched unless configured, and no
+   literature match is a plagiarism conclusion.
+5. On a finding, record a reviewer rationale and choose a review action. The decision
+   appears in the finding history and audit trail. **Confirm** confirms the screening
+   signal only; it is not an institutional funding decision.
+6. Open **Report** and verify application totals, finding evidence and the recorded
+   reviewer action. The report carries a synthetic-data notice and the human-review
+   disclaimer.
+
+Expected deterministic check: the five-application API integration scenario finds
+`DEMO-APP-003` under eligibility `FAIL`, with cited evidence; its outcome is a test
+fixture expectation, not a validated real-world screening accuracy claim.
+
+To reset, stop the API and start a fresh process. In-memory calls, uploaded documents,
+findings and decisions are discarded; the synthetic seed is recreated when enabled.
+If you used the dedicated SQLite path above, remove only that file and its SQLite
+`-wal`/`-shm` sidecars after the API has stopped. Remove the two `/tmp/shakahive-demo-*`
+download files if you created them. Do not upload institutional or personal data into
+this demonstration.
 
 ## Duplication workflow
 

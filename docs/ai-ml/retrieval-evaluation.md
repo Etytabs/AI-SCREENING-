@@ -35,6 +35,12 @@ The benchmark contains 10 cases with five candidates per case. Labels are benchm
 
 Benchmark #2 should be interpreted as a diagnostic evaluation. A semantic or hybrid method performing better is evidence for this synthetic corpus only; it does not establish production performance.
 
+The lexical-only execution on 12 November 2026 measured Recall@5 **1.00**, Precision@5
+**0.24**, MRR **0.562** and nDCG@5 **0.667** across the 10 synthetic cases. The high
+recall but low precision/ranking scores show that relevant candidates are retrieved but
+often mixed with distractors. Embedding and reranker strategies were not run in this
+execution; these results are not scientific or institutional validation.
+
 ## Cross-encoder reranking
 
 The retrieval stack now supports a true second-stage cross-encoder:

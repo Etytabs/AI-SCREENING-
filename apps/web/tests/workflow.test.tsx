@@ -56,6 +56,7 @@ describe("requirement confirmation", () => {
 
   it("blocks confirmation while a requirement is unverified and verifies on click", async () => {
     render(<RequirementReview requirements={[fx.criterion()]} canEdit confirmed={false} {...actions} />);
+    expect(screen.queryByText(/extraction confidence/i)).toBeNull();
     const confirm = screen.getByRole("button", { name: /Confirm requirements/ }) as HTMLButtonElement;
     expect(confirm.disabled).toBe(true);
     expect(screen.getByText(/1 requirement\(s\) must be verified/)).toBeTruthy();
@@ -263,6 +264,7 @@ describe("evidence drawer", () => {
     expect(screen.getByText("Evidence (1)")).toBeTruthy();
     expect(screen.getByText("Human decision")).toBeTruthy();
     expect(screen.getByLabelText("Citation verified against extracted text")).toBeTruthy();
+    expect(screen.queryByText(/confidence/i)).toBeNull();
     expect(screen.getByText("proposal.txt · p.1 · Budget")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /Show in document/ }));
     expect(baseProps.onShowInDocument).toHaveBeenCalledWith(fx.evidence());
@@ -272,7 +274,7 @@ describe("evidence drawer", () => {
     const detail = fx.findingDetail({ status: "REVIEW_REQUIRED", confidence: null, evidence: [fx.evidence({ source_type: "rfp", document_id: null, citation_valid: null })] });
     render(<EvidenceDrawer detail={detail} canDecide={false} {...baseProps} />);
     expect(screen.getByText(/No passage from this application could be cited/)).toBeTruthy();
-    expect(screen.getByText("confidence not computed")).toBeTruthy();
+    expect(screen.queryByText(/confidence/i)).toBeNull();
     expect(screen.queryByRole("button", { name: /Show in document/ })).toBeNull();
     expect(screen.getByText(/Only a Reviewer or Grant Administrator/)).toBeTruthy();
   });

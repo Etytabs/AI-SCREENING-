@@ -231,7 +231,7 @@ def evaluate_text_similarity(ctx: ScreeningContext, run_id: str) -> list[Finding
             similarity_score=round(max(verbatim_share, item.phrase_coverage), 4),
             lexical_score=round(item.lexical_score, 4),
             query_coverage=round(verbatim_share, 4),
-            source_coverage=round(item.phrase_coverage, 4),
+            source_coverage=round(item.source_coverage, 4),
             query_passage=query_passage,
             matched_passage=matched_passage,
             matching_concepts=shared_concepts(query_passage or "", matched_passage or ""),

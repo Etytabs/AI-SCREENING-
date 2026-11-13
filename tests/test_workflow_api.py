@@ -63,6 +63,9 @@ def test_full_workflow_over_http(client):
     assert upload.status_code == 201
     body = upload.json()
     assert len(body["applications_created"]) == 5 and body["duplicates"] == []
+    uploaded_rows = client.get(f"/api/v1/grants/{call_id}/applications").json()
+    assert len(uploaded_rows) == 5
+    assert all(row["data_origin"] == "SYNTHETIC" for row in uploaded_rows)
 
     batch = client.post(f"/api/v1/grants/{call_id}/screen", headers=ADMIN)
     assert batch.status_code == 202
@@ -99,6 +102,24 @@ def test_full_workflow_over_http(client):
 
     report = client.get(f"/api/v1/grants/{call_id}/report").json()
     assert len(report["applications"]) == 5 and "not funding decisions" in report["disclaimer"]
+    assert report["synthetic_notice"]
+    assert any(
+        decision["finding_id"] == failing["finding_id"]
+        and decision["action"] == "CONFIRM"
+        and decision["note"] == "Verified against page 1"
+        for decision in report["summary"]["decisions"]
+    )
+    reported_finding = next(
+        finding
+        for application in report["applications"]
+        for finding in application["findings"]
+        if finding["finding_id"] == failing["finding_id"]
+    )
+    assert reported_finding["review_state"] == "CONFIRMED"
+    assert any(
+        decision["action"] == "CONFIRM" and decision["note"] == "Verified against page 1"
+        for decision in reported_finding["decisions"]
+    )
 
 
 def test_upload_edge_cases_over_http(client):
@@ -109,6 +130,8 @@ def test_upload_edge_cases_over_http(client):
         data={"reference": "REF-1"}, headers=ADMIN,
     )
     assert unsupported.status_code == 201 and unsupported.json()["errors"]
+    uploaded_id = unsupported.json()["applications_created"][0]
+    assert client.get(f"/api/v1/applications/{uploaded_id}").json()["application"]["data_origin"] == "UPLOADED"
     duplicate = client.post(
         f"/api/v1/grants/{call_id}/applications", files=[("files", ("proposal.txt", b"x", "text/plain"))],
         data={"reference": "REF-1"}, headers=ADMIN,

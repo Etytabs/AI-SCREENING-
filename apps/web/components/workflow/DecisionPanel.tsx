@@ -20,7 +20,7 @@ export function DecisionPanel({ canDecide, onDecide, onNote }: Props) {
   const [saved, setSaved] = useState<string | null>(null);
 
   if (!canDecide) {
-    return <p className="muted">Only a Reviewer or Grant Administrator can record decisions on findings.</p>;
+    return <p className="muted">This demo role cannot record decisions on findings.</p>;
   }
 
   async function submit(kind: "decision" | "note") {

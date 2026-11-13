@@ -2,10 +2,10 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { ApiError, createClient, type ApiClient } from "../../lib/api";
+import { ACTIVE_DEMO_ROLES, isActiveDemoRole, normalizeDemoRole } from "../../lib/demo-roles";
 import type { GrantCall, Role } from "../../lib/types";
 
 const ROLE_KEY = "ai-screening.role";
-const VALID_ROLES: Role[] = ["NCST_GRANT_PERSONNEL", "GRANT_INSTITUTION", "RESEARCHER_APPLICANT"];
 const CALL_KEY = "ai-screening.call";
 
 export type LoadState = "loading" | "ready" | "error";
@@ -32,7 +32,7 @@ export function useWorkspace(): WorkspaceValue {
 }
 
 export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
-  const [role, setRoleState] = useState<Role>("NCST_GRANT_PERSONNEL");
+  const [role, setRoleState] = useState<Role>(ACTIVE_DEMO_ROLES[0]);
   const [callId, setCallIdState] = useState<string | null>(null);
   const [calls, setCalls] = useState<GrantCall[]>([]);
   const [callsState, setCallsState] = useState<LoadState>("loading");
@@ -41,16 +41,15 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const client = useMemo(() => createClient({ role, userId: `demo-${role.toLowerCase().replace(/_/g, "-")}` }), [role]);
 
   useEffect(() => {
-    const storedRole = window.localStorage.getItem(ROLE_KEY) as Role | null;
-    if (storedRole && VALID_ROLES.includes(storedRole)) setRoleState(storedRole);
-    else if (storedRole) {
-      window.localStorage.setItem(ROLE_KEY, "NCST_GRANT_PERSONNEL");
-      setRoleState("NCST_GRANT_PERSONNEL");
-    }
+    const storedRole = window.localStorage.getItem(ROLE_KEY);
+    const nextRole = normalizeDemoRole(storedRole);
+    setRoleState(nextRole);
+    if (storedRole !== nextRole) window.localStorage.setItem(ROLE_KEY, nextRole);
     setCallIdState(window.localStorage.getItem(CALL_KEY));
   }, []);
 
   const setRole = useCallback((next: Role) => {
+    if (!isActiveDemoRole(next)) return;
     setRoleState(next);
     window.localStorage.setItem(ROLE_KEY, next);
   }, []);

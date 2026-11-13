@@ -276,7 +276,7 @@ describe("evidence drawer", () => {
     expect(screen.getByText(/No passage from this application could be cited/)).toBeTruthy();
     expect(screen.queryByText(/confidence/i)).toBeNull();
     expect(screen.queryByRole("button", { name: /Show in document/ })).toBeNull();
-    expect(screen.getByText(/Only a Reviewer or Grant Administrator/)).toBeTruthy();
+    expect(screen.getByText(/This demo role cannot record decisions/)).toBeTruthy();
   });
 
   it("shows compared records and prior decisions", () => {

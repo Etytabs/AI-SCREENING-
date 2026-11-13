@@ -9,6 +9,7 @@ import { FindingList } from "../../../../components/workflow/FindingList";
 import { Notice, SignalBadge, StatusBadge, SyntheticBadge } from "../../../../components/workflow/ui";
 import { useWorkspace } from "../../../../components/workflow/WorkspaceContext";
 import { ApiError } from "../../../../lib/api";
+import { DEMO_ROLE_CONFIG } from "../../../../lib/demo-roles";
 import { formatAmount, formatDate } from "../../../../lib/labels";
 import type { ApplicationDetail, DocumentContent, Finding, FindingDetail, FindingEvidence } from "../../../../lib/types";
 
@@ -93,7 +94,7 @@ function Workspace({ id, initialFinding }: { id: string; initialFinding: string 
   const { application, row, documents, latest_run: run } = detail;
   const running = run && ["QUEUED", "RUNNING"].includes(run.status);
   const notSearched = run?.coverage.sources?.filter((s) => s.state !== "COMPLETE") ?? [];
-  const canDecide = ["REVIEWER", "GRANT_ADMINISTRATOR", "NCST_GRANT_PERSONNEL", "GRANT_INSTITUTION"].includes(role);
+  const canDecide = DEMO_ROLE_CONFIG[role].capabilities.canReviewFindings;
 
   return (
     <div className="review-page">
@@ -104,7 +105,7 @@ function Workspace({ id, initialFinding }: { id: string; initialFinding: string 
           <p>{[row.applicant_name, row.institution_name, row.country].filter(Boolean).join(" · ") || "Applicant details not stated in the documents"}</p>
         </div>
         <div className="page-actions">
-          {role !== "REVIEWER" && (
+          {DEMO_ROLE_CONFIG[role].capabilities.canRunScreening && (
             <button className="ghost-button" disabled={!!running} onClick={async () => {
               setActionError(null);
               try { await client.screenApplication(id); setSelected(null); await load(); } catch (e) { setActionError(message(e)); }

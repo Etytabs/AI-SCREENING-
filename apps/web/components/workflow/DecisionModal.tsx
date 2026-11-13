@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef } from "react";
 
 import { REVIEW_STATE_LABELS } from "../../lib/labels";
+import { DEMO_ROLE_CONFIG } from "../../lib/demo-roles";
 import type { Finding, ReviewerAction } from "../../lib/types";
 import { DecisionPanel } from "./DecisionPanel";
 import { useWorkspace } from "./WorkspaceContext";
@@ -79,7 +80,7 @@ export function DecisionModal({
               <p><b>{REVIEW_STATE_LABELS[selected.review_state]}</b></p>
               <DecisionPanel
                 key={selected.finding_id}
-                canDecide={role === "REVIEWER" || role === "GRANT_ADMINISTRATOR"}
+                canDecide={DEMO_ROLE_CONFIG[role].capabilities.canReviewFindings}
                 onDecide={record}
                 onNote={addNote}
               />

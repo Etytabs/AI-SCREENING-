@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { DuplicationProjectImport } from "../../../components/workflow/DuplicationProjectImport";
 import { Notice, PageHeader, SyntheticBadge } from "../../../components/workflow/ui";
 import { useWorkspace } from "../../../components/workflow/WorkspaceContext";
+import { DEMO_ROLE_CONFIG } from "../../../lib/demo-roles";
 import { formatDate } from "../../../lib/labels";
 import type { ArchivedProject } from "../../../lib/types";
 
@@ -77,8 +78,8 @@ export default function DuplicationPage() {
       </section>
       <section className="panel" aria-labelledby="import-project-heading">
         <h2 id="import-project-heading">Add a historical project</h2>
-        {role === "REVIEWER"
-          ? <Notice kind="info" title="Read-only library">A Grant Administrator or System Administrator can import comparison projects.</Notice>
+        {!DEMO_ROLE_CONFIG[role].capabilities.canImportComparisonProjects
+          ? <Notice kind="info" title="Read-only library">This demo role cannot import comparison projects.</Notice>
           : <DuplicationProjectImport key={role} onImport={client.importDuplicationProject} onImported={(project) => setProjects((current) => current ? [project, ...current] : current)} />}
       </section>
     </>

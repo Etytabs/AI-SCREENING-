@@ -7,6 +7,7 @@ import { ResultsTable, type ResultFilters } from "../../../components/workflow/R
 import { NoCallSelected, Notice, PageHeader } from "../../../components/workflow/ui";
 import { useWorkspace } from "../../../components/workflow/WorkspaceContext";
 import { ApiError } from "../../../lib/api";
+import { DEMO_ROLE_CONFIG } from "../../../lib/demo-roles";
 import type { ApplicationRow, PendingUpload } from "../../../lib/types";
 
 function PendingAssociations({ pending, rows, onAssociate }: {
@@ -91,10 +92,10 @@ export default function ApplicationsPage() {
     return () => clearTimeout(timer);
   }, [rows, load]);
 
-  const canUpload = role !== "REVIEWER" && !!call && ["READY_FOR_SUBMISSIONS", "SCREENING", "REVIEW"].includes(call.status);
+  const canUpload = DEMO_ROLE_CONFIG[role].capabilities.canUploadApplications && !!call && ["READY_FOR_SUBMISSIONS", "SCREENING", "REVIEW"].includes(call.status);
   const unscreened = allRows.filter((r) => r.screening_status === "NOT_SCREENED").length;
-  const uploadBody = !call ? null : role === "REVIEWER" ? (
-    <Notice kind="info" title="Read-only">Reviewers can inspect results but not upload applications.</Notice>
+  const uploadBody = !call ? null : !DEMO_ROLE_CONFIG[role].capabilities.canUploadApplications ? (
+    <Notice kind="info" title="Read-only">This demo role cannot upload applications.</Notice>
   ) : !canUpload ? (
     <Notice kind="review" title="Submissions are not open">
       Confirm this call&apos;s requirements first. <Link href={`/dashboard/calls?id=${call.id}`}>Go to requirement review</Link>

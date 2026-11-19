@@ -147,16 +147,11 @@ def compare_purposes(left_text: str, right_text: str) -> PurposeOverlapResult:
     objective = similarities["objectives"]
     intervention = similarities["intervention"]
     methodology = similarities["methodology"]
-    beneficiaries = similarities["beneficiaries"]
-    geography = similarities["geography_scope"]
     strong = sum(score >= 0.55 for score in similarities.values())
 
     if provided < 2:
         disposition = "INSUFFICIENT_EVIDENCE"
         confidence = "LOW"
-    elif strong >= 4 and objective >= 0.55 and intervention >= 0.55:
-        disposition = "LEGITIMATE_REPLICATION"
-        confidence = "MEDIUM"
     elif strong >= 3 and objective >= 0.55 and intervention >= 0.55 and methodology >= 0.55:
         disposition = "POTENTIAL_OVERLAP"
         confidence = "MEDIUM"

@@ -39,7 +39,9 @@ Study area: sloped agricultural communities in Rwanda.
 
 def test_same_purpose_with_different_wording_is_distinguished():
     result = compare_purposes(LEFT, RIGHT_REWRITTEN)
-    assert result.disposition in {"POTENTIAL_OVERLAP", "LEGITIMATE_REPLICATION"}
+    assert result.disposition != "LEGITIMATE_REPLICATION"
+    dimensions = {item.dimension for item in result.dimensions}
+    assert {"beneficiaries", "geography_scope"}.issubset(dimensions)
     assert result.method == "deterministic_section_jaccard_v1"
     assert all(item.status in {"SIMILAR", "DIFFERENT", "DISTINCT", "NOT_PROVIDED"} for item in result.dimensions)
     assert "not a trained purpose classifier" in " ".join(result.limitations)
@@ -59,3 +61,16 @@ def test_missing_structured_dimensions_are_not_inferred():
     result = compare_purposes("A short project.", "Another short project.")
     assert result.disposition == "INSUFFICIENT_EVIDENCE"
     assert result.confidence == "LOW"
+
+def test_classifier_never_claims_legitimate_replication_from_similarity():
+    comparisons = (
+        (LEFT, RIGHT_REWRITTEN),
+        (LEFT, RIGHT_DIFFERENT),
+        ("A short project.", "Another short project."),
+    )
+
+    for left_text, right_text in comparisons:
+        result = compare_purposes(left_text, right_text)
+        assert result.disposition != "LEGITIMATE_REPLICATION", (
+            f"Unsupported disposition returned: {result.disposition}"
+        )

@@ -9,6 +9,17 @@ Phase implementation reviews: [Phase 2 workflow audit](phase-2-workflow-audit.md
 Application assessment direction: [FPDR-001 — approved product decision](../../company/product/FPDR-001-application-assessment-engine.md) ·
 [TAIS-001 — technical specification and implementation workstreams](../architecture/TAIS-001-application-assessment-engine.md).
 
+## Feedback-to-implementation audit
+
+- [Feedback requirements gap matrix](feedback-requirements-gap-matrix.md)
+- [Current-state technical and product gap audit](technical-gap-audit.md)
+- [Implementation backlog and dependency map](implementation-backlog-dependency-map.md)
+- [Architecture and decision conflict register](architecture-decision-conflict-register.md)
+- [AI/ML evaluation and benchmark gap plan](ai-ml-evaluation-gap-plan.md)
+- [Phased implementation roadmap](phased-roadmap.md)
+- [Team workstream responsibility matrix](team-workstream-responsibility-matrix.md)
+- [Controlled synthetic demonstration acceptance plan](demonstration-acceptance-plan.md)
+
 ## Purpose and quality bar
 
 This programme translates the agreed five-role team structure and the current MVP definition into an executable plan: workstreams, accountable owners, dependencies, deliverables, acceptance criteria and release gates.

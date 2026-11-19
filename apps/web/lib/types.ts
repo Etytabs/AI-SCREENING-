@@ -66,6 +66,27 @@ export interface StakeholderResponse {
   primary_user_order: string[];
   human_review_required: boolean;
 }
+
+export interface PurposeDimensionEvidence {
+  dimension: string;
+  left_text: string;
+  right_text: string;
+  similarity: number;
+  status: "SIMILAR" | "DIFFERENT" | "DISTINCT" | "NOT_PROVIDED";
+}
+
+export interface PurposeOverlapResult {
+  left_label: string;
+  right_label: string;
+  disposition: string;
+  confidence: string;
+  summary: string;
+  method: string;
+  dimensions: PurposeDimensionEvidence[];
+  limitations: string[];
+  human_review_required: boolean;
+  disclaimer: string;
+}
 export type EvidenceRelationship = "SUPPORTS" | "CONTRADICTS" | "PARTIALLY_SUPPORTS" | "UNCERTAIN";
 
 export interface GrantCall {

@@ -13,6 +13,7 @@ import type {
   GrantCall,
   GrantCallInput,
   PendingUpload,
+  PurposeOverlapResult,
   ReviewerAction,
   ReviewerDecision,
   ReviewerNote,
@@ -190,6 +191,8 @@ export function createClient(accessToken: string, base: string = API_BASE) {
     audit: (id: string) => request<AuditLogEntry[]>( "GET", `/api/v1/grants/${id}/audit`),
     report: (id: string) => request<ScreeningReport>("GET", `/api/v1/grants/${id}/report`),
     sources: () => request<DataSource[]>("GET", "/api/v1/sources"),
+    comparePurposeOverlap: (input: { left_text: string; right_text: string; left_label?: string; right_label?: string }) =>
+      request<PurposeOverlapResult>("POST", "/api/v1/purpose-overlap/compare", input),
     stakeholders: () => request<StakeholderResponse>("GET", "/api/v1/ncst/stakeholders"),
     listDuplicationProjects: () => request<ArchivedProject[]>("GET", "/api/v1/duplication/projects"),
     importDuplicationProject: (input: ArchivedProjectInput) => {

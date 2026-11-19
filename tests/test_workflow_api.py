@@ -417,3 +417,38 @@ def test_sources_and_demo_files(client):
     assert rfp.status_code == 200 and b"synthetic" in rfp.content.lower()
     archive = client.get("/api/v1/demo/applications.zip")
     assert archive.headers["content-type"] == "application/zip"
+
+
+def test_purpose_overlap_requires_demo_auth_and_returns_dimensions(client):
+    left = (
+        "Research problem: hillside drought. Objectives: reduce water use. "
+        "Beneficiaries: smallholder farmers. Intervention: solar drip irrigation. "
+        "Methodology: compare sensor and farmer-managed plots. "
+        "Outputs: irrigation schedules. Outcomes: stable yields. "
+        "Geography and scope: Rwanda hillside farms."
+    )
+    right = (
+        "Problem statement: drought in farming communities. Aim: reduce water demand. "
+        "Target population: bean growers. Proposed solution: solar irrigation sensors. "
+        "Method: compare field plots. Deliverables: schedules. "
+        "Expected outcomes: lower water use. Study area: Rwandan hills."
+    )
+    response = client.post("/api/v1/purpose-overlap/compare", json={
+        "left_text": left,
+        "right_text": right,
+        "left_label": "Synthetic A",
+        "right_label": "Synthetic B",
+    })
+    assert response.status_code == 200
+    body = response.json()
+    assert body["human_review_required"] is True
+    assert body["method"] == "deterministic_section_jaccard_v1"
+    assert body["disclaimer"].startswith("This is purpose-comparison evidence")
+    assert len(body["dimensions"]) == 8
+
+    anonymous = TestClient(app)
+    denied = anonymous.post("/api/v1/purpose-overlap/compare", json={
+        "left_text": left,
+        "right_text": right,
+    })
+    assert denied.status_code == 401

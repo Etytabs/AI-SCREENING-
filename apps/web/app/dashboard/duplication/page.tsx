@@ -7,7 +7,7 @@ import { Notice, PageHeader, SyntheticBadge } from "../../../components/workflow
 import { useWorkspace } from "../../../components/workflow/WorkspaceContext";
 import { DEMO_ROLE_CONFIG } from "../../../lib/demo-roles";
 import { formatDate } from "../../../lib/labels";
-import type { ArchivedProject } from "../../../lib/types";
+import type { ArchivedProject, PurposeOverlapResult } from "../../../lib/types";
 
 export default function DuplicationPage() {
   const { client, role } = useWorkspace();
@@ -16,6 +16,29 @@ export default function DuplicationPage() {
   const [retry, setRetry] = useState(0);
   const [query, setQuery] = useState("");
   const [source, setSource] = useState("");
+  const [leftText, setLeftText] = useState("");
+  const [rightText, setRightText] = useState("");
+  const [purposeResult, setPurposeResult] = useState<PurposeOverlapResult | null>(null);
+  const [purposeError, setPurposeError] = useState<string | null>(null);
+  const [purposeLoading, setPurposeLoading] = useState(false);
+
+  const comparePurposes = async () => {
+    setPurposeLoading(true);
+    setPurposeError(null);
+    setPurposeResult(null);
+    try {
+      setPurposeResult(await client.comparePurposeOverlap({
+        left_text: leftText,
+        right_text: rightText,
+        left_label: "Project A",
+        right_label: "Project B",
+      }));
+    } catch (cause) {
+      setPurposeError(cause instanceof Error ? cause.message : "Purpose comparison failed.");
+    } finally {
+      setPurposeLoading(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -44,6 +67,37 @@ export default function DuplicationPage() {
       <Notice kind="info" title="Comparison coverage">
         The library is shared across grant calls. Results cover readable projects available to the checker at the time of screening. A result with no significant similarity does not establish that a proposal is original. Reviewers confirm any duplication finding from the matched passages.
       </Notice>
+      <section className="panel" aria-labelledby="purpose-overlap-heading">
+        <div className="panel-head"><h2 id="purpose-overlap-heading">Purpose-overlap comparison</h2></div>
+        <p className="muted small">Compare structured project narrative dimensions separately from textual duplication or plagiarism.</p>
+        <div className="filters">
+          <textarea aria-label="Project A narrative" placeholder="Paste Project A purpose, objectives, beneficiaries, intervention, methodology, outputs, outcomes and scope" value={leftText} onChange={(event) => setLeftText(event.target.value)} />
+          <textarea aria-label="Project B narrative" placeholder="Paste Project B purpose, objectives, beneficiaries, intervention, methodology, outputs, outcomes and scope" value={rightText} onChange={(event) => setRightText(event.target.value)} />
+        </div>
+        <button className="primary-button" type="button" disabled={purposeLoading || leftText.trim().length < 40 || rightText.trim().length < 40} onClick={() => void comparePurposes()}>
+          {purposeLoading ? "Comparing…" : "Compare purpose"}
+        </button>
+        {purposeError && <Notice kind="error" title="Purpose comparison unavailable">{purposeError}</Notice>}
+        {purposeResult && (
+          <div className="purpose-result">
+            <Notice kind="review" title={purposeResult.disposition.replace(/_/g, " ")}>
+              {purposeResult.summary}
+              <div className="muted small">{purposeResult.disclaimer}</div>
+            </Notice>
+            <table className="data-table results-table">
+              <thead><tr><th>Dimension</th><th>Status</th><th>Similarity</th></tr></thead>
+              <tbody>{purposeResult.dimensions.map((item) => (
+                <tr key={item.dimension}>
+                  <td data-label="Dimension">{item.dimension.replace(/_/g, " ")}</td>
+                  <td data-label="Status">{item.status.replace(/_/g, " ")}</td>
+                  <td data-label="Similarity">{item.similarity.toFixed(2)}</td>
+                </tr>
+              ))}</tbody>
+            </table>
+            {purposeResult.limitations.map((item) => <p className="muted small" key={item}>{item}</p>)}
+          </div>
+        )}
+      </section>
       <section className="panel" aria-labelledby="comparison-library-heading">
         <div className="panel-head"><h2 id="comparison-library-heading">Comparison library{projects && ` (${projects.length})`}</h2></div>
         <p className="muted small">Imported historical records appear below. Other submitted applications in the workspace are compared automatically during screening.</p>

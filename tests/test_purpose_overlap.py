@@ -1,4 +1,4 @@
-from ml.purpose_overlap.service import compare_purposes
+from ml.purpose_overlap.service import DIMENSIONS, compare_purposes, profile
 
 
 LEFT = """
@@ -62,15 +62,54 @@ def test_missing_structured_dimensions_are_not_inferred():
     assert result.disposition == "INSUFFICIENT_EVIDENCE"
     assert result.confidence == "LOW"
 
+
 def test_classifier_never_claims_legitimate_replication_from_similarity():
     comparisons = (
         (LEFT, RIGHT_REWRITTEN),
         (LEFT, RIGHT_DIFFERENT),
         ("A short project.", "Another short project."),
     )
-
     for left_text, right_text in comparisons:
         result = compare_purposes(left_text, right_text)
-        assert result.disposition != "LEGITIMATE_REPLICATION", (
-            f"Unsupported disposition returned: {result.disposition}"
-        )
+        assert result.disposition != "LEGITIMATE_REPLICATION"
+
+
+def test_profile_extracts_only_its_own_newline_separated_section():
+    text = "Research problem: drought affects farms.\nObjectives: reduce water use.\nBeneficiaries: smallholder farmers."
+    extracted = profile(text)
+    assert extracted["research_problem"] == "drought affects farms"
+    assert extracted["objectives"] == "reduce water use"
+    assert extracted["beneficiaries"] == "smallholder farmers"
+    assert extracted["intervention"] == ""
+
+
+def test_profile_extracts_numbered_and_reordered_sections():
+    text = (
+        "3. Methodology: compare two irrigation systems.\n"
+        "1. Objectives: reduce water use.\n"
+        "2. Research problem: recurring drought."
+    )
+    extracted = profile(text)
+    assert extracted["methodology"] == "compare two irrigation systems"
+    assert extracted["objectives"] == "reduce water use"
+    assert extracted["research_problem"] == "recurring drought"
+
+
+def test_profile_extracts_inline_punctuation_separated_headings():
+    text = (
+        "Research problem: drought reduces yields; Objectives: improve resilience. "
+        "Intervention: solar irrigation, Methodology: field trials."
+    )
+    extracted = profile(text)
+    assert extracted["research_problem"] == "drought reduces yields"
+    assert extracted["objectives"] == "improve resilience"
+    assert extracted["intervention"] == "solar irrigation"
+    assert extracted["methodology"] == "field trials"
+
+
+def test_missing_sections_remain_empty_and_do_not_absorb_other_content():
+    extracted = profile("Research problem: drought affects farms.\nOutputs: irrigation guidance.")
+    assert extracted["research_problem"] == "drought affects farms"
+    assert extracted["outputs"] == "irrigation guidance"
+    assert extracted["objectives"] == ""
+    assert set(extracted) == set(DIMENSIONS)

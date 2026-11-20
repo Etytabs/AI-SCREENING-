@@ -38,18 +38,47 @@ def test_similarity_is_explicitly_review_required():
     assert evidence.status == "REVIEW_REQUIRED"
 
 
-def test_plagiarism_dispositions_keep_quote_and_boilerplate_separate():
+def test_plagiarism_dispositions_use_only_the_matched_passage_context():
+    from services.plagiarism.service import classify_disposition
+
+    matched_uncited = "The intervention reduced crop losses through targeted irrigation."
+    source_match = "The intervention reduced crop losses through targeted irrigation."
+    full_proposal = "As cited from the original study. " + matched_uncited
+    assert "cited from" in full_proposal
+    assert classify_disposition(
+        matched_uncited, source_match, 0.92
+    ) == "POTENTIAL_VERBATIM_OR_NEAR_VERBATIM"
+
+
+def test_boilerplate_elsewhere_does_not_relabel_a_substantive_match():
+    from services.plagiarism.service import classify_disposition
+
+    substantive_match = "The intervention reduced crop losses through targeted irrigation."
+    full_proposal = (
+        "The institutional research ethics committee will review the protocol. "
+        + substantive_match
+    )
+    assert "institutional research ethics committee" in full_proposal
+    assert classify_disposition(
+        substantive_match, substantive_match, 0.92
+    ) == "POTENTIAL_VERBATIM_OR_NEAR_VERBATIM"
+
+
+def test_local_citation_and_boilerplate_context_remain_distinct():
     from services.plagiarism.service import classify_disposition
 
     assert classify_disposition(
-        "As cited from the original study.",
-        "The original study method.",
-        0.70,
+        "Quoted from the original report: participants will receive information.",
+        "participants will receive information",
+        0.92,
+    ) == "GENERIC_OR_BOILERPLATE"
+    assert classify_disposition(
+        "According to the cited source, this passage is reproduced.",
+        "this passage is reproduced",
+        0.92,
     ) == "PROPERLY_ATTRIBUTED_CONTEXT"
     assert classify_disposition(
-        "Ethical approval will be obtained from the institutional research ethics committee.",
-        "The same institutional research ethics committee procedure.",
-        0.80,
-    ) == "GENERIC_OR_BOILERPLATE"
-    assert classify_disposition("One passage copied.", "A matching passage.", 0.70) == "POTENTIAL_VERBATIM_OR_NEAR_VERBATIM"
-    assert classify_disposition("A paraphrased project.", "A differently worded project.", 0.50) == "POTENTIAL_PARAPHRASED_OVERLAP"
+        "A paraphrased project passage.",
+        "A differently worded project passage.",
+        0.50,
+    ) == "POTENTIAL_PARAPHRASED_OVERLAP"

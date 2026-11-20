@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from apps.api.dependencies import get_service
-from apps.api.routes import auth, duplication, grants, health, ncst, publications, workflow
+from apps.api.routes import auth, duplication, grants, health, ncst, publications, purpose_overlap, workflow
 from services.auth.demo_auth import DemoAuthentication, DemoWorkspace
 from services.config.env import load_env_file
 from services.grant_workflow.seed import seed_demo
@@ -150,6 +150,7 @@ app.include_router(ncst.router)
 app.include_router(publications.router)
 app.include_router(workflow.router)
 app.include_router(duplication.router)
+app.include_router(purpose_overlap.router)
 
 
 @app.get("/api/v1")

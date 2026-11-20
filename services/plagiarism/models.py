@@ -35,3 +35,4 @@ class PlagiarismEvidence:
     explanation: str
     confidence: float
     human_review_required: bool = True
+    disposition: str = "POTENTIAL_TEXT_OVERLAP"

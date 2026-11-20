@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Query
 from apps.api.schemas.publications import PublicationRecord
 from ml.semantic_matching.embedding import get_runtime_embedder
 from ml.semantic_matching.hybrid import rank_candidates
-from services.plagiarism.service import check_public_sources
+from services.plagiarism.service import check_public_sources_with_coverage
 from services.reconciliation.engine import reconcile_publication
 from services.research_sources.connectors import search_source
 from services.research_sources.registry import list_sources
@@ -70,7 +70,7 @@ def screen_public_text_for_similarity(
     limit: int = Query(default=5, ge=1, le=10),
 ) -> dict:
     try:
-        findings = check_public_sources(text, limit=limit)
+        findings, unavailable = check_public_sources_with_coverage(text, limit=limit)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail="Invalid source comparison request") from exc
     except (RuntimeError, OSError) as exc:
@@ -80,6 +80,8 @@ def screen_public_text_for_similarity(
         "status": "REVIEW_REQUIRED" if findings else "NO_PUBLIC_MATCH_FOUND",
         "count": len(findings),
         "findings": [asdict(finding) for finding in findings],
+        "unavailable_sources": unavailable,
+        "source_availability": "PARTIAL" if unavailable else "SEARCHED",
         "human_review_required": True,
         "disclaimer": "Potential text similarity is evidence for reviewer comparison, not an automatic plagiarism verdict.",
     }

@@ -22,7 +22,7 @@ _HEADINGS = {
     "methodology": ("methodology", "methods", "method", "study design"),
     "outputs": ("outputs", "deliverables", "products"),
     "outcomes": ("outcomes", "expected outcomes", "impact"),
-    "geography_scope": ("geography", "location", "population", "scope", "study area"),
+    "geography_scope": ("geography", "location", "scope", "study area"),
 }
 
 _STOP = frozenset("""
@@ -65,64 +65,42 @@ def _jaccard(left: str, right: str) -> float:
     return len(a & b) / len(union) if union else 0.0
 
 
-def _extract_dimension(text: str, dimension: str) -> str:
-    normalized = re.sub(r"\s+", " ", text).strip()
-    heading_terms = _HEADINGS[dimension]
-    escaped = "|".join(re.escape(term) for term in sorted(heading_terms, key=len, reverse=True))
-    for match in re.finditer(
-        rf"(?i)(?:^|[.;\n]\s*)(?:\d+[.)]?\s*)?(?:{escaped})\s*:\s*",
-        normalized,
-    ):
-        start = match.end()
-        all_heading_terms = sorted(
-            {term for terms in _HEADINGS.values() for term in terms},
-            key=len,
-            reverse=True,
-        )
-        all_heading_pattern = "|".join(re.escape(term) for term in all_heading_terms)
-        remainder = normalized[start:]
-        next_heading = re.search(
-            rf"(?i)(?:[.;]\s+|,\s*)(?:\d+[.)]?\s*)?(?:{all_heading_pattern})\s*:",
-            remainder,
-        )
-        value = remainder[: next_heading.start()] if next_heading else remainder
-        value = value.strip(" .")
-        if value:
-            return value[:5000]
+def _heading_pattern() -> tuple[re.Pattern[str], dict[str, str]]:
+    aliases = {
+        alias: dimension
+        for dimension, terms in _HEADINGS.items()
+        for alias in terms
+    }
+    alternatives = "|".join(
+        re.escape(alias) for alias in sorted(aliases, key=len, reverse=True)
+    )
+    pattern = re.compile(
+        rf"(?im)(?:^|[\n;,.]\s*)(?:\d+[.)]?\s*)?(?P<heading>{alternatives})\s*:\s*"
+    )
+    return pattern, aliases
 
-    lines = re.split(r"[\n\r]+", text)
-    collected: list[str] = []
-    active = False
-    for line in lines:
-        stripped = line.strip()
-        heading = re.sub(r"^\d+[.)]?\s*", "", stripped).lower().rstrip(": ")
-        if any(heading.startswith(term) for term in heading_terms):
-            active = True
-            remainder = re.sub(r"^[^:]{1,80}:?\s*", "", stripped)
-            if remainder and not remainder.lower().startswith(heading):
-                collected.append(remainder)
-            continue
-        if active:
-            if re.match(r"^\d+[.)]?\s*[A-Za-z]", stripped) or re.match(
-                r"^(abstract|summary|references|budget|work plan|declaration)\b", stripped, re.I
-            ):
-                break
-            collected.append(stripped)
-    if collected:
-        return " ".join(collected[:12])[:5000]
-    if dimension == "geography_scope":
-        locations = re.findall(
-            r"\b(?:rwanda|africa|district|province|region|country|urban|rural|nationwide|"
-            r"villages?|communities?|schools?|clinics?|farms?)\b[^.\n]{0,120}",
-            normalized,
-            re.I,
-        )
-        return " ".join(locations[:8])
-    return ""
+
+_HEADING_PATTERN, _HEADING_DIMENSIONS = _heading_pattern()
 
 
 def profile(text: str) -> dict[str, str]:
-    return {dimension: _extract_dimension(text, dimension) for dimension in DIMENSIONS}
+    """Extract explicitly labelled sections without borrowing adjacent sections.
+
+    Only labelled headings are used. Unstructured text is deliberately left
+    unassigned rather than guessed into a research dimension.
+    """
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+    matches = list(_HEADING_PATTERN.finditer(normalized))
+    extracted = {dimension: "" for dimension in DIMENSIONS}
+
+    for index, match in enumerate(matches):
+        dimension = _HEADING_DIMENSIONS[match.group("heading").casefold()]
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(normalized)
+        value = normalized[match.end():end].strip(" \t\n\r:;,.")
+        if value and not extracted[dimension]:
+            extracted[dimension] = value[:5000]
+
+    return extracted
 
 
 def compare_purposes(left_text: str, right_text: str) -> PurposeOverlapResult:

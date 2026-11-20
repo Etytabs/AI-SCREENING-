@@ -35,6 +35,24 @@ def _best_source_window(applicant: str, source: str) -> tuple[float, str]:
     return best_score, best_text
 
 
+def _best_applicant_window(applicant: str, source_passage: str) -> str:
+    """Return the applicant excerpt most similar to the selected source passage."""
+    words = applicant.split()
+    source_words = source_passage.split()
+    if not words or not source_words:
+        return ""
+    window = min(len(words), max(12, min(len(source_words), 100)))
+    step = max(5, window // 4)
+    best_score = -1.0
+    best_text = " ".join(words[:window])
+    for start in range(0, max(1, len(words) - window + 1), step):
+        excerpt = " ".join(words[start : start + window])
+        score = compare_texts(excerpt, source_passage).score
+        if score > best_score:
+            best_score, best_text = score, excerpt
+    return best_text
+
+
 def _match_type(similarity: float, applicant: str, source: str) -> str:
     if similarity >= 0.9:
         return "near-verbatim"
@@ -56,9 +74,12 @@ _BOILERPLATE = (
 )
 
 
-def classify_disposition(applicant: str, source: str, similarity: float) -> str:
-    text = " ".join((applicant + " " + source).split()).casefold()
-    if any(phrase in text for phrase in _BOILERPLATE):
+def classify_disposition(applicant_passage: str, source_passage: str, similarity: float) -> str:
+    """Classify only the supplied matched excerpts, never whole-document context."""
+    applicant = " ".join(applicant_passage.split()).casefold()
+    source = " ".join(source_passage.split()).casefold()
+    matched_text = f"{applicant} {source}"
+    if any(phrase in matched_text for phrase in _BOILERPLATE):
         return "GENERIC_OR_BOILERPLATE"
     if re.search(r"(?i)(?:cited from|source:|reference:|references:|quoted from|according to)", applicant):
         return "PROPERLY_ATTRIBUTED_CONTEXT"
@@ -85,6 +106,9 @@ def check_public_sources(text: str, *, limit: int = 5) -> list[PlagiarismEvidenc
         if not source_text:
             continue
         score, matched_text = _best_source_window(normalized, source_text)
+        if score < 0.35:
+            continue
+        applicant_passage = _best_applicant_window(normalized, matched_text)
         attribution = resolve_attribution(candidate.url, candidate.title)
         enriched = SourceCandidate(
             source_id=candidate.source_id,
@@ -94,15 +118,13 @@ def check_public_sources(text: str, *, limit: int = 5) -> list[PlagiarismEvidenc
             search_query=candidate.search_query,
             attribution=attribution,
         )
-        if score < 0.35:
-            continue
         findings.append(
             PlagiarismEvidence(
                 finding_id=f"PLG-{uuid4().hex[:10]}",
                 status="REVIEW_REQUIRED",
-                match_type=_match_type(score, normalized, matched_text),
+                match_type=_match_type(score, applicant_passage, matched_text),
                 similarity=round(score, 4),
-                applicant_passage=normalized[:2000],
+                applicant_passage=applicant_passage[:2000],
                 source_passage=matched_text[:2000],
                 source=enriched,
                 explanation=(
@@ -110,7 +132,7 @@ def check_public_sources(text: str, *, limit: int = 5) -> list[PlagiarismEvidenc
                     "The source URL and attribution metadata are provided for human comparison."
                 ),
                 confidence=round(score, 4),
-                disposition=classify_disposition(normalized, matched_text, score),
+                disposition=classify_disposition(applicant_passage, matched_text, score),
             )
         )
     return sorted(findings, key=lambda item: item.similarity, reverse=True)
@@ -148,6 +170,7 @@ def check_public_sources_with_coverage(
         score, matched_text = _best_source_window(normalized, source_text)
         if score < 0.35:
             continue
+        applicant_passage = _best_applicant_window(normalized, matched_text)
         attribution = resolve_attribution(candidate.url, candidate.title)
         enriched = SourceCandidate(
             source_id=candidate.source_id,
@@ -161,9 +184,9 @@ def check_public_sources_with_coverage(
             PlagiarismEvidence(
                 finding_id=f"PLG-{uuid4().hex[:10]}",
                 status="REVIEW_REQUIRED",
-                match_type=_match_type(score, normalized, matched_text),
+                match_type=_match_type(score, applicant_passage, matched_text),
                 similarity=round(score, 4),
-                applicant_passage=normalized[:2000],
+                applicant_passage=applicant_passage[:2000],
                 source_passage=matched_text[:2000],
                 source=enriched,
                 explanation=(
@@ -171,7 +194,7 @@ def check_public_sources_with_coverage(
                     "The source URL and attribution metadata are provided for human comparison."
                 ),
                 confidence=round(score, 4),
-                disposition=classify_disposition(normalized, matched_text, score),
+                disposition=classify_disposition(applicant_passage, matched_text, score),
             )
         )
     return sorted(findings, key=lambda item: item.similarity, reverse=True), unavailable
